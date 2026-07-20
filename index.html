@@ -12,7 +12,7 @@
   :root {
     /* Couleurs de base */
     --gold: #FFB03B; --source: #12D99B; --cockpit: #3B9CFF; --moteur: #A56CFF; --objectifs: #38D4F8;
-    --bg-main: #0B0B0E;        
+    --bg-main: #0B0B0E;       
     --panel-border: rgba(255,255,255,0.08);
     --text: #E3E4E8; --dim: #626775;
   }
@@ -172,12 +172,12 @@
   .btn-danger { background: #ff4a4a; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; width: 100%; text-align: center; }
   .btn-secondary { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--panel-border); padding: 8px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 12px; }
 
-  /* FIX RESPONSIVE MOBILE / IPHONE */
-  @media (max-width: 768px) {
+  /* FIX RESPONSIVE MOBILE + TABLETTE (CSS - conservé en fallback, la logique réelle est forcée en JS ci-dessous) */
+  @media (max-width: 1024px) {
     .header-nav { padding: 12px 16px; }
     .header-nav > div:last-child { display: none; } 
-    .tabs { display: none !important; } 
-    .view-toggle { display: flex !important; } 
+    .tabs { display: none !important; } /* On cache les onglets texte doublons sur mobile/tablette */
+    .view-toggle { display: flex !important; } /* On force le sélecteur Journal / Carte */
     
     .app-container.mode-journal #canvasContainer { display: none !important; }
     .app-container.mode-journal #journalContainer { display: flex !important; }
@@ -185,7 +185,7 @@
     .app-container.mode-map #canvasContainer { display: block !important; }
     .app-container.mode-map #journalContainer { display: none !important; }
     
-    .sheet { width: 100% !important; } 
+    .sheet { width: 100% !important; } /* Le panneau prend tout l'écran sur mobile/tablette */
   }
 </style>
 </head>
@@ -203,7 +203,7 @@
       <button class="toggle-btn active" data-mode="map">Carte</button>
     </div>
 
-    <div class="actions-bar">
+    <div class="actions-bar" id="actionsBar">
       <button class="btn-primary" id="addGlobalNodeBtn">+ Ajouter une vignette</button>
       <div style="font-size: 12px; color: var(--dim);" id="syncStatus">Studio Anthony Carrel</div>
     </div>
@@ -313,6 +313,8 @@ let activeNodeId = null;
 let tempTags = [];
 
 let transformState = { x: 0, y: 0, scale: 1 };
+let isDragging = false;
+let startX = 0, startY = 0;
 let isPanning = false;
 let startPanX = 0, startPanY = 0;
 
@@ -361,7 +363,7 @@ function updateTransform() {
 }
 
 container.addEventListener('pointerdown', (e) => {
-  if (e.target.closest('.node') || e.target.closest('.resize-handle') || e.target.closest('#configSheet')) return;
+  if (e.target.closest('.node') || e.target.closest('.resize-handle')) return;
   isPanning = true;
   container.setPointerCapture(e.pointerId);
   startPanX = e.clientX - transformState.x;
@@ -422,8 +424,8 @@ document.getElementById('addGlobalNodeBtn').addEventListener('click', () => {
   const newId = 'node_' + Date.now();
   const newNode = {
     id: newId,
-    x: 100 - transformState.x,
-    y: 100 - transformState.y,
+    x: 300 - transformState.x,
+    y: 300 - transformState.y,
     w: 220,
     h: 240,
     color: 'var(--gold)',
@@ -717,23 +719,14 @@ function renderSheetTags() {
   });
 
   container.querySelectorAll('.sheet-tag-text').forEach(input => {
-    input.addEventListener('input', (e) => { 
-      const idx = e.target.getAttribute('data-idx');
-      tempTags[idx].text = e.target.value;
-    });
+    input.addEventListener('input', (e) => { tempTags[e.target.dataset.idx].text = e.target.value; });
   });
-
   container.querySelectorAll('.sheet-tag-color').forEach(select => {
-    select.addEventListener('change', (e) => {
-      const idx = e.target.getAttribute('data-idx');
-      tempTags[idx].color = e.target.value;
-    });
+    select.addEventListener('change', (e) => { tempTags[e.target.dataset.idx].color = e.target.value; });
   });
-
   container.querySelectorAll('.remove-tag-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const idx = e.target.getAttribute('data-idx');
-      tempTags.splice(idx, 1);
+      tempTags.splice(e.target.dataset.idx, 1);
       renderSheetTags();
     });
   });
@@ -744,25 +737,18 @@ document.getElementById('sheetAddTagBtn').addEventListener('click', () => {
   renderSheetTags();
 });
 
-document.getElementById('closeSheet').addEventListener('click', () => {
-  document.getElementById('configSheet').classList.remove('open');
-  activeNodeId = null;
-});
-
 document.getElementById('saveNodeConfig').addEventListener('click', () => {
-  if (!activeNodeId) return;
   const n = dataset.find(item => item.id === activeNodeId);
   if (n) {
     n.bg = document.getElementById('bgUrlInput').value.trim();
     n.color = document.getElementById('nodeColorInput').value;
     n.cardBg = document.getElementById('nodeBgColorInput').value;
-    n.bgOpacity = parseInt(document.getElementById('bgOpacityInput').value);
+    n.bgOpacity = parseInt(document.getElementById('bgOpacityInput').value) || 85;
     n.showBlock = document.getElementById('showBlockInput').checked;
     n.blockLabel = document.getElementById('blockLabelInput').value.trim();
     n.blockVal = document.getElementById('blockValInput').value.trim();
-    n.tags = JSON.parse(JSON.stringify(tempTags));
-    
-    // Gérer les parents sélectionnés
+    n.tags = tempTags;
+
     const checkedBoxes = document.querySelectorAll('.node-parent-checkbox:checked');
     n.parents = Array.from(checkedBoxes).map(cb => cb.value);
 
@@ -770,88 +756,80 @@ document.getElementById('saveNodeConfig').addEventListener('click', () => {
     render();
   }
   document.getElementById('configSheet').classList.remove('open');
-  activeNodeId = null;
 });
 
 document.getElementById('deleteNodeBtn').addEventListener('click', () => {
-  if (!activeNodeId) return;
-  if (confirm("Supprimer définitivement cette vignette ?")) {
+  if (confirm('Voulez-vous vraiment supprimer définitivement cette carte ?')) {
     dataset = dataset.filter(item => item.id !== activeNodeId);
-    
-    // Nettoyer les références parentes orphelines dans les autres nœuds
-    dataset.forEach(node => {
-      if(node.parents) {
-        node.parents = node.parents.filter(pId => pId !== activeNodeId);
-      }
+    dataset.forEach(opt => {
+      if (opt.parents) opt.parents = opt.parents.filter(pId => pId !== activeNodeId);
     });
-
     save();
     render();
     document.getElementById('configSheet').classList.remove('open');
-    activeNodeId = null;
   }
 });
 
-function setupDrag(el, n) {
-  let nodeStartX = 0, nodeStartY = 0;
-  let pointerStartX = 0, pointerStartY = 0;
-  let isMoving = false;
+document.getElementById('closeSheet').addEventListener('click', () => {
+  document.getElementById('configSheet').classList.remove('open');
+});
 
-  el.addEventListener('pointerdown', (e) => {
-    if (e.target.closest('[contenteditable="true"]') || e.target.closest('.action-btn') || e.target.closest('.bullet-checkbox') || e.target.closest('.resize-handle')) return;
-    isMoving = true;
-    el.setPointerCapture(e.pointerId);
-    pointerStartX = e.clientX;
-    pointerStartY = e.clientY;
-    nodeStartX = n.x;
-    nodeStartY = n.y;
+function setupDrag(div, n) {
+  let isDragging = false;
+  let startDragX = 0, startDragY = 0;
+
+  div.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('[contenteditable="true"]') || e.target.closest('.action-btn') || e.target.closest('.resize-handle') || e.target.closest('.bullet-checkbox')) return;
+    isDragging = true;
+    div.setPointerCapture(e.pointerId);
+    startDragX = e.clientX - n.x * transformState.scale;
+    startDragY = e.clientY - n.y * transformState.scale;
+    div.classList.add('dragging');
   });
 
-  el.addEventListener('pointermove', (e) => {
-    if (!isMoving) return;
-    const dx = (e.clientX - pointerStartX) / transformState.scale;
-    const dy = (e.clientY - pointerStartY) / transformState.scale;
-    n.x = nodeStartX + dx;
-    n.y = nodeStartY + dy;
-    el.style.left = n.x + 'px';
-    el.style.top = n.y + 'px';
+  div.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    n.x = (e.clientX - startDragX) / transformState.scale;
+    n.y = (e.clientY - startDragY) / transformState.scale;
+    div.style.left = n.x + 'px';
+    div.style.top = n.y + 'px';
     draw();
   });
 
-  const endMove = (e) => {
-    if (!isMoving) return;
-    isMoving = false;
-    el.releasePointerCapture(e.pointerId);
+  const endDrag = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    div.releasePointerCapture(e.pointerId);
+    div.classList.remove('dragging');
     save();
   };
-  el.addEventListener('pointerup', endMove);
-  el.addEventListener('pointercancel', endMove);
+  div.addEventListener('pointerup', endDrag);
+  div.addEventListener('pointercancel', endDrag);
 }
 
-function setupResize(el, n) {
-  const handle = el.querySelector('.resize-handle');
-  let startW = 0, startH = 0;
-  let pointerStartX = 0, pointerStartY = 0;
+function setupResize(div, n) {
+  const handle = div.querySelector('.resize-handle');
   let isResizing = false;
+  let startW = 0, startH = 0, startMouseX = 0, startMouseY = 0;
 
   handle.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
     isResizing = true;
     handle.setPointerCapture(e.pointerId);
-    pointerStartX = e.clientX;
-    pointerStartY = e.clientY;
-    startW = n.w || el.offsetWidth;
-    startH = n.h || el.offsetHeight;
+    startW = n.w;
+    startH = n.h || div.offsetHeight;
+    startMouseX = e.clientX;
+    startMouseY = e.clientY;
   });
 
   handle.addEventListener('pointermove', (e) => {
     if (!isResizing) return;
-    const dx = (e.clientX - pointerStartX) / transformState.scale;
-    const dy = (e.clientY - pointerStartY) / transformState.scale;
-    n.w = Math.max(160, startW + dx);
-    n.h = Math.max(140, startH + dy);
-    el.style.width = n.w + 'px';
-    el.style.height = n.h + 'px';
+    const deltaX = (e.clientX - startMouseX) / transformState.scale;
+    const deltaY = (e.clientY - startMouseY) / transformState.scale;
+    n.w = Math.max(160, startW + deltaX);
+    n.h = Math.max(140, startH + deltaY);
+    div.style.width = n.w + 'px';
+    div.style.height = n.h + 'px';
     draw();
   });
 
@@ -865,8 +843,30 @@ function setupResize(el, n) {
   handle.addEventListener('pointercancel', endResize);
 }
 
+// FIX RESPONSIVE FORCÉ EN JS
+// On ne fait plus confiance uniquement au @media CSS : certaines plateformes d'intégration
+// (comme systeme.io) peuvent filtrer ou mal restituer les règles @media des blocs HTML
+// personnalisés. Ici, on force l'affichage via du style inline (priorité maximale en CSS),
+// recalculé à chaque redimensionnement / rotation d'écran. Seuil à 1024px pour couvrir
+// mobile ET tablette.
+function applyResponsiveLayout() {
+  const isCompact = window.innerWidth <= 1024;
+  const tabsEl = document.querySelector('.tabs');
+  const toggleEl = document.getElementById('viewToggle');
+  const actionsEl = document.getElementById('actionsBar');
+  const sheetEl = document.getElementById('configSheet');
+
+  if (tabsEl) tabsEl.style.display = isCompact ? 'none' : 'flex';
+  if (toggleEl) toggleEl.style.display = isCompact ? 'flex' : 'none';
+  if (actionsEl) actionsEl.style.display = isCompact ? 'none' : 'flex';
+  if (sheetEl) sheetEl.style.width = isCompact ? '100%' : '360px';
+}
+window.addEventListener('resize', applyResponsiveLayout);
+window.addEventListener('orientationchange', applyResponsiveLayout);
+applyResponsiveLayout();
+
 // Lancement au chargement de la page
-window.addEventListener('DOMContentLoaded', loadData);
+loadData();
 </script>
 </body>
 </html>
