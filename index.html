@@ -90,7 +90,6 @@
   .node-overlay { content: ''; position: absolute; inset: 0; background: rgba(20, 21, 26, 0.4); z-index: 1; pointer-events: none; }
   .node-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
   
-  /* Zone dédiée pour attraper et déplacer proprement la vignette */
   .node-drag-zone { cursor: move; display: flex; align-items: center; gap: 8px; width: 100%; }
   .node-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
   .header-actions { display: flex; gap: 8px; z-index: 10; }
@@ -357,7 +356,6 @@ function updateTransform() {
   panZoomContent.style.transform = `translate(${transformState.x}px, ${transformState.y}px) scale(${transformState.scale})`;
 }
 
-// Interaction du Plan de travail corrigée (Filtre les éléments interactifs internes)
 interact(container).gesturable({
   listeners: {
     move (event) {
@@ -393,15 +391,23 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
   localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
 });
 
-// Alignement automatique en Grille
+// Alignement automatique en Grille (Corrigé pour éviter le bug de déplacement)
 document.getElementById('resetLayoutBtn').addEventListener('click', () => {
   transformState = { x: 0, y: 0, scale: 1 };
   updateTransform();
-  dataset.forEach((n, idx) => { n.x = 40 + (idx % 4) * 280; n.y = 40 + Math.floor(idx / 4) * 300; n.w = 240; n.h = 260; });
-  save(); render();
+  
+  dataset.forEach((n, idx) => { 
+    n.x = 40 + (idx % 4) * 280; 
+    n.y = 40 + Math.floor(idx / 4) * 300; 
+    n.w = 240; 
+    n.h = 260; 
+  });
+  
+  interact('.node').unset(); // Libère proprement les verrous absolus du DOM
+  save(); 
+  render();
 });
 
-// --- ENGINE DE VUE PERSONNALISÉE ---
 document.getElementById('saveCustomViewBtn').addEventListener('click', () => {
   const currentPositions = dataset.map(n => ({ id: n.id, x: n.x, y: n.y, w: n.w, h: n.h }));
   localStorage.setItem('anthony_custom_layout_positions', JSON.stringify(currentPositions));
@@ -420,6 +426,7 @@ document.getElementById('loadCustomViewBtn').addEventListener('click', () => {
       const match = positions.find(p => p.id === n.id);
       if (match) { n.x = match.x; n.y = match.y; n.w = match.w; n.h = match.h; }
     });
+    interact('.node').unset();
     save(); render();
   } else {
     alert("Aucune vue personnalisée enregistrée. Clique sur '💾 Épingler Vue' d'abord.");
@@ -444,10 +451,9 @@ document.querySelectorAll('#viewToggle .toggle-btn, .tabs .tab').forEach(btn => 
   btn.addEventListener('click', (e) => switchView(e.target.getAttribute('data-mode') || e.target.getAttribute('data-target')));
 });
 
-// RECONCEPTION DU DRAG : On isole strictement la zone d'accroche pour éviter les bugs textuels
 function initInteractOnNodes() {
   interact('.node').draggable({
-    allowFrom: '.node-drag-zone', // Force l'utilisateur à déplacer via le header de la vignette
+    allowFrom: '.node-drag-zone', 
     listeners: {
       move(event) {
         const node = dataset.find(n => n.id === event.target.id);
@@ -632,7 +638,6 @@ function render() {
       <div class="resize-handle"></div>
     `;
 
-    // Empêcher l'activation du Drag quand on édite du texte
     div.querySelectorAll('[contenteditable="true"]').forEach(el => {
       el.addEventListener('mousedown', (e) => e.stopPropagation());
       el.addEventListener('touchstart', (e) => e.stopPropagation());
