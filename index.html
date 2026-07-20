@@ -172,14 +172,20 @@
   .btn-danger { background: #ff4a4a; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; width: 100%; text-align: center; }
   .btn-secondary { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--panel-border); padding: 8px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 12px; }
 
+  /* FIX RESPONSIVE MOBILE / IPHONE */
   @media (max-width: 768px) {
     .header-nav { padding: 12px 16px; }
     .header-nav > div:last-child { display: none; } 
-    .view-toggle { display: flex; }
-    .app-container.mode-journal .canvas-container { display: none; }
-    .app-container.mode-journal .journal-container { display: flex; }
-    .app-container.mode-map .canvas-container { display: block; }
-    .app-container.mode-map .journal-container { display: none; }
+    .tabs { display: none !important; } /* On cache les onglets texte doublons sur mobile */
+    .view-toggle { display: flex !important; } /* On force le sélecteur Journal / Carte */
+    
+    .app-container.mode-journal #canvasContainer { display: none !important; }
+    .app-container.mode-journal #journalContainer { display: flex !important; }
+    
+    .app-container.mode-map #canvasContainer { display: block !important; }
+    .app-container.mode-map #journalContainer { display: none !important; }
+    
+    .sheet { width: 100% !important; } /* Le panneau prend tout l'écran sur iPhone */
   }
 </style>
 </head>
@@ -293,7 +299,7 @@
 // CONFIGURATION SUPABASE SYNCHRONISÉE
 const SUPABASE_URL = "https://oftfrsezwjjybpohknim.supabase.co";
 const SUPABASE_KEY = "sb_publishable_FD8fOiN6Z71LGJQbqL6MEQ_NtKzEReT";
-supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let dataset = [];
 
@@ -307,6 +313,8 @@ let activeNodeId = null;
 let tempTags = [];
 
 let transformState = { x: 0, y: 0, scale: 1 };
+let isDragging = false;
+let startX = 0, startY = 0;
 let isPanning = false;
 let startPanX = 0, startPanY = 0;
 
@@ -439,6 +447,77 @@ document.getElementById('addGlobalNodeBtn').addEventListener('click', () => {
   save();
   render();
 });
+
+function draw() {
+  svg.innerHTML = '';
+  if (app.classList.contains('mode-journal')) return;
+  
+  dataset.forEach(n => {
+    if (n.parents && n.parents.length > 0) {
+      n.parents.forEach(pId => {
+        const parentNode = dataset.find(item => item.id === pId);
+        if (parentNode) {
+          const pX = parentNode.x + parentNode.w / 2;
+          const pY = parentNode.y + (parentNode.h || 240) / 2;
+          const cX = n.x + n.w / 2;
+          const cY = n.y + (n.h || 240) / 2;
+          
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          const d = `M ${pX} ${pY} Q ${(pX+cX)/2} ${(pY+cY)/2 - 50}, ${cX} ${cY}`;
+          path.setAttribute("d", d);
+          path.setAttribute("class", "flow-line");
+          path.setAttribute("stroke", n.color || "rgba(255,255,255,0.2)");
+          path.setAttribute("stroke-width", "2");
+          path.setAttribute("fill", "none");
+          svg.appendChild(path);
+        }
+      });
+    }
+  });
+}
+
+function buildJournal() {
+  journalContainer.innerHTML = '';
+  dataset.forEach(n => {
+    const card = document.createElement('div');
+    card.className = 'journal-card';
+    card.style.setProperty('--nc', n.color);
+    
+    let bulletsHTML = '';
+    if (n.bullets) {
+      n.bullets.forEach((b, idx) => {
+        const isChecked = n.checkedBullets && n.checkedBullets.includes(idx);
+        bulletsHTML += `
+          <div style="font-size:13px; margin-bottom:6px; color:${isChecked ? 'var(--dim)' : 'var(--text)'}; text-decoration:${isChecked ? 'line-through' : 'none'}; display:flex; align-items:center; gap:8px;">
+            <span style="width:6px; height:6px; background:${n.color}; border-radius:50%;"></span>
+            <span>${b || '<i>Sans titre</i>'}</span>
+          </div>`;
+      });
+    }
+    
+    card.innerHTML = `
+      <div class="journal-header">
+        <div class="journal-meta">
+          <span style="font-size:20px;">${n.icon}</span>
+          <div>
+            <div class="journal-title">${n.title || 'Sans titre'}</div>
+            <div class="journal-sub">${n.sub || ''}</div>
+          </div>
+        </div>
+        <div class="journal-chevron">▼</div>
+      </div>
+      <div class="journal-body">
+        ${bulletsHTML || '<div style="color:var(--dim); font-style:italic; font-size:12px;">Aucun objectif.</div>'}
+      </div>
+    `;
+    
+    card.querySelector('.journal-header').addEventListener('click', () => {
+      card.classList.toggle('collapsed');
+    });
+    
+    journalContainer.appendChild(card);
+  });
+}
 
 function render() {
   document.querySelectorAll('.node').forEach(n => n.remove());
@@ -697,21 +776,21 @@ document.getElementById('closeSheet').addEventListener('click', () => {
 
 function setupDrag(div, n) {
   let isDragging = false;
-  let startX = 0, startY = 0;
+  let startDragX = 0, startDragY = 0;
 
   div.addEventListener('pointerdown', (e) => {
     if (e.target.closest('[contenteditable="true"]') || e.target.closest('.action-btn') || e.target.closest('.resize-handle') || e.target.closest('.bullet-checkbox')) return;
     isDragging = true;
     div.setPointerCapture(e.pointerId);
-    startX = e.clientX - n.x * transformState.scale;
-    startY = e.clientY - n.y * transformState.scale;
+    startDragX = e.clientX - n.x * transformState.scale;
+    startDragY = e.clientY - n.y * transformState.scale;
     div.classList.add('dragging');
   });
 
   div.addEventListener('pointermove', (e) => {
     if (!isDragging) return;
-    n.x = (e.clientX - startX) / transformState.scale;
-    n.y = (e.clientY - startY) / transformState.scale;
+    n.x = (e.clientX - startDragX) / transformState.scale;
+    n.y = (e.clientY - startDragY) / transformState.scale;
     div.style.left = n.x + 'px';
     div.style.top = n.y + 'px';
     draw();
@@ -724,7 +803,6 @@ function setupDrag(div, n) {
     div.classList.remove('dragging');
     save();
   };
-
   div.addEventListener('pointerup', endDrag);
   div.addEventListener('pointercancel', endDrag);
 }
@@ -732,24 +810,24 @@ function setupDrag(div, n) {
 function setupResize(div, n) {
   const handle = div.querySelector('.resize-handle');
   let isResizing = false;
-  let startW = 0, startH = 0, startX = 0, startY = 0;
+  let startW = 0, startH = 0, startMouseX = 0, startMouseY = 0;
 
   handle.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
     isResizing = true;
     handle.setPointerCapture(e.pointerId);
-    startW = div.offsetWidth;
-    startH = div.offsetHeight;
-    startX = e.clientX;
-    startY = e.clientY;
+    startW = n.w;
+    startH = n.h || div.offsetHeight;
+    startMouseX = e.clientX;
+    startMouseY = e.clientY;
   });
 
   handle.addEventListener('pointermove', (e) => {
     if (!isResizing) return;
-    const dw = (e.clientX - startX) / transformState.scale;
-    const dh = (e.clientY - startY) / transformState.scale;
-    n.w = Math.max(160, startW + dw);
-    n.h = Math.max(120, startH + dh);
+    const deltaX = (e.clientX - startMouseX) / transformState.scale;
+    const deltaY = (e.clientY - startMouseY) / transformState.scale;
+    n.w = Math.max(160, startW + deltaX);
+    n.h = Math.max(140, startH + deltaY);
     div.style.width = n.w + 'px';
     div.style.height = n.h + 'px';
     draw();
@@ -761,86 +839,12 @@ function setupResize(div, n) {
     handle.releasePointerCapture(e.pointerId);
     save();
   };
-
   handle.addEventListener('pointerup', endResize);
   handle.addEventListener('pointercancel', endResize);
 }
 
-function draw() {
-  svg.innerHTML = '';
-  dataset.forEach(n => {
-    if (!n.parents) return;
-    n.parents.forEach(pId => {
-      const parentNode = dataset.find(item => item.id === pId);
-      if (!parentNode) return;
-
-      const x1 = parentNode.x + parentNode.w / 2;
-      const y1 = parentNode.y + (parentNode.h || 240) / 2;
-      const x2 = n.x + n.w / 2;
-      const y2 = n.y + (n.h || 240) / 2;
-
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      const dx = Math.abs(x2 - x1) * 0.5;
-      const dstring = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
-      
-      path.setAttribute('d', dstring);
-      path.setAttribute('stroke', n.color || 'var(--gold)');
-      path.setAttribute('stroke-width', '2');
-      path.setAttribute('fill', 'none');
-      path.setAttribute('class', 'flow-line');
-      path.setAttribute('opacity', '0.4');
-      svg.appendChild(path);
-    });
-  });
-}
-
-function buildJournal() {
-  journalContainer.innerHTML = '';
-  dataset.forEach(n => {
-    const card = document.createElement('div');
-    card.className = 'journal-card';
-    card.style.setProperty('--nc', n.color);
-
-    let bulletsHTML = '';
-    n.bullets.forEach((bText, idx) => {
-      const isChecked = n.checkedBullets && n.checkedBullets.includes(idx);
-      if(bText.trim() !== "") {
-        bulletsHTML += `
-          <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:${isChecked ? 'var(--dim)' : 'var(--text)'}; ${isChecked ? 'text-decoration:line-through;' : ''}">
-            <div style="width:6px; height:6px; border-radius:50%; background:var(--nc);"></div>
-            <div>${bText}</div>
-          </div>
-        `;
-      }
-    });
-
-    card.innerHTML = `
-      <div class="journal-header">
-        <div class="journal-meta">
-          <span style="font-size:18px;">${n.icon}</span>
-          <div>
-            <div class="journal-title">${n.title}</div>
-            <div class="journal-sub">${n.sub}</div>
-          </div>
-        </div>
-        <div class="journal-chevron">▼</div>
-      </div>
-      <div class="journal-body">
-        ${bulletsHTML || '<span style="font-style:italic; font-size:12px; color:var(--dim);">Aucun objectif</span>'}
-      </div>
-    `;
-
-    card.querySelector('.journal-header').addEventListener('click', () => {
-      card.classList.toggle('collapsed');
-    });
-
-    journalContainer.appendChild(card);
-  });
-}
-
-// Lancement au chargement
+// Lancement au chargement de la page
 loadData();
-updateTransform();
 </script>
 </body>
 </html>
