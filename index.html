@@ -218,4 +218,526 @@
 
     <div class="actions-bar" id="actionsBar">
       <input type="text" class="search-input" id="searchBar" placeholder="Rechercher...">
-      <button class="btn-primary" id="addGlobalNodeBtn">+ Ajouter
+      <button class="btn-primary" id="addGlobalNodeBtn">+ Ajouter</button>
+      <button class="btn-tool" id="saveCustomViewBtn" title="Enregistrer ma disposition actuelle">💾 Épingler Vue</button>
+      <button class="btn-tool" id="loadCustomViewBtn" title="Retourner à ma vue personnalisée">📍 Ma Vue</button>
+      <button class="btn-tool" id="themeToggleBtn" title="Changer le thème">🌓</button>
+      <button class="btn-tool" id="resetLayoutBtn" title="Aligner en Grille">🔄 Grille</button>
+      <div style="font-size: 12px; color: var(--dim);" id="syncStatus">Studio Anthony Carrel</div>
+    </div>
+  </div>
+
+  <div class="canvas-container" id="canvasContainer">
+    <div class="pan-zoom-content" id="panZoomContent">
+      <svg class="connector-svg" id="svgFlow"></svg>
+    </div>
+  </div>
+
+  <div class="journal-container" id="journalContainer"></div>
+  <button class="fab-add-mobile" id="fabAddMobile">+</button>
+</div>
+
+<div class="sheet" id="configSheet">
+  <button class="sheet-close" id="closeSheet">×</button>
+  <h3 style="font-family:'Space Grotesk'; margin-top:10px; color:var(--text); margin-bottom: 24px;">Propriétés de la vignette</h3>
+  
+  <div class="field"><label>Titre</label><input type="text" id="nodeTitleInput"></div>
+  <div class="field"><label>Sous-titre</label><input type="text" id="nodeSubInput"></div>
+  <div class="field"><label>Icône (Emoji)</label><input type="text" id="nodeIconInput"></div>
+
+  <div class="field" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--panel-border);">
+    <label style="margin: 0;">Style Bento moderne</label>
+    <input type="checkbox" id="nodeIsBentoInput" style="width: auto;">
+  </div>
+
+  <div class="field">
+    <label>Couleur Thématique</label>
+    <select id="nodeColorInput">
+      <option value="var(--gold)">Or</option>
+      <option value="var(--source)">Vert émeraude</option>
+      <option value="var(--cockpit)">Bleu cockpit</option>
+      <option value="var(--moteur)">Violet pur</option>
+      <option value="var(--objectifs)">Cyan électrique</option>
+      <option value="#FF4A82">Rose Rubis</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Couleur du fond</label>
+    <select id="nodeBgColorInput">
+      <option value="#070709">Noir Profond</option>
+      <option value="#14151A">Anthracite</option>
+      <option value="#1B1C22">Gris Sombre</option>
+    </select>
+  </div>
+
+  <div class="field"><label>Liaisons Parentes</label><div class="checkbox-group-container" id="nodeParentsCheckboxGroup"></div></div>
+  <div class="field"><label>Image de fond (URL)</label><input type="text" id="bgUrlInput"></div>
+  <div class="field"><label id="bgOpacityLabel">Opacité</label><input type="range" id="bgOpacityInput" min="0" max="100" step="5"></div>
+
+  <div class="field" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--panel-border);">
+    <label style="margin: 0;">Activer l'encoche</label>
+    <input type="checkbox" id="showBlockInput" style="width: auto;">
+  </div>
+
+  <div class="field">
+    <div style="display: flex; gap: 6px;">
+      <input type="text" id="blockLabelInput" placeholder="LABEL" style="flex:1;">
+      <input type="text" id="blockValInput" placeholder="Valeur" style="flex:2;">
+    </div>
+  </div>
+
+  <div class="field" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--panel-border);">
+    <label style="margin: 0;">Puces en Checkboxes</label>
+    <input type="checkbox" id="nodeUseCheckboxesInput" style="width: auto;">
+  </div>
+
+  <div class="field" style="border-top: 1px solid var(--panel-border); padding-top: 16px;">
+    <label>Tags Design</label>
+    <div class="sheet-tags-list" id="sheetTagsList"></div>
+    <button class="btn-secondary" id="sheetAddTagBtn">+ Ajouter un tag</button>
+  </div>
+
+  <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px;">
+    <button id="saveNodeConfig" style="width:100%; background:var(--text); color:var(--bg-main); border:none; padding:12px; border-radius:8px; font-weight:700; cursor:pointer;">Appliquer</button>
+    <button id="deleteNodeBtn" class="btn-danger">Supprimer</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://oftfrsezwjjybpohknim.supabase.co";
+const SUPABASE_KEY = "sb_publishable_FD8fOiN6Z71LGJQbqL6MEQ_NtKzEReT";
+supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let dataset = [];
+let currentSearchQuery = "";
+
+const container = document.getElementById('canvasContainer');
+const panZoomContent = document.getElementById('panZoomContent');
+const journalContainer = document.getElementById('journalContainer');
+const svg = document.getElementById('svgFlow');
+const app = document.getElementById('app');
+const syncStatus = document.getElementById('syncStatus');
+let activeNodeId = null;
+let tempTags = [];
+
+let transformState = { x: 0, y: 0, scale: 1 };
+
+async function save() {
+  syncStatus.innerText = "Synchronisation...";
+  localStorage.setItem('anthony_system_v6', JSON.stringify(dataset));
+  try {
+    const { error } = await supabase.from('bento_architecture').upsert({ id: 1, data: dataset });
+    if (error) throw error;
+    syncStatus.innerText = "Studio Anthony Carrel (En ligne)";
+  } catch (err) {
+    console.error(err);
+    syncStatus.innerText = "Sauvegarde locale active";
+  }
+}
+
+async function loadData() {
+  syncStatus.innerText = "Chargement...";
+  if (localStorage.getItem('anthony_system_v6')) {
+    dataset = JSON.parse(localStorage.getItem('anthony_system_v6'));
+  }
+  try {
+    const { data, error } = await supabase.from('bento_architecture').select('data').eq('id', 1).single();
+    if (!error && data) dataset = data.data;
+    syncStatus.innerText = "Studio Anthony Carrel (En ligne)";
+  } catch (err) {
+    syncStatus.innerText = "Studio Anthony Carrel (Local)";
+  }
+  if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+  render();
+}
+
+function updateTransform() {
+  panZoomContent.style.transform = `translate(${transformState.x}px, ${transformState.y}px) scale(${transformState.scale})`;
+}
+
+interact(container).gesturable({
+  listeners: {
+    move (event) {
+      transformState.scale = Math.max(0.1, Math.min(2, transformState.scale * (1 + event.ds)));
+      transformState.x += event.dx; transformState.y += event.dy;
+      updateTransform(); draw();
+    }
+  }
+}).draggable({
+  inertia: true,
+  listeners: {
+    move (event) {
+      if (event.target.closest('.node') || event.target.closest('.sheet') || event.target.closest('.actions-bar')) return;
+      transformState.x += event.dx; transformState.y += event.dy;
+      updateTransform();
+    }
+  }
+});
+
+container.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  let newScale = Math.max(0.1, Math.min(2, transformState.scale + (e.deltaY < 0 ? 1 : -1) * 0.05));
+  const rect = container.getBoundingClientRect();
+  const mX = e.clientX - rect.left; const mY = e.clientY - rect.top;
+  transformState.x = mX - (mX - transformState.x) * (newScale / transformState.scale);
+  transformState.y = mY - (mY - transformState.y) * (newScale / transformState.scale);
+  transformState.scale = newScale;
+  updateTransform(); draw();
+}, { passive: false });
+
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+  document.body.classList.toggle('light-theme');
+  localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+});
+
+// Alignement automatique en Grille (CORRIGÉ - plus de .unset() qui bloquait le drag)
+document.getElementById('resetLayoutBtn').addEventListener('click', () => {
+  transformState = { x: 0, y: 0, scale: 1 };
+  updateTransform();
+  
+  dataset.forEach((n, idx) => { 
+    n.x = 40 + (idx % 4) * 280; 
+    n.y = 40 + Math.floor(idx / 4) * 300; 
+    n.w = 240; 
+    n.h = 260; 
+  });
+  
+  // SUPPRESSION de la ligne interact('.node').unset(); qui cassait le drag
+  save(); 
+  render();
+});
+
+document.getElementById('saveCustomViewBtn').addEventListener('click', () => {
+  const currentPositions = dataset.map(n => ({ id: n.id, x: n.x, y: n.y, w: n.w, h: n.h }));
+  localStorage.setItem('anthony_custom_layout_positions', JSON.stringify(currentPositions));
+  localStorage.setItem('anthony_custom_layout_zoom', JSON.stringify(transformState));
+  alert("📍 Disposition et zoom sauvegardés comme 'Ma Vue' !");
+});
+
+document.getElementById('loadCustomViewBtn').addEventListener('click', () => {
+  const savedPos = localStorage.getItem('anthony_custom_layout_positions');
+  const savedZoom = localStorage.getItem('anthony_custom_layout_zoom');
+  if (savedPos && savedZoom) {
+    const positions = JSON.parse(savedPos);
+    transformState = JSON.parse(savedZoom);
+    updateTransform();
+    dataset.forEach(n => {
+      const match = positions.find(p => p.id === n.id);
+      if (match) { n.x = match.x; n.y = match.y; n.w = match.w; n.h = match.h; }
+    });
+    // SUPPRESSION de la ligne interact('.node').unset(); qui cassait le drag
+    save(); render();
+  } else {
+    alert("Aucune vue personnalisée enregistrée. Clique sur '💾 Épingler Vue' d'abord.");
+  }
+});
+
+document.getElementById('searchBar').addEventListener('input', (e) => {
+  currentSearchQuery = e.target.value.toLowerCase();
+  render();
+});
+
+function switchView(mode) {
+  document.querySelectorAll('#viewToggle .toggle-btn, .tabs .tab').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-mode') === mode || b.getAttribute('data-target') === mode);
+  });
+  app.classList.remove('mode-journal', 'mode-map');
+  app.classList.add('mode-' + mode);
+  if(mode === 'map') setTimeout(() => { draw(); updateTransform(); }, 50);
+}
+
+document.querySelectorAll('#viewToggle .toggle-btn, .tabs .tab').forEach(btn => {
+  btn.addEventListener('click', (e) => switchView(e.target.getAttribute('data-mode') || e.target.getAttribute('data-target')));
+});
+
+function initInteractOnNodes() {
+  interact('.node').draggable({
+    allowFrom: '.node-drag-zone', 
+    listeners: {
+      move(event) {
+        const node = dataset.find(n => n.id === event.target.id);
+        if (node) {
+          let rawX = node.x + event.dx / transformState.scale;
+          let rawY = node.y + event.dy / transformState.scale;
+          node.x = Math.round(rawX / 16) * 16;
+          node.y = Math.round(rawY / 16) * 16;
+          event.target.style.left = node.x + 'px';
+          event.target.style.top = node.y + 'px';
+          draw();
+        }
+      },
+      end() { save(); }
+    }
+  });
+
+  interact('.resize-handle').draggable({
+    listeners: {
+      move(event) {
+        const nodeEl = event.target.closest('.node');
+        const node = dataset.find(n => n.id === nodeEl.id);
+        if (node) {
+          let rawW = node.w + event.dx / transformState.scale;
+          let rawH = (node.h || 260) + event.dy / transformState.scale;
+          node.w = Math.max(180, Math.round(rawW / 16) * 16);
+          node.h = Math.max(160, Math.round(rawH / 16) * 16);
+          nodeEl.style.width = node.w + 'px';
+          nodeEl.style.height = node.h + 'px';
+          draw();
+        }
+      },
+      end() { save(); }
+    }
+  });
+}
+
+function draw() {
+  svg.innerHTML = '';
+  if (app.classList.contains('mode-journal')) return;
+  dataset.forEach(n => {
+    if (n.parents) {
+      n.parents.forEach(pId => {
+        const parentNode = dataset.find(item => item.id === pId);
+        if (parentNode) {
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          const d = `M ${parentNode.x + parentNode.w / 2} ${parentNode.y + (parentNode.h || 260) / 2} Q ${(parentNode.x + n.x + parentNode.w)/2} ${(parentNode.y + n.y + 260)/2 - 50}, ${n.x + n.w / 2} ${n.y + (n.h || 260) / 2}`;
+          path.setAttribute("d", d); path.setAttribute("class", "flow-line");
+          path.setAttribute("stroke", n.color || "rgba(255,255,255,0.2)");
+          path.setAttribute("stroke-width", "2"); path.setAttribute("fill", "none");
+          svg.appendChild(path);
+        }
+      });
+    }
+  });
+}
+
+document.getElementById('addGlobalNodeBtn').addEventListener('click', () => {
+  const newId = 'node_' + Date.now();
+  dataset.push({
+    id: newId, x: (window.innerWidth / 2 - 110 - transformState.x) / transformState.scale, y: (window.innerHeight / 2 - 120 - transformState.y) / transformState.scale,
+    w: 240, h: 260, color: 'var(--gold)', cardBg: '#14151A', icon: '📂', title: 'Nouveau projet', sub: 'Description', parents: [], bullets: ["Objectif initial"], checkedBullets: [], tags: []
+  });
+  save(); render();
+});
+document.getElementById('fabAddMobile').addEventListener('click', () => document.getElementById('addGlobalNodeBtn').click());
+
+function openConfigSheet(node) {
+  activeNodeId = node.id;
+  tempTags = node.tags ? JSON.parse(JSON.stringify(node.tags)) : [];
+  document.getElementById('nodeTitleInput').value = node.title || '';
+  document.getElementById('nodeSubInput').value = node.sub || '';
+  document.getElementById('nodeIconInput').value = node.icon || '';
+  document.getElementById('nodeIsBentoInput').checked = !!node.isBento;
+  document.getElementById('nodeColorInput').value = node.color || 'var(--gold)';
+  document.getElementById('nodeBgColorInput').value = node.cardBg || '#14151A';
+  document.getElementById('bgUrlInput').value = node.bg || '';
+  document.getElementById('bgOpacityInput').value = node.bgOpacity !== undefined ? node.bgOpacity : 85;
+  document.getElementById('showBlockInput').checked = !!node.showBlock;
+  document.getElementById('blockLabelInput').value = node.blockLabel || '';
+  document.getElementById('blockValInput').value = node.blockVal || '';
+  document.getElementById('nodeUseCheckboxesInput').checked = !!node.useCheckboxes;
+
+  const cbGroup = document.getElementById('nodeParentsCheckboxGroup'); cbGroup.innerHTML = '';
+  dataset.forEach(n => {
+    if (n.id !== node.id) {
+      cbGroup.innerHTML += `<label class="checkbox-row"><input type="checkbox" value="${n.id}" ${node.parents && node.parents.includes(n.id) ? 'checked' : ''}> <span>${n.title || 'Sans titre'}</span></label>`;
+    }
+  });
+  renderSheetTags();
+  document.getElementById('configSheet').classList.add('open');
+}
+
+function renderSheetTags() {
+  const container = document.getElementById('sheetTagsList'); container.innerHTML = '';
+  tempTags.forEach((t, idx) => {
+    container.innerHTML += `
+      <div class="sheet-tag-row">
+        <input type="text" value="${t.text}" style="flex:2;" oninput="tempTags[${idx}].text=this.value">
+        <input type="color" value="${t.color.startsWith('var') ? '#FFB03B' : t.color}" style="flex:1;height:36px;" oninput="tempTags[${idx}].color=this.value">
+        <button class="action-btn" style="border:1px solid #ff4a4a; color:#ff4a4a;" onclick="tempTags.splice(${idx},1);renderSheetTags();">×</button>
+      </div>`;
+  });
+}
+document.getElementById('sheetAddTagBtn').addEventListener('click', () => { tempTags.push({ text: 'Tag', color: 'var(--gold)' }); renderSheetTags(); });
+document.getElementById('closeSheet').addEventListener('click', () => document.getElementById('configSheet').classList.remove('open'));
+
+document.getElementById('saveNodeConfig').addEventListener('click', () => {
+  const node = dataset.find(n => n.id === activeNodeId);
+  if (node) {
+    node.title = document.getElementById('nodeTitleInput').value; node.sub = document.getElementById('nodeSubInput').value;
+    node.icon = document.getElementById('nodeIconInput').value; node.isBento = document.getElementById('nodeIsBentoInput').checked;
+    node.color = document.getElementById('nodeColorInput').value; node.cardBg = document.getElementById('nodeBgColorInput').value;
+    node.bg = document.getElementById('bgUrlInput').value; node.bgOpacity = parseInt(document.getElementById('bgOpacityInput').value);
+    node.showBlock = document.getElementById('showBlockInput').checked; node.blockLabel = document.getElementById('blockLabelInput').value;
+    node.blockVal = document.getElementById('blockValInput').value; node.useCheckboxes = document.getElementById('nodeUseCheckboxesInput').checked;
+    node.tags = tempTags;
+    node.parents = Array.from(document.querySelectorAll('#nodeParentsCheckboxGroup input:checked')).map(cb => cb.value);
+    save(); render();
+  }
+  document.getElementById('configSheet').classList.remove('open');
+});
+
+document.getElementById('deleteNodeBtn').addEventListener('click', () => {
+  if (confirm("Supprimer cette vignette ?")) {
+    dataset = dataset.filter(n => n.id !== activeNodeId);
+    dataset.forEach(n => { if(n.parents) n.parents = n.parents.filter(p => p !== activeNodeId); });
+    save(); render(); document.getElementById('configSheet').classList.remove('open');
+  }
+});
+
+function render() {
+  document.querySelectorAll('.node').forEach(n => n.remove());
+  
+  const filteredDataset = dataset.filter(n => 
+    (n.title && n.title.toLowerCase().includes(currentSearchQuery)) || 
+    (n.sub && n.sub.toLowerCase().includes(currentSearchQuery))
+  );
+
+  filteredDataset.forEach(n => {
+    const div = document.createElement('div');
+    div.className = 'node' + (n.isBento ? ' bento-style' : '');
+    div.id = n.id;
+    div.style.left = n.x + 'px';
+    div.style.top = n.y + 'px';
+    div.style.width = n.w + 'px';
+    div.style.height = (n.h || 260) + 'px';
+    div.style.setProperty('--nc', n.color || 'var(--gold)');
+    div.style.backgroundColor = n.cardBg || '#14151A';
+
+    // Rendu dynamique du fond de la vignette
+    if (n.bg) {
+      const bgLayer = document.createElement('div');
+      bgLayer.className = 'node-bg-layer';
+      bgLayer.style.backgroundImage = `url(${n.bg})`;
+      bgLayer.style.opacity = (n.bgOpacity !== undefined ? n.bgOpacity : 85) / 100;
+      div.appendChild(bgLayer);
+      
+      const overlay = document.createElement('div');
+      overlay.className = 'node-overlay';
+      div.appendChild(overlay);
+    }
+
+    const content = document.createElement('div');
+    content.className = 'node-content';
+
+    const dragZone = document.createElement('div');
+    dragZone.className = 'node-drag-zone';
+
+    const iconBadge = document.createElement('div');
+    iconBadge.className = 'icon-badge';
+    iconBadge.innerText = n.icon || '📂';
+    dragZone.appendChild(iconBadge);
+
+    const titleContainer = document.createElement('div');
+    titleContainer.style.flex = '1';
+    
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.innerText = n.title || 'Sans titre';
+    titleContainer.appendChild(title);
+    dragZone.appendChild(titleContainer);
+
+    const actions = document.createElement('div');
+    actions.className = 'header-actions';
+    
+    const settingsBtn = document.createElement('button');
+    settingsBtn.className = 'action-btn';
+    settingsBtn.innerText = '⚙️';
+    settingsBtn.addEventListener('click', (e) => { e.stopPropagation(); openConfigSheet(n); });
+    actions.appendChild(settingsBtn);
+    dragZone.appendChild(actions);
+
+    content.appendChild(dragZone);
+
+    if (n.sub) {
+      const sub = document.createElement('div');
+      sub.className = 'sub';
+      sub.innerText = n.sub;
+      content.appendChild(sub);
+    }
+
+    // Gestion de l'encoche optionnelle
+    if (n.showBlock) {
+      const block = document.createElement('div');
+      block.className = 'inner-block';
+      const label = document.createElement('div');
+      label.className = 'inner-label';
+      label.innerText = n.blockLabel || 'INFO';
+      const val = document.createElement('div');
+      val.className = 'inner-val';
+      val.innerText = n.blockVal || '-';
+      block.appendChild(label);
+      block.appendChild(val);
+      content.appendChild(block);
+    }
+
+    // Gestion des puces / objectifs
+    if (n.bullets && n.bullets.length > 0) {
+      const bulletsCont = document.createElement('div');
+      bulletsCont.className = 'bullets-container';
+      n.bullets.forEach((bText, bIdx) => {
+        const item = document.createElement('div');
+        item.className = 'bullet-item';
+        
+        if (n.useCheckboxes) {
+          const cb = document.createElement('div');
+          cb.className = 'bullet-checkbox';
+          const isChecked = n.checkedBullets && n.checkedBullets.includes(bIdx);
+          if (isChecked) item.classList.add('checked');
+          cb.addEventListener('click', () => {
+            if (!n.checkedBullets) n.checkedBullets = [];
+            if (n.checkedBullets.includes(bIdx)) {
+              n.checkedBullets = n.checkedBullets.filter(i => i !== bIdx);
+            } else {
+              n.checkedBullets.push(bIdx);
+            }
+            save(); render();
+          });
+          item.appendChild(cb);
+        } else {
+          const dot = document.createElement('div');
+          dot.className = 'bullet-dot';
+          item.appendChild(dot);
+        }
+
+        const txt = document.createElement('div');
+        txt.className = 'bullet-text';
+        txt.innerText = bText;
+        item.appendChild(txt);
+        bulletsCont.appendChild(item);
+      });
+      content.appendChild(bulletsCont);
+    }
+
+    // Tags optionnels
+    if (n.tags && n.tags.length > 0) {
+      const tagsCont = document.createElement('div');
+      tagsCont.className = 'tags-container';
+      n.tags.forEach(t => {
+        const tag = document.createElement('div');
+        tag.className = 'tag-item';
+        tag.innerText = t.text;
+        tag.style.setProperty('--tc', t.color || 'var(--gold)');
+        tagsCont.appendChild(tag);
+      });
+      content.appendChild(tagsCont);
+    }
+
+    const resize = document.createElement('div');
+    resize.className = 'resize-handle';
+    div.appendChild(resize);
+
+    div.appendChild(content);
+    panZoomContent.appendChild(div);
+  });
+
+  // Réattache interactJS sur le nouveau DOM généré
+  initInteractOnNodes();
+  draw();
+}
+
+// Initialisation globale
+loadData();
+</script>
+</body>
+</html>
