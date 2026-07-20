@@ -6,6 +6,8 @@
 <title>systeme.anthonycarrel.com / architecture multi-links</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght=500;600;700&family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet">
+<!-- Inclusion du SDK Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     /* Couleurs de base */
@@ -197,7 +199,7 @@
 
     <div class="actions-bar">
       <button class="btn-primary" id="addGlobalNodeBtn">+ Ajouter une vignette</button>
-      <div style="font-size: 12px; color: var(--dim);">Studio Anthony Carrel</div>
+      <div style="font-size: 12px; color: var(--dim);" id="syncStatus">Studio Anthony Carrel</div>
     </div>
   </div>
 
@@ -288,30 +290,19 @@
 </div>
 
 <script>
-let dataset = [
-  { id: 'global-goals', x: 80, y: 460, w: 280, h: 320, color: '#38D4F8', cardBg: '#14151A', icon: '✨', title: 'Upcoming Bento', sub: 'Objectifs transversaux de production', blockLabel: 'COMPLETED', blockVal: '1/5', parents: [], isBento: true, showBlock: true, useCheckboxes: true, bgOpacity: 85, tags: [{text: "In progress", color: "#3B9CFF"}, {text: "To-do", color: "#A56CFF"}], bullets: ["Promote Bento Cards v.2", "Release Bento Cards for Framer", "Bento Cards: UI Components", "Removr Illustrations", "Bento Cards v.4"] },
-  { id: 'anthony', x: 80, y: 150, w: 220, h: 250, color: 'var(--gold)', cardBg: '#14151A', icon: '🏠', title: 'Anthony Carrel', sub: 'Photographe événementiel', blockLabel: '', blockVal: '', parents: [], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: ["Stabiliser l'écosystème", "Focus clarté mentale"] },
-  { id: 'source', x: 340, y: 140, w: 220, h: 240, color: 'var(--source)', cardBg: '#14151A', icon: '🌿', title: 'La Source', sub: 'Corps · Confiance · Énergie', blockLabel: 'OUTIL', blockVal: 'Gemini · Mieux-être', parents: ['anthony'], isHub: false, showBlock: true, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: ["Routine matinale 20min", "Ancrage quotidien"] },
-  { id: 'cockpit', x: 600, y: 140, w: 220, h: 240, color: 'var(--cockpit)', cardBg: '#14151A', icon: '💻', title: 'Le Cockpit', sub: 'Hardware & pilotage', blockLabel: 'SETUP', blockVal: '6 appareils Apple', parents: ['source'], isHub: false, showBlock: true, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: ["Épurer le bureau", "Automatiser les backups"] },
-  { id: 'moteur', x: 860, y: 140, w: 240, h: 240, color: 'var(--moteur)', cardBg: '#14151A', icon: '⚙️', title: 'Le Moteur Pro', sub: 'Activité & IA', blockLabel: 'STATUT', blockVal: 'Actif', parents: ['cockpit'], isHub: true, showBlock: true, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: ["Rythme de publication", "Déléguer via IA"] },
-  { id: 'objectifs', x: 1140, y: 140, w: 220, h: 200, color: 'var(--objectifs)', cardBg: '#14151A', icon: '🎯', title: 'Objectifs', sub: 'Confiance · Stabilité · Clarté', blockLabel: '', blockVal: '', parents: ['moteur'], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: ["Chiffre d'affaires stable", "Moins de friction opérationnelle"] },
-  
-  // Branche Violette
-  { id: 'chatgpt', x: 1400, y: 120, w: 220, h: 240, color: 'var(--moteur)', cardBg: '#14151A', icon: '💬', title: 'ChatGPT', sub: 'Dictée prospection', blockLabel: '', blockVal: '', parents: ['moteur'], isHub: false, showBlock: false, useCheckboxes: true, bgOpacity: 85, tags: [], bullets: ["hhhjh"] },
-  { id: 'claude', x: 1660, y: 140, w: 220, h: 240, color: 'var(--moteur)', cardBg: '#14151A', icon: '🤖', title: 'Claude', sub: 'QQ Structure & Site', blockLabel: '', blockVal: '', parents: ['chatgpt'], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: [] },
-  { id: 'gemini', x: 1920, y: 160, w: 220, h: 240, color: 'var(--moteur)', cardBg: '#14151A', icon: '✨', title: 'Gemini', sub: 'Usine Réseaux Sociaux', blockLabel: '', blockVal: '', parents: ['claude'], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: [] },
+// CONFIGURATION SUPABASE SYNCHRONISÉE
+const SUPABASE_URL = "https://oftfrsezwjjybpohknim.supabase.co";
+const SUPABASE_KEY = "sb_publishable_FD8fOiN6Z71LGJQbqL6MEQ_NtKzEReT";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Branche Or
-  { id: 'seo-site', x: 2220, y: 160, w: 220, h: 240, color: 'var(--gold)', cardBg: '#14151A', icon: '🌐', title: 'SEO / Site', sub: 'anthonycarrel.com', blockLabel: '', blockVal: '', parents: ['moteur'], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: [] },
-  { id: 'reseaux', x: 2480, y: 150, w: 220, h: 240, color: 'var(--gold)', cardBg: '#14151A', icon: '📱', title: 'Réseaux', sub: 'IG / TikTok', blockLabel: '', blockVal: '', parents: ['seo-site'], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: [] },
-  { id: 'prospection', x: 2740, y: 130, w: 220, h: 240, color: 'var(--gold)', cardBg: '#14151A', icon: '✉️', title: 'Prospection', sub: 'Mailmeteor', blockLabel: '', blockVal: '', parents: ['reseaux'], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: [] }
-];
+let dataset = [];
 
 const container = document.getElementById('canvasContainer');
 const panZoomContent = document.getElementById('panZoomContent');
 const journalContainer = document.getElementById('journalContainer');
 const svg = document.getElementById('svgFlow');
 const app = document.getElementById('app');
+const syncStatus = document.getElementById('syncStatus');
 let activeNodeId = null;
 let tempTags = [];
 
@@ -319,11 +310,45 @@ let transformState = { x: 0, y: 0, scale: 1 };
 let isPanning = false;
 let startPanX = 0, startPanY = 0;
 
-if (localStorage.getItem('anthony_system_v6')) {
-  dataset = JSON.parse(localStorage.getItem('anthony_system_v6'));
+// Sauvegarde synchrone vers Supabase
+async function save() {
+  syncStatus.innerText = "Synchronisation...";
+  try {
+    const { error } = await supabase
+      .from('bento_architecture')
+      .upsert({ id: 1, data: dataset });
+
+    if (error) throw error;
+    syncStatus.innerText = "Studio Anthony Carrel (En ligne)";
+  } catch (err) {
+    console.error("Erreur de sauvegarde Supabase:", err);
+    syncStatus.innerText = "Erreur de synchro (Sauvegarde locale)";
+    localStorage.setItem('anthony_system_v6', JSON.stringify(dataset));
+  }
 }
 
-function save() { localStorage.setItem('anthony_system_v6', JSON.stringify(dataset)); }
+// Chargement initial depuis Supabase (avec fallback LocalStorage)
+async function loadData() {
+  syncStatus.innerText = "Chargement...";
+  try {
+    const { data, error } = await supabase
+      .from('bento_architecture')
+      .select('data')
+      .eq('id', 1)
+      .single();
+
+    if (error || !data) throw error;
+    dataset = data.data;
+    syncStatus.innerText = "Studio Anthony Carrel (En ligne)";
+  } catch (err) {
+    console.warn("Échec de chargement Supabase, récupération locale:", err);
+    if (localStorage.getItem('anthony_system_v6')) {
+      dataset = JSON.parse(localStorage.getItem('anthony_system_v6'));
+    }
+    syncStatus.innerText = "Studio Anthony Carrel (Local)";
+  }
+  render();
+}
 
 function updateTransform() {
   panZoomContent.style.transform = `translate(${transformState.x}px, ${transformState.y}px) scale(${transformState.scale})`;
@@ -813,7 +838,8 @@ function buildJournal() {
   });
 }
 
-render();
+// Lancement au chargement
+loadData();
 updateTransform();
 </script>
 </body>
