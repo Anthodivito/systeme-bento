@@ -558,42 +558,132 @@ function draw() {
 function buildJournal() {
   journalContainer.innerHTML = '';
   dataset.forEach(n => {
+    if(!n.bullets) n.bullets = [];
+    if(n.useCheckboxes === undefined) n.useCheckboxes = false;
+    if(n.showBlock === undefined) n.showBlock = !!n.blockLabel;
+    if(!n.tags) n.tags = [];
+
     const card = document.createElement('div');
     card.className = 'journal-card';
+    card.id = 'journal_' + n.id;
     card.style.setProperty('--nc', n.color);
-    
+
     let bulletsHTML = '';
-    if (n.bullets) {
-      n.bullets.forEach((b, idx) => {
-        const isChecked = n.checkedBullets && n.checkedBullets.includes(idx);
-        bulletsHTML += `
-          <div style="font-size:13px; margin-bottom:6px; color:${isChecked ? 'var(--dim)' : 'var(--text)'}; text-decoration:${isChecked ? 'line-through' : 'none'}; display:flex; align-items:center; gap:8px;">
-            <span style="width:6px; height:6px; background:${n.color}; border-radius:50%;"></span>
-            <span>${b || '<i>Sans titre</i>'}</span>
-          </div>`;
+    n.bullets.forEach((bText, idx) => {
+      const isChecked = n.checkedBullets && n.checkedBullets.includes(idx);
+      const indicator = n.useCheckboxes ? `<div class="bullet-checkbox"></div>` : `<div class="bullet-dot"></div>`;
+      bulletsHTML += `
+        <div class="bullet-item ${isChecked ? 'checked' : ''}" data-index="${idx}">
+          ${indicator}
+          <div class="bullet-text" contenteditable="true">${bText}</div>
+        </div>`;
+    });
+
+    let tagsHTML = '';
+    if (n.tags.length > 0) {
+      tagsHTML = '<div class="tags-container" style="margin-top:10px;">';
+      n.tags.forEach(t => {
+        tagsHTML += `<div class="tag-item" style="--tc: ${t.color}">${t.text}</div>`;
       });
+      tagsHTML += '</div>';
     }
-    
+
+    let blockHTML = '';
+    if (n.showBlock) {
+      blockHTML = `
+        <div class="inner-block" style="margin-top:10px;">
+          <div class="inner-label">${n.blockLabel || 'LABEL'}</div>
+          <div class="inner-val">${n.blockVal || ''}</div>
+        </div>`;
+    }
+
     card.innerHTML = `
       <div class="journal-header">
         <div class="journal-meta">
-          <span style="font-size:20px;">${n.icon}</span>
+          <span class="icon-badge">${n.icon}</span>
           <div>
-            <div class="journal-title">${n.title || 'Sans titre'}</div>
-            <div class="journal-sub">${n.sub || ''}</div>
+            <div class="journal-title" contenteditable="true" data-prop="title">${n.title || 'Sans titre'}</div>
+            <div class="journal-sub" contenteditable="true" data-prop="sub">${n.sub || ''}</div>
           </div>
         </div>
-        <div class="journal-chevron">▼</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="header-actions">
+            <button class="action-btn journal-mode-btn" title="Type de puces">📋</button>
+            <button class="action-btn journal-addbullet-btn" title="Ajouter un objectif">+</button>
+            <button class="action-btn journal-settings-btn" title="Options avancées (couleur, image, tags, liaisons)">⚙️</button>
+          </div>
+          <div class="journal-chevron">▼</div>
+        </div>
       </div>
       <div class="journal-body">
-        ${bulletsHTML || '<div style="color:var(--dim); font-style:italic; font-size:12px;">Aucun objectif.</div>'}
+        <div class="bullets-container" style="max-height:none; overflow:visible; flex:none;">
+          ${bulletsHTML || '<div style="color:var(--dim); font-style:italic; font-size:12px;">Aucun objectif.</div>'}
+        </div>
+        ${tagsHTML}
+        ${blockHTML}
       </div>
     `;
-    
-    card.querySelector('.journal-header').addEventListener('click', () => {
+
+    card.querySelector('.journal-header').addEventListener('click', (e) => {
+      if (e.target.closest('[contenteditable="true"]') || e.target.closest('.action-btn')) return;
       card.classList.toggle('collapsed');
     });
-    
+
+    card.querySelectorAll('.journal-title, .journal-sub').forEach(el => {
+      el.addEventListener('click', e => e.stopPropagation());
+      el.addEventListener('blur', (e) => {
+        n[e.target.getAttribute('data-prop')] = e.target.innerText;
+        save();
+        render();
+      });
+    });
+
+    card.querySelectorAll('.bullet-text').forEach(el => {
+      el.addEventListener('click', e => e.stopPropagation());
+      el.addEventListener('blur', (e) => {
+        const idx = e.target.closest('.bullet-item').getAttribute('data-index');
+        const text = e.target.innerText.trim();
+        if (text === "") { n.bullets.splice(idx, 1); } else { n.bullets[idx] = text; }
+        save();
+        render();
+      });
+    });
+
+    card.querySelectorAll('.bullet-checkbox').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(e.target.closest('.bullet-item').getAttribute('data-index'));
+        if(!n.checkedBullets) n.checkedBullets = [];
+        n.checkedBullets = n.checkedBullets.includes(idx) ? n.checkedBullets.filter(i => i !== idx) : [...n.checkedBullets, idx];
+        save();
+        render();
+      });
+    });
+
+    card.querySelector('.journal-mode-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      n.useCheckboxes = !n.useCheckboxes;
+      save();
+      render();
+    });
+
+    card.querySelector('.journal-addbullet-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      n.bullets.push("");
+      save();
+      render();
+      const refreshedCard = document.getElementById('journal_' + n.id);
+      if (refreshedCard) {
+        const items = refreshedCard.querySelectorAll('.bullet-text');
+        if (items.length > 0) items[items.length - 1].focus();
+      }
+    });
+
+    card.querySelector('.journal-settings-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openConfigSheet(n);
+    });
+
     journalContainer.appendChild(card);
   });
 }
