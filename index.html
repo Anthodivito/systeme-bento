@@ -186,6 +186,34 @@
     .app-container.mode-map #journalContainer { display: none !important; }
     
     .sheet { width: 100% !important; } /* Le panneau prend tout l'écran sur mobile/tablette */
+
+    /* Cibles tactiles agrandies pour un usage au doigt */
+    .bullet-checkbox { width: 20px; height: 20px; }
+    .action-btn { width: 26px; height: 26px; font-size: 13px; }
+    .journal-title { font-size: 16px; }
+    .journal-sub { font-size: 12px; }
+  }
+
+  /* Bouton flottant "Ajouter une vignette" — remplace le bouton du header caché sur mobile/tablette */
+  .fab-add-mobile {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--text);
+    color: #000;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+    border: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08);
+    z-index: 150;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
   }
 </style>
 </head>
@@ -216,6 +244,8 @@
   </div>
 
   <div class="journal-container" id="journalContainer"></div>
+
+  <button class="fab-add-mobile" id="fabAddMobile" title="Ajouter une vignette">+</button>
 </div>
 
 <!-- PANNEAU CONFIGURATION VIGNETTE -->
@@ -362,7 +392,32 @@ function updateTransform() {
   panZoomContent.style.transform = `translate(${transformState.x}px, ${transformState.y}px) scale(${transformState.scale})`;
 }
 
+// Suivi multi-doigts pour le pincement (pinch-to-zoom) tactile
+let activePointers = new Map();
+let pinchStartDist = 0;
+let pinchStartScale = 1;
+let pinchStartMid = { x: 0, y: 0 };
+
+function getPointersDistance() {
+  const pts = Array.from(activePointers.values());
+  return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+}
+function getPointersMidpoint() {
+  const pts = Array.from(activePointers.values());
+  return { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+}
+
 container.addEventListener('pointerdown', (e) => {
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (activePointers.size === 2) {
+    isPanning = false;
+    pinchStartDist = getPointersDistance();
+    pinchStartScale = transformState.scale;
+    pinchStartMid = getPointersMidpoint();
+    return;
+  }
+
   if (e.target.closest('.node') || e.target.closest('.resize-handle')) return;
   isPanning = true;
   container.setPointerCapture(e.pointerId);
@@ -371,6 +426,25 @@ container.addEventListener('pointerdown', (e) => {
 });
 
 container.addEventListener('pointermove', (e) => {
+  if (!activePointers.has(e.pointerId)) return;
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (activePointers.size === 2) {
+    const dist = getPointersDistance();
+    if (dist > 0 && pinchStartDist > 0) {
+      const rect = container.getBoundingClientRect();
+      const midX = pinchStartMid.x - rect.left;
+      const midY = pinchStartMid.y - rect.top;
+      const oldScale = transformState.scale;
+      const newScale = Math.max(0.1, Math.min(2, pinchStartScale * (dist / pinchStartDist)));
+      transformState.x = midX - (midX - transformState.x) * (newScale / oldScale);
+      transformState.y = midY - (midY - transformState.y) * (newScale / oldScale);
+      transformState.scale = newScale;
+      updateTransform();
+    }
+    return;
+  }
+
   if (!isPanning) return;
   transformState.x = e.clientX - startPanX;
   transformState.y = e.clientY - startPanY;
@@ -378,9 +452,10 @@ container.addEventListener('pointermove', (e) => {
 });
 
 function endPan(e) {
+  activePointers.delete(e.pointerId);
   if (!isPanning) return;
   isPanning = false;
-  container.releasePointerCapture(e.pointerId);
+  try { container.releasePointerCapture(e.pointerId); } catch (err) {}
 }
 container.addEventListener('pointerup', endPan);
 container.addEventListener('pointercancel', endPan);
@@ -446,6 +521,10 @@ document.getElementById('addGlobalNodeBtn').addEventListener('click', () => {
   dataset.push(newNode);
   save();
   render();
+});
+
+document.getElementById('fabAddMobile').addEventListener('click', () => {
+  document.getElementById('addGlobalNodeBtn').click();
 });
 
 function draw() {
@@ -849,17 +928,27 @@ function setupResize(div, n) {
 // personnalisés. Ici, on force l'affichage via du style inline (priorité maximale en CSS),
 // recalculé à chaque redimensionnement / rotation d'écran. Seuil à 1024px pour couvrir
 // mobile ET tablette.
+let initialLayoutApplied = false;
 function applyResponsiveLayout() {
   const isCompact = window.innerWidth <= 1024;
   const tabsEl = document.querySelector('.tabs');
   const toggleEl = document.getElementById('viewToggle');
   const actionsEl = document.getElementById('actionsBar');
   const sheetEl = document.getElementById('configSheet');
+  const fabEl = document.getElementById('fabAddMobile');
 
   if (tabsEl) tabsEl.style.display = isCompact ? 'none' : 'flex';
   if (toggleEl) toggleEl.style.display = isCompact ? 'flex' : 'none';
   if (actionsEl) actionsEl.style.display = isCompact ? 'none' : 'flex';
   if (sheetEl) sheetEl.style.width = isCompact ? '100%' : '360px';
+  if (fabEl) fabEl.style.display = isCompact ? 'flex' : 'none';
+
+  // Au tout premier chargement sur mobile/tablette, on ouvre directement la vue Journal :
+  // le canevas pannable/zoomable "Carte" n'est pas ergonomique sur petit écran tactile.
+  if (isCompact && !initialLayoutApplied) {
+    switchView('journal');
+  }
+  initialLayoutApplied = true;
 }
 window.addEventListener('resize', applyResponsiveLayout);
 window.addEventListener('orientationchange', applyResponsiveLayout);
