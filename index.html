@@ -1,180 +1,820 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Système Bento — Anthony Carrel</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .bento-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-        .bento-card { background: #111; border: 1px solid #222; border-radius: 1rem; padding: 1.5rem; transition: all 0.3s ease; }
-        .bento-card:hover { border-color: #444; transform: translateY(-2px); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>systeme.anthonycarrel.com / architecture multi-links</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght=500;600;700&family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Couleurs de base */
+    --gold: #FFB03B; --source: #12D99B; --cockpit: #3B9CFF; --moteur: #A56CFF; --objectifs: #38D4F8;
+    --bg-main: #0B0B0E;       
+    --panel-border: rgba(255,255,255,0.08);
+    --text: #E3E4E8; --dim: #626775;
+  }
+  * { box-sizing: border-box; user-select: none; }
+  html, body { margin: 0; padding: 0; background: var(--bg-main); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; height: 100vh; }
+  
+  .app-container { display: flex; flex-direction: column; height: 100vh; background: var(--bg-main); position: relative; }
+  
+  .header-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background: #0B0B0E; border-bottom: 1px solid var(--panel-border); z-index: 110; gap: 12px; }
+  .tabs { display: flex; gap: 8px; }
+  .tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--dim); cursor: pointer; }
+  .tab.active { background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--panel-border); }
+  
+  .view-toggle { display: none; gap: 4px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 8px; border: 1px solid var(--panel-border); }
+  .toggle-btn { background: none; border: none; color: var(--dim); padding: 6px 12px; font-size: 11px; font-weight: 600; border-radius: 6px; cursor: pointer; font-family: inherit; }
+  .toggle-btn.active { background: var(--panel-border); color: var(--text); }
+
+  .actions-bar { display: flex; align-items: center; gap: 10px; }
+  .btn-primary { background: var(--text); color: #000; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+  .btn-primary:hover { opacity: 0.9; }
+
+  .canvas-container {
+    flex: 1; position: relative; width: 100%; overflow: hidden;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    touch-action: none;
+  }
+  
+  .pan-zoom-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-origin: 0 0; will-change: transform; }
+  .connector-svg { position: absolute; inset: 0; width: 5000px; height: 5000px; pointer-events: none; z-index: 1; }
+
+  .node {
+    position: absolute; z-index: 5; cursor: grab; touch-action: none;
+    border: 1px solid color-mix(in srgb, var(--nc) 40%, transparent);
+    border-radius: 12px; padding: 16px; 
+    box-shadow: 0 0 25px -4px color-mix(in srgb, var(--nc) 50%, transparent),
+                0 20px 40px rgba(0, 0, 0, 0.7), 
+                0 0 0 1px rgba(0, 0, 0, 0.5);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    overflow: hidden;
+  }
+  
+  .node.bento-style {
+    background: #111216;
+    border: 1px solid rgba(56, 212, 248, 0.2);
+    box-shadow: 0 0 40px -5px rgba(56, 212, 248, 0.15), 0 30px 60px rgba(0,0,0,0.8);
+  }
+
+  .node:hover { 
+    border-color: color-mix(in srgb, var(--nc) 80%, transparent); 
+    box-shadow: 0 0 35px -2px color-mix(in srgb, var(--nc) 75%, transparent),
+                0 25px 50px rgba(0, 0, 0, 0.9);
+  }
+  .node:active { cursor: grabbing; z-index: 10; }
+  
+  .node-bg-layer {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    z-index: 0; pointer-events: none;
+  }
+  .node-overlay { content: ''; position: absolute; inset: 0; background: rgba(20, 21, 26, 0.4); z-index: 1; pointer-events: none; }
+  .node-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+  
+  .node-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .header-actions { display: flex; gap: 6px; }
+
+  .icon-badge {
+    width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--nc) 15%, rgba(0,0,0,0.4)); color: var(--nc); font-size: 14px;
+    border: 1px solid color-mix(in srgb, var(--nc) 30%, transparent); box-shadow: 0 0 12px -4px var(--nc);
+  }
+  
+  .action-btn {
+    background: transparent; border: 1px dashed color-mix(in srgb, var(--nc) 40%, transparent);
+    color: var(--dim); width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; transition: all 0.2s;
+  }
+  .action-btn:hover { color: var(--text); border-color: var(--nc); background: rgba(255,255,255,0.05); }
+  
+  .title { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; color: var(--text); outline: none; }
+  .sub { font-size: 11px; color: var(--dim); outline: none; margin-top: 4px; line-height: 1.4; margin-bottom: 8px; }
+  
+  .tags-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; margin-bottom: 8px; padding-top: 4px; }
+  .tag-item {
+    font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+    display: inline-flex; align-items: center; gap: 5px;
+    background: color-mix(in srgb, var(--tc) 12%, rgba(0,0,0,0.6));
+    color: var(--tc); border: 1px solid color-mix(in srgb, var(--tc) 40%, transparent);
+    box-shadow: 0 0 14px -2px color-mix(in srgb, var(--tc) 50%, transparent);
+    outline: none;
+  }
+
+  .bullets-container { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; margin-bottom: 10px; overflow-y: auto; flex: 1; }
+  .bullet-item { display: flex; align-items: center; gap: 8px; font-size: 11px; line-height: 1.3; color: var(--text); position: relative; }
+  
+  .bullet-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--nc); flex-shrink: 0; box-shadow: 0 0 8px var(--nc); }
+  .bullet-checkbox {
+    width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--dim); 
+    background: transparent; flex-shrink: 0; cursor: pointer; transition: all 0.2s;
+  }
+  .bullet-item.checked .bullet-checkbox {
+    background: var(--nc); border-color: var(--nc); box-shadow: 0 0 8px var(--nc);
+  }
+  .bullet-item.checked .bullet-text { color: var(--dim); text-decoration: line-through; }
+
+  .bullet-text { flex: 1; outline: none; min-height: 14px; word-break: break-word; }
+  .bullet-text:empty::before { content: "Nouvel objectif..."; color: var(--dim); font-style: italic; }
+  
+  .inner-block { background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); border-radius: 8px; padding: 8px 12px; margin-top: 2px; flex-shrink: 0; }
+  .inner-label { font-size: 8px; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+  .inner-val { font-size: 11px; color: var(--text); outline: none; }
+
+  .resize-handle { position: absolute; bottom: 4px; right: 4px; width: 14px; height: 14px; cursor: se-resize; z-index: 20; opacity: 0.4; }
+  .node:hover .resize-handle { opacity: 0.9; }
+  .resize-handle::after {
+    content: ''; position: absolute; right: 3px; bottom: 3px; width: 3px; height: 3px; background: var(--text); border-radius: 50%;
+    box-shadow: -4px 0 var(--text), 0 -4px var(--text), -4px -4px var(--text);
+  }
+
+  .journal-container { display: none; flex: 1; overflow-y: auto; padding: 16px; background: var(--bg-main); flex-direction: column; gap: 12px; }
+  .journal-card {
+    background: #14151A;
+    border: 1px solid var(--panel-border); border-left: 4px solid var(--nc); border-radius: 12px; padding: 16px;
+  }
+  .journal-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+  .journal-meta { display: flex; align-items: center; gap: 12px; }
+  .journal-title { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px; color: var(--text); }
+  .journal-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
+  .journal-body { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--panel-border); padding-top: 12px; }
+  .journal-chevron { font-size: 12px; color: var(--dim); transition: transform 0.2s; }
+  .journal-card.collapsed .journal-body { display: none; }
+  .journal-card.collapsed .journal-chevron { transform: rotate(-90deg); }
+
+  [contenteditable="true"]:focus { background: rgba(255,255,255,0.04); border-radius: 4px; outline: none; }
+  .flow-line { stroke-dasharray: 8, 6; animation: flowMovement 25s linear infinite; }
+  @keyframes flowMovement { to { stroke-dashoffset: -1000; } }
+
+  .sheet {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 360px; background: #14151A;
+    border-left: 1px solid var(--panel-border); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); z-index: 200; padding: 24px; transform: translateX(100%); transition: transform 0.3s ease;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.5); overflow-y: auto;
+  }
+  .sheet.open { transform: translateX(0); }
+  .sheet-close { position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text); font-size: 28px; cursor: pointer; line-height: 1; display: block; width: 30px; height: 30px; text-align: center; }
+  .field { margin-bottom: 20px; }
+  .field label { display:block; font-size:10px; text-transform: uppercase; color:var(--dim); margin-bottom:6px; font-weight:600; }
+  .field input, .field select { width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); border-radius:8px; padding:10px; color:#fff; font-size:12px; }
+  
+  .checkbox-group-container {
+    max-height: 140px; overflow-y: auto; border: 1px solid var(--panel-border);
+    background: rgba(0,0,0,0.2); border-radius: 8px; padding: 8px 12px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text); cursor: pointer; }
+  .checkbox-row input { width: auto; cursor: pointer; }
+
+  .sheet-tags-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .sheet-tag-row { display: flex; gap: 6px; align-items: center; }
+  .btn-danger { background: #ff4a4a; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; width: 100%; text-align: center; }
+  .btn-secondary { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--panel-border); padding: 8px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 12px; }
+
+  @media (max-width: 768px) {
+    .header-nav { padding: 12px 16px; }
+    .header-nav > div:last-child { display: none; } 
+    .view-toggle { display: flex; }
+    .app-container.mode-journal .canvas-container { display: none; }
+    .app-container.mode-journal .journal-container { display: flex; }
+    .app-container.mode-map .canvas-container { display: block; }
+    .app-container.mode-map .journal-container { display: none; }
+  }
+</style>
 </head>
-<body class="bg-black text-gray-100 min-h-screen p-6 md:p-12">
+<body class="app-container mode-map">
 
-    <header class="max-w-7xl mx-auto mb-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-            <h1 class="text-3xl font-bold tracking-tight text-white">Architecture Bento</h1>
-            <p class="text-gray-400 mt-1">Anthony Carrel Photographie — Pilote SEO & E-E-A-T 2026</p>
+<div class="app-container mode-map" id="app">
+  <div class="header-nav">
+    <div class="tabs">
+      <div class="tab active" data-target="map">Architecture</div>
+      <div class="tab" data-target="journal">Journal</div>
+    </div>
+    
+    <div class="view-toggle" id="viewToggle">
+      <button class="toggle-btn" data-mode="journal">Journal</button>
+      <button class="toggle-btn active" data-mode="map">Carte</button>
+    </div>
+
+    <div class="actions-bar">
+      <button class="btn-primary" id="addGlobalNodeBtn">+ Ajouter une vignette</button>
+      <div style="font-size: 12px; color: var(--dim);">Studio Anthony Carrel</div>
+    </div>
+  </div>
+
+  <div class="canvas-container" id="canvasContainer">
+    <div class="pan-zoom-content" id="panZoomContent">
+      <svg class="connector-svg" id="svgFlow"></svg>
+    </div>
+  </div>
+
+  <div class="journal-container" id="journalContainer"></div>
+</div>
+
+<!-- PANNEAU CONFIGURATION VIGNETTE -->
+<div class="sheet" id="configSheet">
+  <button class="sheet-close" id="closeSheet">×</button>
+  <h3 style="font-family:'Space Grotesk'; margin-top:10px; color:var(--text); margin-bottom: 24px;">Propriétés de la vignette</h3>
+  
+  <div class="field">
+    <label>Couleur Thématique (Contour & Icône)</label>
+    <select id="nodeColorInput">
+      <option value="var(--gold)">Or (Studio Anthony)</option>
+      <option value="var(--source)">Vert émeraude (La Source)</option>
+      <option value="var(--cockpit)">Bleu cockpit (Pilotage)</option>
+      <option value="var(--moteur)">Violet pur (Moteur IA / Contenu)</option>
+      <option value="var(--objectifs)">Cyan électrique (Objectifs)</option>
+      <option value="#FF4A82">Rose Rubis</option>
+      <option value="#FF6B35">Orange Intense</option>
+      <option value="#00F5D4">Menthe Néo</option>
+      <option value="#7209B7">Indigo Profond</option>
+      <option value="#FFD166">Jaune Pastel</option>
+      <option value="#4EA8DE">Bleu Ciel Ardoise</option>
+      <option value="#DEa4ff">Mauve Orchidée</option>
+      <option value="#FF4A4A">Rouge Alerte</option>
+      <option value="#FFFFFF">Blanc Pur</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Couleur du fond (Nuances de sombre/gris)</label>
+    <select id="nodeBgColorInput">
+      <option value="#070709">Noir Profond (#070709)</option>
+      <option value="#14151A">Anthracite Classique (#14151A)</option>
+      <option value="#1B1C22">Gris Sombre (#1B1C22)</option>
+      <option value="#252730">Gris Foncé Lunod (#252730)</option>
+      <option value="#343742">Gris Intermédiaire (#343742)</option>
+      <option value="#454957">Gris Moyen Flou (#454957)</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Liaisons Parentes (Multi-sélection autorisée)</label>
+    <div class="checkbox-group-container" id="nodeParentsCheckboxGroup"></div>
+  </div>
+
+  <div class="field">
+    <label>Image de fond (URL)</label>
+    <input type="text" id="bgUrlInput" placeholder="https://...">
+  </div>
+
+  <div class="field">
+    <label id="bgOpacityLabel">Opacité de l'image (85%)</label>
+    <input type="range" id="bgOpacityInput" min="0" max="100" step="5" style="accent-color: var(--text);">
+  </div>
+
+  <div class="field" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--panel-border);">
+    <label style="margin: 0;">Activer l'encoche (Bas de carte)</label>
+    <input type="checkbox" id="showBlockInput" style="width: auto; cursor: pointer;">
+  </div>
+
+  <div class="field">
+    <label>Libellé & Valeur de l'encoche</label>
+    <div style="display: flex; gap: 6px;">
+      <input type="text" id="blockLabelInput" placeholder="Ex: OUTIL" style="flex:1;">
+      <input type="text" id="blockValInput" placeholder="Ex: Gemini" style="flex:2;">
+    </div>
+  </div>
+
+  <div class="field" style="border-top: 1px solid var(--panel-border); padding-top: 16px;">
+    <label>Tags Design (Glow - Fin de vignette)</label>
+    <div class="sheet-tags-list" id="sheetTagsList"></div>
+    <button class="btn-secondary" id="sheetAddTagBtn">+ Ajouter un tag</button>
+  </div>
+
+  <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px;">
+    <button id="saveNodeConfig" style="width:100%; background:var(--text); color:#000; border:none; padding:12px; border-radius:8px; font-weight:700; cursor:pointer;">Appliquer les modifications</button>
+    <button id="deleteNodeBtn" class="btn-danger">Supprimer définitivement cette vignette</button>
+  </div>
+</div>
+
+<script>
+let dataset = [
+  { id: 'global-goals', x: 80, y: 460, w: 280, h: 320, color: '#38D4F8', cardBg: '#14151A', icon: '✨', title: 'Upcoming Bento', sub: 'Objectifs transversaux de production', blockLabel: 'COMPLETED', blockVal: '1/5', parents: [], isBento: true, showBlock: true, useCheckboxes: true, bgOpacity: 85, tags: [{text: "In progress", color: "#3B9CFF"}, {text: "To-do", color: "#A56CFF"}], bullets: ["Promote Bento Cards v.2", "Release Bento Cards for Framer", "Bento Cards: UI Components", "Removr Illustrations", "Bento Cards v.4"] },
+  { id: 'anthony', x: 80, y: 150, w: 220, h: 250, color: 'var(--gold)', cardBg: '#14151A', icon: '🏠', title: 'Anthony Carrel', sub: 'Photographe événementiel', blockLabel: '', blockVal: '', parents: [], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: ["Stabiliser l'écosystème", "Focus clarté mentale"] },
+  { id: 'source', x: 340, y: 140, w: 220, h: 240, color: 'var(--source)', cardBg: '#14151A', icon: '🌿', title: 'La Source', sub: 'Corps · Confiance · Énergie', blockLabel: 'OUTIL', blockVal: 'Gemini · Mieux-être', parents: ['anthony'], isHub: false, showBlock: true, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: ["Routine matinale 20min", "Ancrage quotidien"] },
+  { id: 'cockpit', x: 600, y: 140, w: 220, h: 240, color: 'var(--cockpit)', cardBg: '#14151A', icon: '💻', title: 'Le Cockpit', sub: 'Hardware & pilotage', blockLabel: 'SETUP', blockVal: '6 appareils Apple', parents: ['source'], isHub: false, showBlock: true, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: ["Épurer le bureau", "Automatiser les backups"] },
+  { id: 'moteur', x: 860, y: 140, w: 240, h: 240, color: 'var(--moteur)', cardBg: '#14151A', icon: '⚙️', title: 'Le Moteur Pro', sub: 'Activité & IA', blockLabel: 'STATUT', blockVal: 'Actif', parents: ['cockpit'], isHub: true, showBlock: true, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: ["Rythme de publication", "Déléguer via IA"] },
+  { id: 'objectifs', x: 1140, y: 140, w: 220, h: 200, color: 'var(--objectifs)', cardBg: '#14151A', icon: '🎯', title: 'Objectifs', sub: 'Confiance · Stabilité · Clarté', blockLabel: '', blockVal: '', parents: ['moteur'], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: ["Chiffre d'affaires stable", "Moins de friction opérationnelle"] },
+  
+  // Branche Violette
+  { id: 'chatgpt', x: 1400, y: 120, w: 220, h: 240, color: 'var(--moteur)', cardBg: '#14151A', icon: '💬', title: 'ChatGPT', sub: 'Dictée prospection', blockLabel: '', blockVal: '', parents: ['moteur'], isHub: false, showBlock: false, useCheckboxes: true, bgOpacity: 85, tags: [], bullets: ["hhhjh"] },
+  { id: 'claude', x: 1660, y: 140, w: 220, h: 240, color: 'var(--moteur)', cardBg: '#14151A', icon: '🤖', title: 'Claude', sub: 'QQ Structure & Site', blockLabel: '', blockVal: '', parents: ['chatgpt'], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: [] },
+  { id: 'gemini', x: 1920, y: 160, w: 220, h: 240, color: 'var(--moteur)', cardBg: '#14151A', icon: '✨', title: 'Gemini', sub: 'Usine Réseaux Sociaux', blockLabel: '', blockVal: '', parents: ['claude'], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: [] },
+
+  // Branche Or
+  { id: 'seo-site', x: 2220, y: 160, w: 220, h: 240, color: 'var(--gold)', cardBg: '#14151A', icon: '🌐', title: 'SEO / Site', sub: 'anthonycarrel.com', blockLabel: '', blockVal: '', parents: ['moteur'], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: [] },
+  { id: 'reseaux', x: 2480, y: 150, w: 220, h: 240, color: 'var(--gold)', cardBg: '#14151A', icon: '📱', title: 'Réseaux', sub: 'IG / TikTok', blockLabel: '', blockVal: '', parents: ['seo-site'], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: [] },
+  { id: 'prospection', x: 2740, y: 130, w: 220, h: 240, color: 'var(--gold)', cardBg: '#14151A', icon: '✉️', title: 'Prospection', sub: 'Mailmeteor', blockLabel: '', blockVal: '', parents: ['reseaux'], isHub: false, showBlock: false, useCheckboxes: false, bgOpacity: 85, tags: [], bullets: [] }
+];
+
+const container = document.getElementById('canvasContainer');
+const panZoomContent = document.getElementById('panZoomContent');
+const journalContainer = document.getElementById('journalContainer');
+const svg = document.getElementById('svgFlow');
+const app = document.getElementById('app');
+let activeNodeId = null;
+let tempTags = [];
+
+let transformState = { x: 0, y: 0, scale: 1 };
+let isPanning = false;
+let startPanX = 0, startPanY = 0;
+
+if (localStorage.getItem('anthony_system_v6')) {
+  dataset = JSON.parse(localStorage.getItem('anthony_system_v6'));
+}
+
+function save() { localStorage.setItem('anthony_system_v6', JSON.stringify(dataset)); }
+
+function updateTransform() {
+  panZoomContent.style.transform = `translate(${transformState.x}px, ${transformState.y}px) scale(${transformState.scale})`;
+}
+
+container.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('.node') || e.target.closest('.resize-handle')) return;
+  isPanning = true;
+  container.setPointerCapture(e.pointerId);
+  startPanX = e.clientX - transformState.x;
+  startPanY = e.clientY - transformState.y;
+});
+
+container.addEventListener('pointermove', (e) => {
+  if (!isPanning) return;
+  transformState.x = e.clientX - startPanX;
+  transformState.y = e.clientY - startPanY;
+  updateTransform();
+});
+
+function endPan(e) {
+  if (!isPanning) return;
+  isPanning = false;
+  container.releasePointerCapture(e.pointerId);
+}
+container.addEventListener('pointerup', endPan);
+container.addEventListener('pointercancel', endPan);
+
+container.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const zoomFactor = 0.05;
+  const delta = e.deltaY < 0 ? 1 : -1;
+  const oldScale = transformState.scale;
+  let newScale = Math.max(0.1, Math.min(2, oldScale + delta * zoomFactor));
+  const rect = container.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+  transformState.x = mouseX - (mouseX - transformState.x) * (newScale / oldScale);
+  transformState.y = mouseY - (mouseY - transformState.y) * (newScale / oldScale);
+  transformState.scale = newScale;
+  updateTransform();
+}, { passive: false });
+
+function switchView(mode) {
+  document.querySelectorAll('#viewToggle .toggle-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-mode') === mode);
+  });
+  document.querySelectorAll('.tabs .tab').forEach(t => {
+    t.classList.toggle('active', t.getAttribute('data-target') === mode);
+  });
+  app.classList.remove('mode-journal', 'mode-map');
+  app.classList.add('mode-' + mode);
+  if(mode === 'map') setTimeout(() => { draw(); updateTransform(); }, 50);
+}
+
+document.querySelectorAll('#viewToggle .toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchView(btn.getAttribute('data-mode')));
+});
+
+document.querySelectorAll('.tabs .tab').forEach(tab => {
+  tab.addEventListener('click', () => switchView(tab.getAttribute('data-target')));
+});
+
+document.getElementById('addGlobalNodeBtn').addEventListener('click', () => {
+  const newId = 'node_' + Date.now();
+  const newNode = {
+    id: newId,
+    x: 300 - transformState.x,
+    y: 300 - transformState.y,
+    w: 220,
+    h: 240,
+    color: 'var(--gold)',
+    cardBg: '#14151A',
+    icon: '📂',
+    title: 'Nouveau projet',
+    sub: 'Description du projet',
+    blockLabel: 'STATUT',
+    blockVal: 'Nouveau',
+    parents: [],
+    isBento: false,
+    showBlock: false,
+    useCheckboxes: false,
+    bgOpacity: 85,
+    tags: [],
+    bullets: ["Premier objectif"]
+  };
+  dataset.push(newNode);
+  save();
+  render();
+});
+
+function render() {
+  document.querySelectorAll('.node').forEach(n => n.remove());
+  journalContainer.innerHTML = '';
+
+  dataset.forEach(n => {
+    if(!n.bullets) n.bullets = [];
+    if(n.useCheckboxes === undefined) n.useCheckboxes = false;
+    if(n.showBlock === undefined) n.showBlock = !!n.blockLabel;
+    if(n.bgOpacity === undefined) n.bgOpacity = 85;
+    if(!n.tags) n.tags = [];
+    if(!n.cardBg) n.cardBg = '#14151A';
+    if(n.parent) { 
+      if(!n.parents) n.parents = [n.parent];
+      delete n.parent;
+    }
+    if(!n.parents) n.parents = [];
+
+    const div = document.createElement('div');
+    div.className = 'node' + (n.isBento ? ' bento-style' : '');
+    div.id = n.id;
+    div.style.left = n.x + 'px';
+    div.style.top = n.y + 'px';
+    div.style.width = n.w + 'px';
+    if(n.h) div.style.height = n.h + 'px';
+    div.style.setProperty('--nc', n.color);
+    div.style.backgroundColor = n.cardBg;
+
+    let bgLayerHTML = '';
+    if(n.bg) {
+      const opc = (n.bgOpacity / 100).toFixed(2);
+      bgLayerHTML = `
+        <div class="node-bg-layer" style="background-image: url('${n.bg}'); opacity: ${opc};"></div>
+        <div class="node-overlay"></div>
+      `;
+    }
+
+    let blockHTML = (n.showBlock) ? `
+      <div class="inner-block">
+        <div class="inner-label">${n.blockLabel || 'LABEL'}</div>
+        <div class="inner-val" contenteditable="true" data-prop="blockVal">${n.blockVal || ''}</div>
+      </div>
+    ` : '';
+
+    let tagsHTML = '<div class="tags-container">';
+    n.tags.forEach((t, tIdx) => {
+      tagsHTML += `<div class="tag-item" contenteditable="true" data-tag-idx="${tIdx}" style="--tc: ${t.color}">${t.text}</div>`;
+    });
+    tagsHTML += '</div>';
+
+    let bulletsHTML = '';
+    n.bullets.forEach((bText, idx) => {
+      const isChecked = n.checkedBullets && n.checkedBullets.includes(idx);
+      const indicator = n.useCheckboxes ? `<div class="bullet-checkbox"></div>` : `<div class="bullet-dot"></div>`;
+      bulletsHTML += `
+        <div class="bullet-item ${isChecked ? 'checked' : ''}" data-index="${idx}">
+          ${indicator}
+          <div class="bullet-text" contenteditable="true">${bText}</div>
         </div>
-        <div class="flex items-center gap-3">
-            <span id="sync-status" class="text-xs px-3 py-1.5 rounded-full bg-yellow-500/10 text-yellow-400 font-medium border border-yellow-500/20">
-                Connexion à Supabase...
-            </span>
-            <button onclick="addNewCard()" class="bg-white text-black text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-200 transition">
-                + Ajouter une carte
-            </button>
+      `;
+    });
+
+    div.innerHTML = `
+      ${bgLayerHTML}
+      <div class="node-content">
+        <div class="node-header">
+          <span class="icon-badge">${n.icon}</span>
+          <div class="header-actions">
+            <button class="action-btn toggle-mode-btn" title="Changer type de puces">📋</button>
+            <button class="action-btn add-bullet-btn">+</button>
+          </div>
         </div>
-    </header>
+        <div class="title" contenteditable="true" data-prop="title">${n.title}</div>
+        <div class="sub" contenteditable="true" data-prop="sub">${n.sub}</div>
+        <div class="bullets-container">${bulletsHTML}</div>
+        ${n.tags.length > 0 ? tagsHTML : ''}
+        ${blockHTML}
+      </div>
+      <div class="resize-handle"></div>
+    `;
 
-    <main class="max-w-7xl mx-auto">
-        <div id="grid-container" class="bento-grid">
-            <!-- Les cartes s'afficheront ici -->
+    div.querySelectorAll('.title, .sub, .inner-val').forEach(el => {
+      el.addEventListener('blur', (e) => { n[e.target.getAttribute('data-prop')] = e.target.innerText; save(); buildJournal(); });
+      el.addEventListener('pointerdown', e => e.stopPropagation());
+    });
+
+    div.querySelectorAll('.tag-item').forEach(el => {
+      el.addEventListener('blur', (e) => {
+        const tIdx = e.target.getAttribute('data-tag-idx');
+        n.tags[tIdx].text = e.target.innerText;
+        save();
+      });
+      el.addEventListener('pointerdown', e => e.stopPropagation());
+    });
+
+    div.querySelectorAll('.bullet-text').forEach(el => {
+      el.addEventListener('blur', (e) => {
+        const idx = e.target.closest('.bullet-item').getAttribute('data-index');
+        const text = e.target.innerText.trim();
+        if (text === "") { n.bullets.splice(idx, 1); render(); } else { n.bullets[idx] = text; save(); buildJournal(); }
+      });
+      el.addEventListener('pointerdown', e => e.stopPropagation());
+    });
+
+    div.querySelectorAll('.bullet-checkbox').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(e.target.closest('.bullet-item').getAttribute('data-index'));
+        if(!n.checkedBullets) n.checkedBullets = [];
+        n.checkedBullets = n.checkedBullets.includes(idx) ? n.checkedBullets.filter(i => i !== idx) : [...n.checkedBullets, idx];
+        save(); render();
+      });
+    });
+
+    div.querySelector('.toggle-mode-btn').addEventListener('click', (e) => {
+      e.stopPropagation(); n.useCheckboxes = !n.useCheckboxes; save(); render();
+    });
+
+    div.querySelector('.action-btn.add-bullet-btn').addEventListener('click', (e) => {
+      e.stopPropagation(); n.bullets.push(""); save(); render();
+      const items = div.querySelectorAll('.bullet-text');
+      if(items.length > 0) items[items.length - 1].focus();
+    });
+
+    div.addEventListener('dblclick', (e) => {
+      e.stopPropagation(); openConfigSheet(n);
+    });
+
+    setupDrag(div, n);
+    setupResize(div, n);
+    panZoomContent.appendChild(div);
+  });
+  buildJournal();
+  draw();
+}
+
+function openConfigSheet(n) {
+  activeNodeId = n.id;
+  document.getElementById('bgUrlInput').value = n.bg || "";
+  document.getElementById('nodeColorInput').value = n.color || "var(--gold)";
+  document.getElementById('nodeBgColorInput').value = n.cardBg || "#14151A";
+  
+  const parentsContainer = document.getElementById('nodeParentsCheckboxGroup');
+  parentsContainer.innerHTML = '';
+  
+  let validOptionsCount = 0;
+  dataset.forEach(opt => {
+    if(opt.id !== n.id) {
+      validOptionsCount++;
+      const isChecked = n.parents && n.parents.includes(opt.id);
+      const row = document.createElement('label');
+      row.className = 'checkbox-row';
+      row.innerHTML = `
+        <input type="checkbox" value="${opt.id}" ${isChecked ? 'checked' : ''} class="node-parent-checkbox">
+        <span>${opt.title || opt.id}</span>
+      `;
+      parentsContainer.appendChild(row);
+    }
+  });
+
+  if (validOptionsCount === 0) {
+    parentsContainer.innerHTML = '<div style="font-size:11px; color:var(--dim); font-style:italic;">Aucune autre carte disponible</div>';
+  }
+
+  const initialOpacity = n.bgOpacity !== undefined ? n.bgOpacity : 85;
+  document.getElementById('bgOpacityInput').value = initialOpacity;
+  document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${initialOpacity}%)`;
+
+  document.getElementById('showBlockInput').checked = !!n.showBlock;
+  document.getElementById('blockLabelInput').value = n.blockLabel || "";
+  document.getElementById('blockValInput').value = n.blockVal || "";
+  tempTags = JSON.parse(JSON.stringify(n.tags || []));
+  renderSheetTags();
+  document.getElementById('configSheet').classList.add('open');
+}
+
+document.getElementById('bgOpacityInput').addEventListener('input', (e) => {
+  document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${e.target.value}%)`;
+});
+
+function renderSheetTags() {
+  const container = document.getElementById('sheetTagsList');
+  container.innerHTML = '';
+  tempTags.forEach((tag, idx) => {
+    const row = document.createElement('div');
+    row.className = 'sheet-tag-row';
+    row.innerHTML = `
+      <input type="text" value="${tag.text}" placeholder="Texte" style="flex:2;" data-idx="${idx}" class="sheet-tag-text">
+      <select style="flex:1;" data-idx="${idx}" class="sheet-tag-color">
+        <option value="#3B9CFF" ${tag.color==='#3B9CFF'?'selected':''}>Bleu</option>
+        <option value="#12D99B" ${tag.color==='#12D99B'?'selected':''}>Vert</option>
+        <option value="#A56CFF" ${tag.color==='#A56CFF'?'selected':''}>Violet</option>
+        <option value="#FFB03B" ${tag.color==='#FFB03B'?'selected':''}>Or</option>
+        <option value="#ff4a4a" ${tag.color==='#ff4a4a'?'selected':''}>Rouge</option>
+      </select>
+      <button class="btn-danger remove-tag-btn" data-idx="${idx}" style="width:auto; padding:6px 10px;">×</button>
+    `;
+    container.appendChild(row);
+  });
+
+  container.querySelectorAll('.sheet-tag-text').forEach(input => {
+    input.addEventListener('input', (e) => { tempTags[e.target.dataset.idx].text = e.target.value; });
+  });
+  container.querySelectorAll('.sheet-tag-color').forEach(select => {
+    select.addEventListener('change', (e) => { tempTags[e.target.dataset.idx].color = e.target.value; });
+  });
+  container.querySelectorAll('.remove-tag-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      tempTags.splice(e.target.dataset.idx, 1);
+      renderSheetTags();
+    });
+  });
+}
+
+document.getElementById('sheetAddTagBtn').addEventListener('click', () => {
+  tempTags.push({ text: 'Nouveau tag', color: '#3B9CFF' });
+  renderSheetTags();
+});
+
+document.getElementById('saveNodeConfig').addEventListener('click', () => {
+  const n = dataset.find(item => item.id === activeNodeId);
+  if (n) {
+    n.bg = document.getElementById('bgUrlInput').value.trim();
+    n.color = document.getElementById('nodeColorInput').value;
+    n.cardBg = document.getElementById('nodeBgColorInput').value;
+    n.bgOpacity = parseInt(document.getElementById('bgOpacityInput').value) || 85;
+    n.showBlock = document.getElementById('showBlockInput').checked;
+    n.blockLabel = document.getElementById('blockLabelInput').value.trim();
+    n.blockVal = document.getElementById('blockValInput').value.trim();
+    n.tags = tempTags;
+
+    const checkedBoxes = document.querySelectorAll('.node-parent-checkbox:checked');
+    n.parents = Array.from(checkedBoxes).map(cb => cb.value);
+
+    save();
+    render();
+  }
+  document.getElementById('configSheet').classList.remove('open');
+});
+
+document.getElementById('deleteNodeBtn').addEventListener('click', () => {
+  if (confirm('Voulez-vous vraiment supprimer définitivement cette carte ?')) {
+    dataset = dataset.filter(item => item.id !== activeNodeId);
+    dataset.forEach(opt => {
+      if (opt.parents) opt.parents = opt.parents.filter(pId => pId !== activeNodeId);
+    });
+    save();
+    render();
+    document.getElementById('configSheet').classList.remove('open');
+  }
+});
+
+document.getElementById('closeSheet').addEventListener('click', () => {
+  document.getElementById('configSheet').classList.remove('open');
+});
+
+function setupDrag(div, n) {
+  let isDragging = false;
+  let startX = 0, startY = 0;
+
+  div.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('[contenteditable="true"]') || e.target.closest('.action-btn') || e.target.closest('.resize-handle') || e.target.closest('.bullet-checkbox')) return;
+    isDragging = true;
+    div.setPointerCapture(e.pointerId);
+    startX = e.clientX - n.x * transformState.scale;
+    startY = e.clientY - n.y * transformState.scale;
+    div.classList.add('dragging');
+  });
+
+  div.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    n.x = (e.clientX - startX) / transformState.scale;
+    n.y = (e.clientY - startY) / transformState.scale;
+    div.style.left = n.x + 'px';
+    div.style.top = n.y + 'px';
+    draw();
+  });
+
+  const endDrag = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    div.releasePointerCapture(e.pointerId);
+    div.classList.remove('dragging');
+    save();
+  };
+
+  div.addEventListener('pointerup', endDrag);
+  div.addEventListener('pointercancel', endDrag);
+}
+
+function setupResize(div, n) {
+  const handle = div.querySelector('.resize-handle');
+  let isResizing = false;
+  let startW = 0, startH = 0, startX = 0, startY = 0;
+
+  handle.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    isResizing = true;
+    handle.setPointerCapture(e.pointerId);
+    startW = div.offsetWidth;
+    startH = div.offsetHeight;
+    startX = e.clientX;
+    startY = e.clientY;
+  });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!isResizing) return;
+    const dw = (e.clientX - startX) / transformState.scale;
+    const dh = (e.clientY - startY) / transformState.scale;
+    n.w = Math.max(160, startW + dw);
+    n.h = Math.max(120, startH + dh);
+    div.style.width = n.w + 'px';
+    div.style.height = n.h + 'px';
+    draw();
+  });
+
+  const endResize = (e) => {
+    if (!isResizing) return;
+    isResizing = false;
+    handle.releasePointerCapture(e.pointerId);
+    save();
+  };
+
+  handle.addEventListener('pointerup', endResize);
+  handle.addEventListener('pointercancel', endResize);
+}
+
+function draw() {
+  svg.innerHTML = '';
+  dataset.forEach(n => {
+    if (!n.parents) return;
+    n.parents.forEach(pId => {
+      const parentNode = dataset.find(item => item.id === pId);
+      if (!parentNode) return;
+
+      const x1 = parentNode.x + parentNode.w / 2;
+      const y1 = parentNode.y + (parentNode.h || 240) / 2;
+      const x2 = n.x + n.w / 2;
+      const y2 = n.y + (n.h || 240) / 2;
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const dx = Math.abs(x2 - x1) * 0.5;
+      const dstring = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+      
+      path.setAttribute('d', dstring);
+      path.setAttribute('stroke', n.color || 'var(--gold)');
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('class', 'flow-line');
+      path.setAttribute('opacity', '0.4');
+      svg.appendChild(path);
+    });
+  });
+}
+
+function buildJournal() {
+  journalContainer.innerHTML = '';
+  dataset.forEach(n => {
+    const card = document.createElement('div');
+    card.className = 'journal-card';
+    card.style.setProperty('--nc', n.color);
+
+    let bulletsHTML = '';
+    n.bullets.forEach((bText, idx) => {
+      const isChecked = n.checkedBullets && n.checkedBullets.includes(idx);
+      if(bText.trim() !== "") {
+        bulletsHTML += `
+          <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:${isChecked ? 'var(--dim)' : 'var(--text)'}; ${isChecked ? 'text-decoration:line-through;' : ''}">
+            <div style="width:6px; height:6px; border-radius:50%; background:var(--nc);"></div>
+            <div>${bText}</div>
+          </div>
+        `;
+      }
+    });
+
+    card.innerHTML = `
+      <div class="journal-header">
+        <div class="journal-meta">
+          <span style="font-size:18px;">${n.icon}</span>
+          <div>
+            <div class="journal-title">${n.title}</div>
+            <div class="journal-sub">${n.sub}</div>
+          </div>
         </div>
-    </main>
+        <div class="journal-chevron">▼</div>
+      </div>
+      <div class="journal-body">
+        ${bulletsHTML || '<span style="font-style:italic; font-size:12px; color:var(--dim);">Aucun objectif</span>'}
+      </div>
+    `;
 
-    <script>
-        // Configuration de ta base de données Supabase
-        const SUPABASE_URL = "https://oftfrsezwjjybpohknim.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_FD8fOiN6Z71LGJQbqL6MEQ_NtKzEReT";
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    card.querySelector('.journal-header').addEventListener('click', () => {
+      card.classList.toggle('collapsed');
+    });
 
-        // Données d'origine basées sur ton écosystème 2026
-        const defaultDataset = [
-            { id: 1, title: "Profil de Marque", content: "Anthony Carrel, photographe premium basé à Cannes. Spécialisé en événementiel de luxe, mode et tapis rouge.", tag: "Identité", color: "border-blue-500/30" },
-            { id: 2, title: "Signal E-E-A-T : Chanel", content: "Accompagnement VIP du marché coréen dans le Sud de la France. Discrétion absolue et flux rapide.", tag: "Preuve", color: "border-purple-500/30" },
-            { id: 3, title: "Signal E-E-A-T : Piaget", content: "Scénographie haute joaillerie à Menton et concert privé de Sophie Ellis-Bextor.", tag: "Preuve", color: "border-purple-500/30" },
-            { id: 4, title: "Silo SEO Principal", content: "Page Mère 'Photographe Événementiel Cannes' maillée avec le Portfolio Martinez Hôtel.", tag: "SEO", color: "border-emerald-500/30" }
-        ];
+    journalContainer.appendChild(card);
+  });
+}
 
-        let currentCards = [];
-        let isSaving = false;
-
-        // Statut visuel de la synchronisation
-        function updateStatus(text, type) {
-            const el = document.getElementById('sync-status');
-            el.textContent = text;
-            el.className = `text-xs px-3 py-1.5 rounded-full font-medium border ${
-                type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                type === 'error' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-            }`;
-        }
-
-        // Charger les données depuis Supabase
-        async function loadData() {
-            try {
-                const { data, error } = await supabase
-                    .from('bento_data')
-                    .select('cards_json')
-                    .eq('id', 1)
-                    .single();
-
-                if (error) throw error;
-
-                // Si la base est vide ou introuvable, on prend le jeu de données par défaut
-                if (!data || !data.cards_json || data.cards_json.length === 0) {
-                    currentCards = defaultDataset;
-                    await saveData(true); 
-                } else {
-                    currentCards = data.cards_json;
-                }
-
-                renderGrid();
-                updateStatus('Synchronisé en temps réel', 'success');
-            } catch (err) {
-                console.error(err);
-                updateStatus('Erreur de chargement', 'error');
-            }
-        }
-
-        // Sauvegarder les données dans Supabase
-        async function saveData(silent = false) {
-            if (isSaving) return;
-            isSaving = true;
-            if (!silent) updateStatus('Sauvegarde...', 'pending');
-
-            try {
-                const { error } = await supabase
-                    .from('bento_data')
-                    .update({ cards_json: currentCards, updated_at: new Date() })
-                    .eq('id', 1);
-
-                if (error) throw error;
-                updateStatus('Synchronisé en temps réel', 'success');
-            } catch (err) {
-                console.error(err);
-                updateStatus('Erreur de sauvegarde', 'error');
-            } finally {
-                isSaving = false;
-            }
-        }
-
-        // Afficher graphiquement les cartes bento
-        function renderGrid() {
-            const container = document.getElementById('grid-container');
-            container.innerHTML = '';
-
-            currentCards.forEach((card, index) => {
-                const div = document.createElement('div');
-                div.className = `bento-card border ${card.color || 'border-gray-800'}`;
-                div.innerHTML = `
-                    <div class="flex justify-between items-start mb-3">
-                        <span class="text-xs uppercase font-bold tracking-wider text-gray-500">${card.tag || 'Projet'}</span>
-                        <button onclick="deleteCard(${index})" class="text-gray-600 hover:text-red-400 text-xs transition">Supprimer</button>
-                    </div>
-                    <h2 class="text-lg font-bold text-white mb-2 outline-none focus:text-yellow-400" contenteditable="true" onblur="updateCard(${index}, 'title', this.innerText)">${card.title}</h2>
-                    <p class="text-sm text-gray-400 leading-relaxed outline-none focus:text-white" contenteditable="true" onblur="updateCard(${index}, 'content', this.innerText)">${card.content}</p>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // Fonctions d'interaction
-        function updateCard(index, field, value) {
-            if (currentCards[index][field] !== value) {
-                currentCards[index][field] = value;
-                saveData();
-            }
-        }
-
-        function addNewCard() {
-            currentCards.push({
-                id: Date.now(),
-                title: "Nouveau titre",
-                content: "Cliquez ici pour modifier le texte de cette carte.",
-                tag: "Idée",
-                color: "border-gray-700"
-            });
-            renderGrid();
-            saveData();
-        }
-
-        function deleteCard(index) {
-            if(confirm("Supprimer cette carte ?")) {
-                currentCards.splice(index, 1);
-                renderGrid();
-                saveData();
-            }
-        }
-
-        // Système d'écoute (Polling) toutes les 3 secondes pour mettre à jour le téléphone/ordinateur en arrière-plan
-        setInterval(async () => {
-            if (!isSaving && document.activeElement.getAttribute('contenteditable') !== 'true') {
-                try {
-                    const { data } = await supabase.from('bento_data').select('cards_json').eq('id', 1).single();
-                    if (data && JSON.stringify(data.cards_json) !== JSON.stringify(currentCards)) {
-                        currentCards = data.cards_json;
-                        renderGrid();
-                    }
-                } catch (e) { console.log("Vérification arrière-plan..."); }
-            }
-        }, 3000);
-
-        // Lancement initial au chargement de la page
-        loadData();
-    </script>
+render();
+updateTransform();
+</script>
 </body>
 </html>
