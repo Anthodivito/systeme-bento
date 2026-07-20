@@ -351,7 +351,7 @@
 <script>
 const SUPABASE_URL = "https://oftfrsezwjjybpohknim.supabase.co";
 const SUPABASE_KEY = "sb_publishable_FD8fOiN6Z71LGJQbqL6MEQ_NtKzEReT";
-supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let dataset = [];
 
@@ -490,7 +490,8 @@ document.getElementById('addGlobalNodeBtn').addEventListener('click', () => {
     useCheckboxes: false,
     bgOpacity: 85,
     tags: [],
-    bullets: ["Premier objectif"]
+    bullets: ["Premier objectif"],
+    checkedBullets: []
   };
   dataset.push(newNode);
   save();
@@ -530,9 +531,8 @@ function draw() {
 }
 
 function initInteractOnNodes() {
-  // GESTION DRAG & DROP DES VIGNETTES VIA INTERACT.JS
   interact('.node').draggable({
-    ignoreFrom: 'input, select, textarea, [contenteditable="true"], .action-btn, .bullets-container',
+    ignoreFrom: 'input, select, textarea, [contenteditable="true"], .action-btn, .bullets-container, .resize-handle',
     listeners: {
       move(event) {
         const id = event.target.id;
@@ -551,7 +551,6 @@ function initInteractOnNodes() {
     }
   });
 
-  // GESTION RESIZE DES VIGNETTES VIA INTERACT.JS
   interact('.resize-handle').draggable({
     listeners: {
       move(event) {
@@ -573,10 +572,134 @@ function initInteractOnNodes() {
   });
 }
 
+function openConfigSheet(node) {
+  activeNodeId = node.id;
+  tempTags = node.tags ? JSON.parse(JSON.stringify(node.tags)) : [];
+  
+  document.getElementById('nodeTitleInput').value = node.title || '';
+  document.getElementById('nodeSubInput').value = node.sub || '';
+  document.getElementById('nodeIconInput').value = node.icon || '';
+  document.getElementById('nodeIsBentoInput').checked = !!node.isBento;
+  document.getElementById('nodeColorInput').value = node.color || 'var(--gold)';
+  document.getElementById('nodeBgColorInput').value = node.cardBg || '#14151A';
+  document.getElementById('bgUrlInput').value = node.bg || '';
+  document.getElementById('bgOpacityInput').value = node.bgOpacity !== undefined ? node.bgOpacity : 85;
+  document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${document.getElementById('bgOpacityInput').value}%)`;
+  document.getElementById('showBlockInput').checked = !!node.showBlock;
+  document.getElementById('blockLabelInput').value = node.blockLabel || '';
+  document.getElementById('blockValInput').value = node.blockVal || '';
+  document.getElementById('nodeUseCheckboxesInput').checked = !!node.useCheckboxes;
+
+  // Parents list checkboxes
+  const cbGroup = document.getElementById('nodeParentsCheckboxGroup');
+  cbGroup.innerHTML = '';
+  dataset.forEach(n => {
+    if (n.id !== node.id) {
+      const isChecked = node.parents && node.parents.includes(n.id);
+      const row = document.createElement('label');
+      row.className = 'checkbox-row';
+      row.innerHTML = `<input type="checkbox" value="${n.id}" ${isChecked ? 'checked' : ''}> <span>${n.title || 'Sans titre'}</span>`;
+      cbGroup.appendChild(row);
+    }
+  });
+
+  renderSheetTags();
+  document.getElementById('configSheet').classList.add('open');
+}
+
+function renderSheetTags() {
+  const container = document.getElementById('sheetTagsList');
+  container.innerHTML = '';
+  tempTags.forEach((t, idx) => {
+    const row = document.createElement('div');
+    row.className = 'sheet-tag-row';
+    row.innerHTML = `
+      <input type="text" value="${t.text}" style="flex:2;" data-idx="${idx}" class="sheet-tag-text-input">
+      <input type="color" value="${t.color.startsWith('var') ? '#FFB03B' : t.color}" style="flex:1; padding:2px; height:36px;" data-idx="${idx}" class="sheet-tag-color-input">
+      <button class="action-btn" style="border:1px solid #ff4a4a; color:#ff4a4a;" onclick="removeTempTag(${idx})">×</button>
+    `;
+    container.appendChild(row);
+  });
+
+  container.querySelectorAll('.sheet-tag-text-input').forEach(input => {
+    input.addEventListener('input', (e) => {
+      tempTags[e.target.dataset.idx].text = e.target.value;
+    });
+  });
+  container.querySelectorAll('.sheet-tag-color-input').forEach(input => {
+    input.addEventListener('input', (e) => {
+      tempTags[e.target.dataset.idx].color = e.target.value;
+    });
+  });
+}
+
+window.removeTempTag = function(idx) {
+  tempTags.splice(idx, 1);
+  renderSheetTags();
+};
+
+document.getElementById('sheetAddTagBtn').addEventListener('click', () => {
+  tempTags.push({ text: 'Nouveau tag', color: 'var(--gold)' });
+  renderSheetTags();
+});
+
+document.getElementById('bgOpacityInput').addEventListener('input', (e) => {
+  document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${e.target.value}%)`;
+});
+
+document.getElementById('closeSheet').addEventListener('click', () => {
+  document.getElementById('configSheet').classList.remove('open');
+  activeNodeId = null;
+});
+
+document.getElementById('saveNodeConfig').addEventListener('click', () => {
+  if (!activeNodeId) return;
+  const node = dataset.find(n => n.id === activeNodeId);
+  if (node) {
+    node.title = document.getElementById('nodeTitleInput').value;
+    node.sub = document.getElementById('nodeSubInput').value;
+    node.icon = document.getElementById('nodeIconInput').value;
+    node.isBento = document.getElementById('nodeIsBentoInput').checked;
+    node.color = document.getElementById('nodeColorInput').value;
+    node.cardBg = document.getElementById('nodeBgColorInput').value;
+    node.bg = document.getElementById('bgUrlInput').value;
+    node.bgOpacity = parseInt(document.getElementById('bgOpacityInput').value);
+    node.showBlock = document.getElementById('showBlockInput').checked;
+    node.blockLabel = document.getElementById('blockLabelInput').value;
+    node.blockVal = document.getElementById('blockValInput').value;
+    node.useCheckboxes = document.getElementById('nodeUseCheckboxesInput').checked;
+    node.tags = tempTags;
+
+    const checkedParents = [];
+    document.querySelectorAll('#nodeParentsCheckboxGroup input:checked').forEach(cb => {
+      checkedParents.push(cb.value);
+    });
+    node.parents = checkedParents;
+
+    save();
+    render();
+  }
+  document.getElementById('configSheet').classList.remove('open');
+});
+
+document.getElementById('deleteNodeBtn').addEventListener('click', () => {
+  if (!activeNodeId) return;
+  if (confirm("Supprimer définitivement cette vignette ?")) {
+    dataset = dataset.filter(n => n.id !== activeNodeId);
+    dataset.forEach(n => {
+      if(n.parents) n.parents = n.parents.filter(pId => pId !== activeNodeId);
+    });
+    save();
+    render();
+    document.getElementById('configSheet').classList.remove('open');
+  }
+});
+
 function buildJournal() {
   journalContainer.innerHTML = '';
   dataset.forEach(n => {
     if(!n.bullets) n.bullets = [];
+    if(!n.checkedBullets) n.checkedBullets = [];
     if(n.useCheckboxes === undefined) n.useCheckboxes = false;
     if(n.showBlock === undefined) n.showBlock = !!n.blockLabel;
     if(!n.tags) n.tags = [];
@@ -660,13 +783,18 @@ function buildJournal() {
       el.addEventListener('blur', (e) => {
         const idx = e.target.closest('.bullet-item').getAttribute('data-index');
         const text = e.target.innerText.trim();
-        if (text === "") { n.bullets.splice(idx, 1); } else { n.bullets[idx] = text; }
+        if (text === "") { 
+          n.bullets.splice(idx, 1); 
+          n.checkedBullets = n.checkedBullets.filter(i => i !== parseInt(idx)).map(i => i > idx ? i - 1 : i);
+        } else { 
+          n.bullets[idx] = text; 
+        }
         save();
         render();
       });
     });
 
-    card.querySelectorAll('.bullet-checkbox').forEach(el => {
+    card.querySelectorAll('.bullet-checkbox, .bullet-dot').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         const idx = parseInt(e.target.closest('.bullet-item').getAttribute('data-index'));
@@ -703,6 +831,7 @@ function render() {
   
   dataset.forEach(n => {
     if(!n.bullets) n.bullets = [];
+    if(!n.checkedBullets) n.checkedBullets = [];
     if(n.useCheckboxes === undefined) n.useCheckboxes = false;
     if(n.showBlock === undefined) n.showBlock = !!n.blockLabel;
     if(n.bgOpacity === undefined) n.bgOpacity = 85;
@@ -757,54 +886,58 @@ function render() {
       ${bgLayerHTML}
       <div class="node-content">
         <div class="node-header">
-          <span class="icon-badge">${n.icon || '📂'}</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="icon-badge">${n.icon || '📂'}</span>
+            <div>
+              <div class="title" contenteditable="true" data-prop="title">${n.title || 'Sans titre'}</div>
+              <div class="sub" contenteditable="true" data-prop="sub">${n.sub || ''}</div>
+            </div>
+          </div>
           <div class="header-actions">
-            <button class="action-btn node-addbullet-btn" title="Ajouter un objectif">+</button>
-            <button class="action-btn node-settings-btn" title="Configuration complète">⚙️</button>
+            <button class="action-btn add-bullet-btn" title="Ajouter une puce">+</button>
+            <button class="action-btn settings-btn" title="Configuration">⚙️</button>
           </div>
         </div>
-        <div class="title" contenteditable="true" data-prop="title">${n.title || 'Sans titre'}</div>
-        <div class="sub" contenteditable="true" data-prop="sub">${n.sub || ''}</div>
-        
         <div class="bullets-container">
           ${bulletsHTML}
         </div>
-
         ${tagsHTML}
         ${blockHTML}
       </div>
       <div class="resize-handle"></div>
     `;
 
-    // Empêcher la propagation pour laisser le focus se faire proprement sur mobile
+    // INLINE EDITING EVENT LISTENERS FOR MAP VIGNETTE
     div.querySelectorAll('[contenteditable="true"]').forEach(el => {
-      el.addEventListener('pointerdown', e => e.stopPropagation());
       el.addEventListener('blur', (e) => {
         const prop = e.target.getAttribute('data-prop');
         const tagIdx = e.target.getAttribute('data-tag-idx');
         
-        if (tagIdx !== null) {
-          n.tags[tagIdx].text = e.target.innerText;
-        } else if (prop) {
+        if (prop) {
           n[prop] = e.target.innerText;
+        } else if (tagIdx !== null) {
+          n.tags[tagIdx].text = e.target.innerText;
         }
         save();
       });
     });
 
     div.querySelectorAll('.bullet-text').forEach(el => {
-      el.addEventListener('pointerdown', e => e.stopPropagation());
       el.addEventListener('blur', (e) => {
         const idx = e.target.closest('.bullet-item').getAttribute('data-index');
         const text = e.target.innerText.trim();
-        if (text === "") { n.bullets.splice(idx, 1); } else { n.bullets[idx] = text; }
+        if (text === "") {
+          n.bullets.splice(idx, 1);
+          n.checkedBullets = n.checkedBullets.filter(i => i !== parseInt(idx)).map(i => i > idx ? i - 1 : i);
+        } else {
+          n.bullets[idx] = text;
+        }
         save();
         render();
       });
     });
 
-    div.querySelectorAll('.bullet-checkbox').forEach(el => {
-      el.addEventListener('pointerdown', e => e.stopPropagation());
+    div.querySelectorAll('.bullet-checkbox, .bullet-dot').forEach(el => {
       el.addEventListener('click', (e) => {
         const idx = parseInt(e.target.closest('.bullet-item').getAttribute('data-index'));
         if(!n.checkedBullets) n.checkedBullets = [];
@@ -814,148 +947,32 @@ function render() {
       });
     });
 
-    div.querySelector('.node-addbullet-btn').addEventListener('pointerdown', e => e.stopPropagation());
-    div.querySelector('.node-addbullet-btn').addEventListener('click', (e) => {
+    div.querySelector('.add-bullet-btn').addEventListener('click', () => {
       n.bullets.push("");
       save();
       render();
+      const refreshedNode = document.getElementById(n.id);
+      if (refreshedNode) {
+        const items = refreshedNode.querySelectorAll('.bullet-text');
+        if (items.length > 0) items[items.length - 1].focus();
+      }
     });
 
-    div.querySelector('.node-settings-btn').addEventListener('pointerdown', e => e.stopPropagation());
-    div.querySelector('.node-settings-btn').addEventListener('click', (e) => {
+    div.querySelector('.settings-btn').addEventListener('click', () => {
       openConfigSheet(n);
     });
 
     panZoomContent.appendChild(div);
   });
 
-  initInteractOnNodes();
   buildJournal();
+  initInteractOnNodes();
   draw();
 }
 
-function openConfigSheet(node) {
-  activeNodeId = node.id;
-  tempTags = JSON.parse(JSON.stringify(node.tags || []));
-
-  document.getElementById('nodeTitleInput').value = node.title || '';
-  document.getElementById('nodeSubInput').value = node.sub || '';
-  document.getElementById('nodeIconInput').value = node.icon || '📂';
-  document.getElementById('nodeIsBentoInput').checked = !!node.isBento;
-  document.getElementById('nodeColorInput').value = node.color;
-  document.getElementById('nodeBgColorInput').value = node.cardBg || '#14151A';
-  document.getElementById('bgUrlInput').value = node.bg || '';
-  document.getElementById('bgOpacityInput').value = node.bgOpacity !== undefined ? node.bgOpacity : 85;
-  document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${document.getElementById('bgOpacityInput').value}%)`;
-  document.getElementById('showBlockInput').checked = !!node.showBlock;
-  document.getElementById('blockLabelInput').value = node.blockLabel || '';
-  document.getElementById('blockValInput').value = node.blockVal || '';
-  document.getElementById('nodeUseCheckboxesInput').checked = !!node.useCheckboxes;
-
-  // Liste des liaisons parentes
-  const parentContainer = document.getElementById('nodeParentsCheckboxGroup');
-  parentContainer.innerHTML = '';
-  dataset.forEach(item => {
-    if (item.id !== node.id) {
-      const isChecked = node.parents && node.parents.includes(item.id);
-      const row = document.createElement('label');
-      row.className = 'checkbox-row';
-      row.innerHTML = `<input type="checkbox" value="${item.id}" ${isChecked ? 'checked' : ''}> <span>${item.title || 'Sans titre'}</span>`;
-      parentContainer.appendChild(row);
-    }
-  });
-
-  renderSheetTags();
-  document.getElementById('configSheet').classList.add('open');
-}
-
-function renderSheetTags() {
-  const container = document.getElementById('sheetTagsList');
-  container.innerHTML = '';
-  tempTags.forEach((t, idx) => {
-    const row = document.createElement('div');
-    row.className = 'sheet-tag-row';
-    row.innerHTML = `
-      <input type="text" value="${t.text}" style="flex:2;" data-idx="${idx}" class="sheet-tag-text">
-      <select style="flex:1;" data-idx="${idx}" class="sheet-tag-color">
-        <option value="var(--gold)" ${t.color === 'var(--gold)' ? 'selected' : ''}>Or</option>
-        <option value="var(--source)" ${t.color === 'var(--source)' ? 'selected' : ''}>Vert</option>
-        <option value="var(--cockpit)" ${t.color === 'var(--cockpit)' ? 'selected' : ''}>Bleu</option>
-        <option value="var(--moteur)" ${t.color === 'var(--moteur)' ? 'selected' : ''}>Violet</option>
-        <option value="var(--objectifs)" ${t.color === 'var(--objectifs)' ? 'selected' : ''}>Cyan</option>
-      </select>
-      <button class="action-btn remove-tag-btn" data-idx="${idx}" style="border-color:#ff4a4a; color:#ff4a4a;">×</button>
-    `;
-    
-    row.querySelector('.sheet-tag-text').addEventListener('input', (e) => {
-      tempTags[idx].text = e.target.value;
-    });
-    row.querySelector('.sheet-tag-color').addEventListener('change', (e) => {
-      tempTags[idx].color = e.target.value;
-    });
-    row.querySelector('.remove-tag-btn').addEventListener('click', () => {
-      tempTags.splice(idx, 1);
-      renderSheetTags();
-    });
-    
-    container.appendChild(row);
-  });
-}
-
-document.getElementById('sheetAddTagBtn').addEventListener('click', () => {
-  tempTags.push({ text: 'Nouveau', color: 'var(--gold)' });
-  renderSheetTags();
+window.addEventListener('DOMContentLoaded', () => {
+  loadData();
 });
-
-document.getElementById('bgOpacityInput').addEventListener('input', (e) => {
-  document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${e.target.value}%)`;
-});
-
-document.getElementById('saveNodeConfig').addEventListener('click', () => {
-  const node = dataset.find(n => n.id === activeNodeId);
-  if (node) {
-    node.title = document.getElementById('nodeTitleInput').value;
-    node.sub = document.getElementById('nodeSubInput').value;
-    node.icon = document.getElementById('nodeIconInput').value;
-    node.isBento = document.getElementById('nodeIsBentoInput').checked;
-    node.color = document.getElementById('nodeColorInput').value;
-    node.cardBg = document.getElementById('nodeBgColorInput').value;
-    node.bg = document.getElementById('bgUrlInput').value;
-    node.bgOpacity = parseInt(document.getElementById('bgOpacityInput').value);
-    node.showBlock = document.getElementById('showBlockInput').checked;
-    node.blockLabel = document.getElementById('blockLabelInput').value;
-    node.blockVal = document.getElementById('blockValInput').value;
-    node.useCheckboxes = document.getElementById('nodeUseCheckboxesInput').checked;
-    node.tags = tempTags;
-
-    // Sauvegarde des parents sélectionnés
-    const checked = document.querySelectorAll('#nodeParentsCheckboxGroup input:checked');
-    node.parents = Array.from(checked).map(cb => cb.value);
-
-    save();
-    render();
-    document.getElementById('configSheet').classList.remove('open');
-  }
-});
-
-document.getElementById('deleteNodeBtn').addEventListener('click', () => {
-  if (confirm("Supprimer définitivement cette vignette ?")) {
-    dataset = dataset.filter(n => n.id !== activeNodeId);
-    // Nettoyer aussi les liaisons parentes chez les autres vignettes
-    dataset.forEach(n => {
-      if(n.parents) n.parents = n.parents.filter(pId => pId !== activeNodeId);
-    });
-    save();
-    render();
-    document.getElementById('configSheet').classList.remove('open');
-  }
-});
-
-document.getElementById('closeSheet').addEventListener('click', () => {
-  document.getElementById('configSheet').classList.remove('open');
-});
-
-window.addEventListener('DOMContentLoaded', loadData);
 </script>
 </body>
 </html>
