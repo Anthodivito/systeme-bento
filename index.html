@@ -391,7 +391,7 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
   localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
 });
 
-// Alignement automatique en Grille (Corrigé pour éviter le bug de déplacement)
+// Alignement automatique en Grille (Corrigé pour réactiver interactJS après modification)
 document.getElementById('resetLayoutBtn').addEventListener('click', () => {
   transformState = { x: 0, y: 0, scale: 1 };
   updateTransform();
@@ -403,7 +403,7 @@ document.getElementById('resetLayoutBtn').addEventListener('click', () => {
     n.h = 260; 
   });
   
-  interact('.node').unset(); // Libère proprement les verrous absolus du DOM
+  interact('.node').unset();
   save(); 
   render();
 });
@@ -595,95 +595,149 @@ function render() {
 
   filteredDataset.forEach(n => {
     const div = document.createElement('div');
-    div.className = 'node' + (n.isBento ? ' bento-style' : ''); div.id = n.id;
-    div.style.left = n.x + 'px'; div.style.top = n.y + 'px'; div.style.width = n.w + 'px';
-    if(n.h) div.style.height = n.h + 'px';
-    div.style.setProperty('--nc', n.color); div.style.backgroundColor = n.cardBg;
+    div.className = 'node' + (n.isBento ? ' bento-style' : '');
+    div.id = n.id;
+    div.style.left = n.x + 'px';
+    div.style.top = n.y + 'px';
+    div.style.width = n.w + 'px';
+    div.style.height = (n.h || 260) + 'px';
+    div.style.setProperty('--nc', n.color || 'var(--gold)');
+    div.style.backgroundColor = n.cardBg || '#14151A';
 
-    let bgLayerHTML = n.bg ? `<div class="node-bg-layer" style="background-image: url('${n.bg}'); opacity: ${(n.bgOpacity / 100).toFixed(2)};"></div><div class="node-overlay"></div>` : '';
-    let blockHTML = n.showBlock ? `<div class="inner-block"><div class="inner-label">${n.blockLabel}</div><div class="inner-val" contenteditable="true" data-prop="blockVal">${n.blockVal || ''}</div></div>` : '';
+    // Rendu dynamique du fond de la vignette
+    if (n.bg) {
+      const bgLayer = document.createElement('div');
+      bgLayer.className = 'node-bg-layer';
+      bgLayer.style.backgroundImage = `url(${n.bg})`;
+      bgLayer.style.opacity = (n.bgOpacity !== undefined ? n.bgOpacity : 85) / 100;
+      div.appendChild(bgLayer);
+      
+      const overlay = document.createElement('div');
+      overlay.className = 'node-overlay';
+      div.appendChild(overlay);
+    }
+
+    const content = document.createElement('div');
+    content.className = 'node-content';
+
+    const dragZone = document.createElement('div');
+    dragZone.className = 'node-drag-zone';
+
+    const iconBadge = document.createElement('div');
+    iconBadge.className = 'icon-badge';
+    iconBadge.innerText = n.icon || '📂';
+    dragZone.appendChild(iconBadge);
+
+    const titleContainer = document.createElement('div');
+    titleContainer.style.flex = '1';
     
-    let tagsHTML = '<div class="tags-container">';
-    (n.tags || []).forEach((t, i) => { tagsHTML += `<div class="tag-item" contenteditable="true" data-tag-idx="${i}" style="--tc: ${t.color}">${t.text}</div>`; });
-    tagsHTML += '</div>';
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.innerText = n.title || 'Sans titre';
+    titleContainer.appendChild(title);
+    dragZone.appendChild(titleContainer);
 
-    let bulletsHTML = '';
-    (n.bullets || []).forEach((bText, idx) => {
-      bulletsHTML += `
-        <div class="bullet-item ${n.checkedBullets.includes(idx) ? 'checked' : ''}" data-index="${idx}">
-          ${n.useCheckboxes ? '<div class="bullet-checkbox"></div>' : '<div class="bullet-dot"></div>'}
-          <div class="bullet-text" contenteditable="true">${bText}</div>
-        </div>`;
-    });
+    const actions = document.createElement('div');
+    actions.className = 'header-actions';
+    
+    const settingsBtn = document.createElement('button');
+    settingsBtn.className = 'action-btn';
+    settingsBtn.innerText = '⚙️';
+    settingsBtn.addEventListener('click', (e) => { e.stopPropagation(); openConfigSheet(n); });
+    actions.appendChild(settingsBtn);
+    dragZone.appendChild(actions);
 
-    div.innerHTML = `
-      ${bgLayerHTML}
-      <div class="node-content">
-        <div class="node-header">
-          <div class="node-drag-zone">
-            <span class="icon-badge">${n.icon}</span>
-            <div>
-              <div class="title" contenteditable="true" data-prop="title">${n.title || 'Sans titre'}</div>
-              <div class="sub" contenteditable="true" data-prop="sub">${n.sub || ''}</div>
-            </div>
-          </div>
-          <div class="header-actions">
-            <button class="action-btn add-bullet-btn">+</button>
-            <button class="action-btn settings-btn">⚙️</button>
-          </div>
-        </div>
-        <div class="bullets-container">${bulletsHTML}</div>
-        ${tagsHTML} ${blockHTML}
-      </div>
-      <div class="resize-handle"></div>
-    `;
+    content.appendChild(dragZone);
 
-    div.querySelectorAll('[contenteditable="true"]').forEach(el => {
-      el.addEventListener('mousedown', (e) => e.stopPropagation());
-      el.addEventListener('touchstart', (e) => e.stopPropagation());
-      el.addEventListener('blur', (e) => {
-        const prop = e.target.getAttribute('data-prop');
-        const tIdx = e.target.getAttribute('data-tag-idx');
-        if (prop) n[prop] = e.target.innerText;
-        else if (tIdx) n.tags[tIdx].text = e.target.innerText;
-        save();
+    if (n.sub) {
+      const sub = document.createElement('div');
+      sub.className = 'sub';
+      sub.innerText = n.sub;
+      content.appendChild(sub);
+    }
+
+    // Gestion de l'encoche optionnelle
+    if (n.showBlock) {
+      const block = document.createElement('div');
+      block.className = 'inner-block';
+      const label = document.createElement('div');
+      label.className = 'inner-label';
+      label.innerText = n.blockLabel || 'INFO';
+      const val = document.createElement('div');
+      val.className = 'inner-val';
+      val.innerText = n.blockVal || '-';
+      block.appendChild(label);
+      block.appendChild(val);
+      content.appendChild(block);
+    }
+
+    // Gestion des puces / objectifs
+    if (n.bullets && n.bullets.length > 0) {
+      const bulletsCont = document.createElement('div');
+      bulletsCont.className = 'bullets-container';
+      n.bullets.forEach((bText, bIdx) => {
+        const item = document.createElement('div');
+        item.className = 'bullet-item';
+        
+        if (n.useCheckboxes) {
+          const cb = document.createElement('div');
+          cb.className = 'bullet-checkbox';
+          const isChecked = n.checkedBullets && n.checkedBullets.includes(bIdx);
+          if (isChecked) item.classList.add('checked');
+          cb.addEventListener('click', () => {
+            if (!n.checkedBullets) n.checkedBullets = [];
+            if (n.checkedBullets.includes(bIdx)) {
+              n.checkedBullets = n.checkedBullets.filter(i => i !== bIdx);
+            } else {
+              n.checkedBullets.push(bIdx);
+            }
+            save(); render();
+          });
+          item.appendChild(cb);
+        } else {
+          const dot = document.createElement('div');
+          dot.className = 'bullet-dot';
+          item.appendChild(dot);
+        }
+
+        const txt = document.createElement('div');
+        txt.className = 'bullet-text';
+        txt.innerText = bText;
+        item.appendChild(txt);
+        bulletsCont.appendChild(item);
       });
-    });
+      content.appendChild(bulletsCont);
+    }
 
-    div.querySelectorAll('.bullet-text').forEach(el => {
-      el.addEventListener('blur', (e) => {
-        const idx = e.target.closest('.bullet-item').getAttribute('data-index');
-        const text = e.target.innerText.trim();
-        if (text === "") n.bullets.splice(idx, 1); else n.bullets[idx] = text;
-        save(); render();
+    // Tags optionnels
+    if (n.tags && n.tags.length > 0) {
+      const tagsCont = document.createElement('div');
+      tagsCont.className = 'tags-container';
+      n.tags.forEach(t => {
+        const tag = document.createElement('div');
+        tag.className = 'tag-item';
+        tag.innerText = t.text;
+        tag.style.setProperty('--tc', t.color || 'var(--gold)');
+        tagsCont.appendChild(tag);
       });
-    });
+      content.appendChild(tagsCont);
+    }
 
-    div.querySelectorAll('.bullet-checkbox, .bullet-dot').forEach(el => {
-      el.addEventListener('click', (e) => {
-        const idx = parseInt(e.target.closest('.bullet-item').getAttribute('data-index'));
-        n.checkedBullets = n.checkedBullets.includes(idx) ? n.checkedBullets.filter(i => i !== idx) : [...n.checkedBullets, idx];
-        save(); render();
-      });
-    });
+    const resize = document.createElement('div');
+    resize.className = 'resize-handle';
+    div.appendChild(resize);
 
-    div.querySelector('.add-bullet-btn').addEventListener('click', () => { n.bullets.push(""); save(); render(); });
-    div.querySelector('.settings-btn').addEventListener('click', () => openConfigSheet(n));
+    div.appendChild(content);
     panZoomContent.appendChild(div);
   });
 
-  journalContainer.innerHTML = '';
-  filteredDataset.forEach(n => {
-    const card = document.createElement('div'); card.className = 'journal-card'; card.style.setProperty('--nc', n.color);
-    card.innerHTML = `<div class="journal-header"><div class="journal-meta"><span class="icon-badge">${n.icon}</span><div><div class="journal-title">${n.title}</div><div class="journal-sub">${n.sub || ''}</div></div></div><button class="action-btn journal-settings-btn">⚙️</button></div>`;
-    card.querySelector('.journal-settings-btn').addEventListener('click', () => openConfigSheet(n));
-    journalContainer.appendChild(card);
-  });
-
-  initInteractOnNodes(); draw();
+  // Réattache interactJS sur le nouveau DOM généré
+  initInteractOnNodes();
+  draw();
 }
 
-window.addEventListener('DOMContentLoaded', loadData);
+// Initialisation globale
+loadData();
 </script>
 </body>
 </html>
