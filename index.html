@@ -16,26 +16,26 @@
     --text: #E3E4E8; --dim: #626775;
     --grid-opacity: 0.03;
   }
-  
+
   body.light-theme {
     --bg-main: #F4F5F8;
     --panel-border: rgba(0,0,0,0.08);
     --text: #1A1C23; --dim: #787F95;
     --grid-opacity: 0.06;
   }
-  
+
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--bg-main); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; height: 100vh; -webkit-tap-highlight-color: transparent; transition: background 0.3s, color 0.3s; }
-  
+
   .app-container { display: flex; flex-direction: column; height: 100vh; background: var(--bg-main); position: relative; }
-  
+
   .header-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background: rgba(0,0,0,0.05); border-bottom: 1px solid var(--panel-border); z-index: 110; gap: 12px; }
   body.light-theme .header-nav { background: #FFFFFF; }
   .tabs { display: flex; gap: 8px; }
   .tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--dim); cursor: pointer; user-select: none; }
   .tab.active { background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--panel-border); }
   body.light-theme .tab.active { background: rgba(0,0,0,0.02); }
-  
+
   .view-toggle { display: none; gap: 4px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 8px; border: 1px solid var(--panel-border); }
   .toggle-btn { background: none; border: none; color: var(--dim); padding: 6px 12px; font-size: 11px; font-weight: 600; border-radius: 6px; cursor: pointer; font-family: inherit; }
   .toggle-btn.active { background: var(--panel-border); color: var(--text); }
@@ -45,7 +45,7 @@
   .btn-primary:hover { opacity: 0.9; }
   .btn-tool { background: transparent; border: 1px solid var(--panel-border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 500; }
   .btn-tool:hover { background: rgba(255,255,255,0.05); }
-  
+
   .search-input { background: rgba(0,0,0,0.2); border: 1px solid var(--panel-border); border-radius: 8px; padding: 8px 12px; color: #fff; font-size: 12px; font-family: inherit; width: 160px; }
   body.light-theme .search-input { background: #FFF; color: #000; }
 
@@ -58,7 +58,7 @@
   body.light-theme .canvas-container {
     background-image: radial-gradient(rgba(0, 0, 0, var(--grid-opacity)) 1px, transparent 1px);
   }
-  
+
   .pan-zoom-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-origin: 0 0; will-change: transform; }
   .connector-svg { position: absolute; inset: 0; width: 5000px; height: 5000px; pointer-events: none; z-index: 1; }
 
@@ -73,7 +73,7 @@
     overflow: hidden;
   }
   body.light-theme .node { box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-  
+
   .node.bento-style {
     background: #111216;
     border: 1px solid rgba(56, 212, 248, 0.2);
@@ -85,11 +85,11 @@
     box-shadow: 0 0 35px -2px color-mix(in srgb, var(--nc) 75%, transparent),
                 0 25px 50px rgba(0, 0, 0, 0.9);
   }
-  
+
   .node-bg-layer { position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 0; pointer-events: none; }
   .node-overlay { content: ''; position: absolute; inset: 0; background: rgba(20, 21, 26, 0.4); z-index: 1; pointer-events: none; }
   .node-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-  
+
   .node-drag-zone { cursor: move; display: flex; align-items: center; gap: 8px; width: 100%; }
   .node-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
   .header-actions { display: flex; gap: 8px; z-index: 10; }
@@ -99,16 +99,16 @@
     background: color-mix(in srgb, var(--nc) 15%, rgba(0,0,0,0.4)); color: var(--nc); font-size: 14px;
     border: 1px solid color-mix(in srgb, var(--nc) 30%, transparent); box-shadow: 0 0 12px -4px var(--nc); pointer-events: none;
   }
-  
+
   .action-btn {
     background: transparent; border: 1px dashed color-mix(in srgb, var(--nc) 40%, transparent);
     color: var(--dim); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: all 0.2s;
   }
   .action-btn:hover { color: var(--text); border-color: var(--nc); background: rgba(255,255,255,0.05); }
-  
+
   .title { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; color: var(--text); outline: none; }
   .sub { font-size: 11px; color: var(--dim); outline: none; margin-top: 4px; line-height: 1.4; margin-bottom: 8px; }
-  
+
   .tags-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; margin-bottom: 8px; padding-top: 4px; }
   .tag-item {
     font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
@@ -121,7 +121,7 @@
 
   .bullets-container { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; margin-bottom: 10px; overflow-y: auto; flex: 1; pointer-events: auto; }
   .bullet-item { display: flex; align-items: center; gap: 8px; font-size: 11px; line-height: 1.3; color: var(--text); position: relative; }
-  
+
   .bullet-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--nc); flex-shrink: 0; box-shadow: 0 0 8px var(--nc); }
   .bullet-checkbox { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--dim); background: transparent; flex-shrink: 0; cursor: pointer; transition: all 0.2s; }
   .bullet-item.checked .bullet-checkbox { background: var(--nc); border-color: var(--nc); box-shadow: 0 0 8px var(--nc); }
@@ -129,7 +129,7 @@
 
   .bullet-text { flex: 1; outline: none; min-height: 14px; word-break: break-word; }
   .bullet-text:empty::before { content: "Nouvel objectif..."; color: var(--dim); font-style: italic; }
-  
+
   .inner-block { background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); border-radius: 8px; padding: 8px 12px; margin-top: 2px; flex-shrink: 0; }
   .inner-label { font-size: 8px; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
   .inner-val { font-size: 11px; color: var(--text); outline: none; }
@@ -168,7 +168,7 @@
   .field label { display:block; font-size:10px; text-transform: uppercase; color:var(--dim); margin-bottom:6px; font-weight:600; }
   .field input, .field select { width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); border-radius:8px; padding:10px; color:var(--text); font-size:12px; }
   body.light-theme .field input, body.light-theme .field select { background: #FFF; }
-  
+
   .checkbox-group-container { max-height: 140px; overflow-y: auto; border: 1px solid var(--panel-border); background: rgba(0,0,0,0.2); border-radius: 8px; padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; }
   .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text); cursor: pointer; }
   .checkbox-row input { width: auto; cursor: pointer; }
@@ -201,6 +201,7 @@
     box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 150; cursor: pointer; align-items: center; justify-content: center;
   }
 </style>
+<base target="_blank">
 </head>
 <body class="app-container mode-map">
 
@@ -210,7 +211,7 @@
       <div class="tab active" data-target="map">Architecture</div>
       <div class="tab" data-target="journal">Journal</div>
     </div>
-    
+
     <div class="view-toggle" id="viewToggle">
       <button class="toggle-btn" data-mode="journal">Journal</button>
       <button class="toggle-btn active" data-mode="map">Carte</button>
@@ -222,7 +223,6 @@
       <button class="btn-tool" id="saveCustomViewBtn" title="Enregistrer ma disposition actuelle">💾 Épingler Vue</button>
       <button class="btn-tool" id="loadCustomViewBtn" title="Retourner à ma vue personnalisée">📍 Ma Vue</button>
       <button class="btn-tool" id="themeToggleBtn" title="Changer le thème">🌓</button>
-      <button class="btn-tool" id="resetLayoutBtn" title="Aligner en Grille">🔄 Grille</button>
       <div style="font-size: 12px; color: var(--dim);" id="syncStatus">Studio Anthony Carrel</div>
     </div>
   </div>
@@ -240,7 +240,7 @@
 <div class="sheet" id="configSheet">
   <button class="sheet-close" id="closeSheet">×</button>
   <h3 style="font-family:'Space Grotesk'; margin-top:10px; color:var(--text); margin-bottom: 24px;">Propriétés de la vignette</h3>
-  
+
   <div class="field"><label>Titre</label><input type="text" id="nodeTitleInput"></div>
   <div class="field"><label>Sous-titre</label><input type="text" id="nodeSubInput"></div>
   <div class="field"><label>Icône (Emoji)</label><input type="text" id="nodeIconInput"></div>
@@ -391,23 +391,6 @@ document.getElementById('themeToggleBtn').addEventListener('click', () => {
   localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
 });
 
-// Alignement automatique en Grille (CORRIGÉ - plus de .unset() qui bloquait le drag)
-document.getElementById('resetLayoutBtn').addEventListener('click', () => {
-  transformState = { x: 0, y: 0, scale: 1 };
-  updateTransform();
-  
-  dataset.forEach((n, idx) => { 
-    n.x = 40 + (idx % 4) * 280; 
-    n.y = 40 + Math.floor(idx / 4) * 300; 
-    n.w = 240; 
-    n.h = 260; 
-  });
-  
-  // SUPPRESSION de la ligne interact('.node').unset(); qui cassait le drag
-  save(); 
-  render();
-});
-
 document.getElementById('saveCustomViewBtn').addEventListener('click', () => {
   const currentPositions = dataset.map(n => ({ id: n.id, x: n.x, y: n.y, w: n.w, h: n.h }));
   localStorage.setItem('anthony_custom_layout_positions', JSON.stringify(currentPositions));
@@ -426,7 +409,6 @@ document.getElementById('loadCustomViewBtn').addEventListener('click', () => {
       const match = positions.find(p => p.id === n.id);
       if (match) { n.x = match.x; n.y = match.y; n.w = match.w; n.h = match.h; }
     });
-    // SUPPRESSION de la ligne interact('.node').unset(); qui cassait le drag
     save(); render();
   } else {
     alert("Aucune vue personnalisée enregistrée. Clique sur '💾 Épingler Vue' d'abord.");
@@ -587,7 +569,7 @@ document.getElementById('deleteNodeBtn').addEventListener('click', () => {
 
 function render() {
   document.querySelectorAll('.node').forEach(n => n.remove());
-  
+
   const filteredDataset = dataset.filter(n => 
     (n.title && n.title.toLowerCase().includes(currentSearchQuery)) || 
     (n.sub && n.sub.toLowerCase().includes(currentSearchQuery))
@@ -604,14 +586,13 @@ function render() {
     div.style.setProperty('--nc', n.color || 'var(--gold)');
     div.style.backgroundColor = n.cardBg || '#14151A';
 
-    // Rendu dynamique du fond de la vignette
     if (n.bg) {
       const bgLayer = document.createElement('div');
       bgLayer.className = 'node-bg-layer';
       bgLayer.style.backgroundImage = `url(${n.bg})`;
       bgLayer.style.opacity = (n.bgOpacity !== undefined ? n.bgOpacity : 85) / 100;
       div.appendChild(bgLayer);
-      
+
       const overlay = document.createElement('div');
       overlay.className = 'node-overlay';
       div.appendChild(overlay);
@@ -630,7 +611,7 @@ function render() {
 
     const titleContainer = document.createElement('div');
     titleContainer.style.flex = '1';
-    
+
     const title = document.createElement('div');
     title.className = 'title';
     title.innerText = n.title || 'Sans titre';
@@ -639,7 +620,7 @@ function render() {
 
     const actions = document.createElement('div');
     actions.className = 'header-actions';
-    
+
     const settingsBtn = document.createElement('button');
     settingsBtn.className = 'action-btn';
     settingsBtn.innerText = '⚙️';
@@ -656,7 +637,6 @@ function render() {
       content.appendChild(sub);
     }
 
-    // Gestion de l'encoche optionnelle
     if (n.showBlock) {
       const block = document.createElement('div');
       block.className = 'inner-block';
@@ -671,14 +651,13 @@ function render() {
       content.appendChild(block);
     }
 
-    // Gestion des puces / objectifs
     if (n.bullets && n.bullets.length > 0) {
       const bulletsCont = document.createElement('div');
       bulletsCont.className = 'bullets-container';
       n.bullets.forEach((bText, bIdx) => {
         const item = document.createElement('div');
         item.className = 'bullet-item';
-        
+
         if (n.useCheckboxes) {
           const cb = document.createElement('div');
           cb.className = 'bullet-checkbox';
@@ -709,7 +688,6 @@ function render() {
       content.appendChild(bulletsCont);
     }
 
-    // Tags optionnels
     if (n.tags && n.tags.length > 0) {
       const tagsCont = document.createElement('div');
       tagsCont.className = 'tags-container';
@@ -731,12 +709,10 @@ function render() {
     panZoomContent.appendChild(div);
   });
 
-  // Réattache interactJS sur le nouveau DOM généré
   initInteractOnNodes();
   draw();
 }
 
-// Initialisation globale
 loadData();
 </script>
 </body>
