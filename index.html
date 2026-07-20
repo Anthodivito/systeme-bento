@@ -6,24 +6,24 @@
 <title>systeme.anthonycarrel.com / architecture multi-links</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght=500;600;700&family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet">
-<!-- Inclusion du SDK Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Inclusion d'interact.js pour une gestion tactile robuste -->
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <style>
   :root {
-    /* Couleurs de base */
     --gold: #FFB03B; --source: #12D99B; --cockpit: #3B9CFF; --moteur: #A56CFF; --objectifs: #38D4F8;
-    --bg-main: #0B0B0E;       
+    --bg-main: #0B0B0E;        
     --panel-border: rgba(255,255,255,0.08);
     --text: #E3E4E8; --dim: #626775;
   }
-  * { box-sizing: border-box; user-select: none; }
-  html, body { margin: 0; padding: 0; background: var(--bg-main); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; height: 100vh; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg-main); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; height: 100vh; -webkit-tap-highlight-color: transparent; }
   
   .app-container { display: flex; flex-direction: column; height: 100vh; background: var(--bg-main); position: relative; }
   
   .header-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background: #0B0B0E; border-bottom: 1px solid var(--panel-border); z-index: 110; gap: 12px; }
   .tabs { display: flex; gap: 8px; }
-  .tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--dim); cursor: pointer; }
+  .tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--dim); cursor: pointer; user-select: none; }
   .tab.active { background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--panel-border); }
   
   .view-toggle { display: none; gap: 4px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 8px; border: 1px solid var(--panel-border); }
@@ -31,7 +31,7 @@
   .toggle-btn.active { background: var(--panel-border); color: var(--text); }
 
   .actions-bar { display: flex; align-items: center; gap: 10px; }
-  .btn-primary { background: var(--text); color: #000; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+  .btn-primary { background: var(--text); color: #000; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; user-select: none; }
   .btn-primary:hover { opacity: 0.9; }
 
   .canvas-container {
@@ -45,7 +45,7 @@
   .connector-svg { position: absolute; inset: 0; width: 5000px; height: 5000px; pointer-events: none; z-index: 1; }
 
   .node {
-    position: absolute; z-index: 5; cursor: grab; touch-action: none;
+    position: absolute; z-index: 5; touch-action: none;
     border: 1px solid color-mix(in srgb, var(--nc) 40%, transparent);
     border-radius: 12px; padding: 16px; 
     box-shadow: 0 0 25px -4px color-mix(in srgb, var(--nc) 50%, transparent),
@@ -66,7 +66,6 @@
     box-shadow: 0 0 35px -2px color-mix(in srgb, var(--nc) 75%, transparent),
                 0 25px 50px rgba(0, 0, 0, 0.9);
   }
-  .node:active { cursor: grabbing; z-index: 10; }
   
   .node-bg-layer {
     position: absolute; inset: 0;
@@ -77,7 +76,7 @@
   .node-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
   
   .node-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
-  .header-actions { display: flex; gap: 6px; }
+  .header-actions { display: flex; gap: 8px; }
 
   .icon-badge {
     width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
@@ -87,7 +86,7 @@
   
   .action-btn {
     background: transparent; border: 1px dashed color-mix(in srgb, var(--nc) 40%, transparent);
-    color: var(--dim); width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; transition: all 0.2s;
+    color: var(--dim); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: all 0.2s;
   }
   .action-btn:hover { color: var(--text); border-color: var(--nc); background: rgba(255,255,255,0.05); }
   
@@ -104,12 +103,12 @@
     outline: none;
   }
 
-  .bullets-container { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; margin-bottom: 10px; overflow-y: auto; flex: 1; }
+  .bullets-container { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; margin-bottom: 10px; overflow-y: auto; flex: 1; pointer-events: auto; }
   .bullet-item { display: flex; align-items: center; gap: 8px; font-size: 11px; line-height: 1.3; color: var(--text); position: relative; }
   
   .bullet-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--nc); flex-shrink: 0; box-shadow: 0 0 8px var(--nc); }
   .bullet-checkbox {
-    width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--dim); 
+    width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--dim); 
     background: transparent; flex-shrink: 0; cursor: pointer; transition: all 0.2s;
   }
   .bullet-item.checked .bullet-checkbox {
@@ -124,11 +123,10 @@
   .inner-label { font-size: 8px; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
   .inner-val { font-size: 11px; color: var(--text); outline: none; }
 
-  .resize-handle { position: absolute; bottom: 4px; right: 4px; width: 14px; height: 14px; cursor: se-resize; z-index: 20; opacity: 0.4; }
-  .node:hover .resize-handle { opacity: 0.9; }
+  .resize-handle { position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; cursor: se-resize; z-index: 20; opacity: 0.6; }
   .resize-handle::after {
-    content: ''; position: absolute; right: 3px; bottom: 3px; width: 3px; height: 3px; background: var(--text); border-radius: 50%;
-    box-shadow: -4px 0 var(--text), 0 -4px var(--text), -4px -4px var(--text);
+    content: ''; position: absolute; right: 4px; bottom: 4px; width: 4px; height: 4px; background: var(--text); border-radius: 50%;
+    box-shadow: -5px 0 var(--text), 0 -5px var(--text), -5px -5px var(--text);
   }
 
   .journal-container { display: none; flex: 1; overflow-y: auto; padding: 16px; background: var(--bg-main); flex-direction: column; gap: 12px; }
@@ -150,7 +148,7 @@
   @keyframes flowMovement { to { stroke-dashoffset: -1000; } }
 
   .sheet {
-    position: fixed; top: 0; right: 0; bottom: 0; width: 360px; background: #14151A;
+    position: fixed; top: 0; right: 0; bottom: 0; width: 380px; background: #14151A;
     border-left: 1px solid var(--panel-border); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); z-index: 200; padding: 24px; transform: translateX(100%); transition: transform 0.3s ease;
     box-shadow: -10px 0 30px rgba(0,0,0,0.5); overflow-y: auto;
   }
@@ -172,12 +170,12 @@
   .btn-danger { background: #ff4a4a; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; width: 100%; text-align: center; }
   .btn-secondary { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--panel-border); padding: 8px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 12px; }
 
-  /* FIX RESPONSIVE MOBILE + TABLETTE (CSS - conservé en fallback, la logique réelle est forcée en JS ci-dessous) */
+  /* FIX RESPONSIVE MOBILE + TABLETTE */
   @media (max-width: 1024px) {
     .header-nav { padding: 12px 16px; }
     .header-nav > div:last-child { display: none; } 
-    .tabs { display: none !important; } /* On cache les onglets texte doublons sur mobile/tablette */
-    .view-toggle { display: flex !important; } /* On force le sélecteur Journal / Carte */
+    .tabs { display: none !important; }
+    .view-toggle { display: flex !important; }
     
     .app-container.mode-journal #canvasContainer { display: none !important; }
     .app-container.mode-journal #journalContainer { display: flex !important; }
@@ -185,16 +183,16 @@
     .app-container.mode-map #canvasContainer { display: block !important; }
     .app-container.mode-map #journalContainer { display: none !important; }
     
-    .sheet { width: 100% !important; } /* Le panneau prend tout l'écran sur mobile/tablette */
+    .sheet { width: 100% !important; border-left: none; }
 
-    /* Cibles tactiles agrandies pour un usage au doigt */
-    .bullet-checkbox { width: 20px; height: 20px; }
-    .action-btn { width: 26px; height: 26px; font-size: 13px; }
+    /* Ergonomie des cibles tactiles */
+    .bullet-checkbox { width: 22px; height: 22px; }
+    .action-btn { width: 34px; height: 34px; font-size: 16px; }
     .journal-title { font-size: 16px; }
     .journal-sub { font-size: 12px; }
+    .fab-add-mobile { display: flex !important; }
   }
 
-  /* Bouton flottant "Ajouter une vignette" — remplace le bouton du header caché sur mobile/tablette */
   .fab-add-mobile {
     display: none;
     position: fixed;
@@ -253,6 +251,26 @@
   <button class="sheet-close" id="closeSheet">×</button>
   <h3 style="font-family:'Space Grotesk'; margin-top:10px; color:var(--text); margin-bottom: 24px;">Propriétés de la vignette</h3>
   
+  <div class="field">
+    <label>Titre de la vignette</label>
+    <input type="text" id="nodeTitleInput" placeholder="Titre du projet">
+  </div>
+
+  <div class="field">
+    <label>Sous-titre / Description</label>
+    <input type="text" id="nodeSubInput" placeholder="Description courte">
+  </div>
+
+  <div class="field">
+    <label>Icône (Emoji)</label>
+    <input type="text" id="nodeIconInput" placeholder="Ex: 📂">
+  </div>
+
+  <div class="field" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--panel-border); margin-bottom: 20px;">
+    <label style="margin: 0;">Style Bento moderne</label>
+    <input type="checkbox" id="nodeIsBentoInput" style="width: auto; cursor: pointer;">
+  </div>
+
   <div class="field">
     <label>Couleur Thématique (Contour & Icône)</label>
     <select id="nodeColorInput">
@@ -313,6 +331,11 @@
     </div>
   </div>
 
+  <div class="field" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--panel-border); margin-bottom: 20px;">
+    <label style="margin: 0;">Transformer les puces en Checkboxes</label>
+    <input type="checkbox" id="nodeUseCheckboxesInput" style="width: auto; cursor: pointer;">
+  </div>
+
   <div class="field" style="border-top: 1px solid var(--panel-border); padding-top: 16px;">
     <label>Tags Design (Glow - Fin de vignette)</label>
     <div class="sheet-tags-list" id="sheetTagsList"></div>
@@ -326,10 +349,9 @@
 </div>
 
 <script>
-// CONFIGURATION SUPABASE SYNCHRONISÉE
 const SUPABASE_URL = "https://oftfrsezwjjybpohknim.supabase.co";
 const SUPABASE_KEY = "sb_publishable_FD8fOiN6Z71LGJQbqL6MEQ_NtKzEReT";
-supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let dataset = [];
 
@@ -343,12 +365,7 @@ let activeNodeId = null;
 let tempTags = [];
 
 let transformState = { x: 0, y: 0, scale: 1 };
-let isDragging = false;
-let startX = 0, startY = 0;
-let isPanning = false;
-let startPanX = 0, startPanY = 0;
 
-// Sauvegarde synchrone vers Supabase
 async function save() {
   syncStatus.innerText = "Synchronisation...";
   try {
@@ -365,7 +382,6 @@ async function save() {
   }
 }
 
-// Chargement initial depuis Supabase (avec fallback LocalStorage)
 async function loadData() {
   syncStatus.innerText = "Chargement...";
   try {
@@ -392,73 +408,30 @@ function updateTransform() {
   panZoomContent.style.transform = `translate(${transformState.x}px, ${transformState.y}px) scale(${transformState.scale})`;
 }
 
-// Suivi multi-doigts pour le pincement (pinch-to-zoom) tactile
-let activePointers = new Map();
-let pinchStartDist = 0;
-let pinchStartScale = 1;
-let pinchStartMid = { x: 0, y: 0 };
-
-function getPointersDistance() {
-  const pts = Array.from(activePointers.values());
-  return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-}
-function getPointersMidpoint() {
-  const pts = Array.from(activePointers.values());
-  return { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
-}
-
-container.addEventListener('pointerdown', (e) => {
-  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-  if (activePointers.size === 2) {
-    isPanning = false;
-    pinchStartDist = getPointersDistance();
-    pinchStartScale = transformState.scale;
-    pinchStartMid = getPointersMidpoint();
-    return;
+// GESTION PAN & ZOOM ROBUSTE AVEC INTERACT.JS (Desktop + Tactile)
+interact(container).gesturable({
+  listeners: {
+    move (event) {
+      transformState.scale = Math.max(0.1, Math.min(2, transformState.scale * (1 + event.ds)));
+      transformState.x += event.dx;
+      transformState.y += event.dy;
+      updateTransform();
+      draw();
+    }
   }
-
-  if (e.target.closest('.node') || e.target.closest('.resize-handle')) return;
-  isPanning = true;
-  container.setPointerCapture(e.pointerId);
-  startPanX = e.clientX - transformState.x;
-  startPanY = e.clientY - transformState.y;
-});
-
-container.addEventListener('pointermove', (e) => {
-  if (!activePointers.has(e.pointerId)) return;
-  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-  if (activePointers.size === 2) {
-    const dist = getPointersDistance();
-    if (dist > 0 && pinchStartDist > 0) {
-      const rect = container.getBoundingClientRect();
-      const midX = pinchStartMid.x - rect.left;
-      const midY = pinchStartMid.y - rect.top;
-      const oldScale = transformState.scale;
-      const newScale = Math.max(0.1, Math.min(2, pinchStartScale * (dist / pinchStartDist)));
-      transformState.x = midX - (midX - transformState.x) * (newScale / oldScale);
-      transformState.y = midY - (midY - transformState.y) * (newScale / oldScale);
-      transformState.scale = newScale;
+}).draggable({
+  inertia: true,
+  startAxis: 'xy',
+  lockAxis: 'any',
+  listeners: {
+    move (event) {
+      if (event.target.closest('.node') || event.target.closest('.resize-handle') || event.target.closest('.sheet')) return;
+      transformState.x += event.dx;
+      transformState.y += event.dy;
       updateTransform();
     }
-    return;
   }
-
-  if (!isPanning) return;
-  transformState.x = e.clientX - startPanX;
-  transformState.y = e.clientY - startPanY;
-  updateTransform();
 });
-
-function endPan(e) {
-  activePointers.delete(e.pointerId);
-  if (!isPanning) return;
-  isPanning = false;
-  try { container.releasePointerCapture(e.pointerId); } catch (err) {}
-}
-container.addEventListener('pointerup', endPan);
-container.addEventListener('pointercancel', endPan);
 
 container.addEventListener('wheel', (e) => {
   e.preventDefault();
@@ -473,6 +446,7 @@ container.addEventListener('wheel', (e) => {
   transformState.y = mouseY - (mouseY - transformState.y) * (newScale / oldScale);
   transformState.scale = newScale;
   updateTransform();
+  draw();
 }, { passive: false });
 
 function switchView(mode) {
@@ -499,10 +473,10 @@ document.getElementById('addGlobalNodeBtn').addEventListener('click', () => {
   const newId = 'node_' + Date.now();
   const newNode = {
     id: newId,
-    x: 300 - transformState.x,
-    y: 300 - transformState.y,
-    w: 220,
-    h: 240,
+    x: (window.innerWidth / 2 - 110 - transformState.x) / transformState.scale,
+    y: (window.innerHeight / 2 - 120 - transformState.y) / transformState.scale,
+    w: 240,
+    h: 260,
     color: 'var(--gold)',
     cardBg: '#14151A',
     icon: '📂',
@@ -537,9 +511,9 @@ function draw() {
         const parentNode = dataset.find(item => item.id === pId);
         if (parentNode) {
           const pX = parentNode.x + parentNode.w / 2;
-          const pY = parentNode.y + (parentNode.h || 240) / 2;
+          const pY = parentNode.y + (parentNode.h || 260) / 2;
           const cX = n.x + n.w / 2;
-          const cY = n.y + (n.h || 240) / 2;
+          const cY = n.y + (n.h || 260) / 2;
           
           const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
           const d = `M ${pX} ${pY} Q ${(pX+cX)/2} ${(pY+cY)/2 - 50}, ${cX} ${cY}`;
@@ -551,6 +525,50 @@ function draw() {
           svg.appendChild(path);
         }
       });
+    }
+  });
+}
+
+function initInteractOnNodes() {
+  // GESTION DRAG & DROP DES VIGNETTES VIA INTERACT.JS
+  interact('.node').draggable({
+    ignoreFrom: 'input, select, textarea, [contenteditable="true"], .action-btn, .bullets-container',
+    listeners: {
+      move(event) {
+        const id = event.target.id;
+        const node = dataset.find(n => n.id === id);
+        if (node) {
+          node.x += event.dx / transformState.scale;
+          node.y += event.dy / transformState.scale;
+          event.target.style.left = node.x + 'px';
+          event.target.style.top = node.y + 'px';
+          draw();
+        }
+      },
+      end(event) {
+        save();
+      }
+    }
+  });
+
+  // GESTION RESIZE DES VIGNETTES VIA INTERACT.JS
+  interact('.resize-handle').draggable({
+    listeners: {
+      move(event) {
+        const nodeEl = event.target.closest('.node');
+        const id = nodeEl.id;
+        const node = dataset.find(n => n.id === id);
+        if (node) {
+          node.w = Math.max(180, node.w + event.dx / transformState.scale);
+          node.h = Math.max(160, (node.h || 260) + event.dy / transformState.scale);
+          nodeEl.style.width = node.w + 'px';
+          nodeEl.style.height = node.h + 'px';
+          draw();
+        }
+      },
+      end(event) {
+        save();
+      }
     }
   });
 }
@@ -608,9 +626,8 @@ function buildJournal() {
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
           <div class="header-actions">
-            <button class="action-btn journal-mode-btn" title="Type de puces">📋</button>
             <button class="action-btn journal-addbullet-btn" title="Ajouter un objectif">+</button>
-            <button class="action-btn journal-settings-btn" title="Options avancées (couleur, image, tags, liaisons)">⚙️</button>
+            <button class="action-btn journal-settings-btn" title="Configuration complète">⚙️</button>
           </div>
           <div class="journal-chevron">▼</div>
         </div>
@@ -660,13 +677,6 @@ function buildJournal() {
       });
     });
 
-    card.querySelector('.journal-mode-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      n.useCheckboxes = !n.useCheckboxes;
-      save();
-      render();
-    });
-
     card.querySelector('.journal-addbullet-btn').addEventListener('click', (e) => {
       e.stopPropagation();
       n.bullets.push("");
@@ -690,8 +700,7 @@ function buildJournal() {
 
 function render() {
   document.querySelectorAll('.node').forEach(n => n.remove());
-  journalContainer.innerHTML = '';
-
+  
   dataset.forEach(n => {
     if(!n.bullets) n.bullets = [];
     if(n.useCheckboxes === undefined) n.useCheckboxes = false;
@@ -699,10 +708,6 @@ function render() {
     if(n.bgOpacity === undefined) n.bgOpacity = 85;
     if(!n.tags) n.tags = [];
     if(!n.cardBg) n.cardBg = '#14151A';
-    if(n.parent) { 
-      if(!n.parents) n.parents = [n.parent];
-      delete n.parent;
-    }
     if(!n.parents) n.parents = [];
 
     const div = document.createElement('div');
@@ -745,193 +750,200 @@ function render() {
         <div class="bullet-item ${isChecked ? 'checked' : ''}" data-index="${idx}">
           ${indicator}
           <div class="bullet-text" contenteditable="true">${bText}</div>
-        </div>
-      `;
+        </div>`;
     });
 
     div.innerHTML = `
       ${bgLayerHTML}
       <div class="node-content">
         <div class="node-header">
-          <span class="icon-badge">${n.icon}</span>
+          <span class="icon-badge">${n.icon || '📂'}</span>
           <div class="header-actions">
-            <button class="action-btn toggle-mode-btn" title="Changer type de puces">📋</button>
-            <button class="action-btn add-bullet-btn">+</button>
+            <button class="action-btn node-addbullet-btn" title="Ajouter un objectif">+</button>
+            <button class="action-btn node-settings-btn" title="Configuration complète">⚙️</button>
           </div>
         </div>
-        <div class="title" contenteditable="true" data-prop="title">${n.title}</div>
-        <div class="sub" contenteditable="true" data-prop="sub">${n.sub}</div>
-        <div class="bullets-container">${bulletsHTML}</div>
-        ${n.tags.length > 0 ? tagsHTML : ''}
+        <div class="title" contenteditable="true" data-prop="title">${n.title || 'Sans titre'}</div>
+        <div class="sub" contenteditable="true" data-prop="sub">${n.sub || ''}</div>
+        
+        <div class="bullets-container">
+          ${bulletsHTML}
+        </div>
+
+        ${tagsHTML}
         ${blockHTML}
       </div>
       <div class="resize-handle"></div>
     `;
 
-    div.querySelectorAll('.title, .sub, .inner-val').forEach(el => {
-      el.addEventListener('blur', (e) => { n[e.target.getAttribute('data-prop')] = e.target.innerText; save(); buildJournal(); });
+    // Empêcher la propagation pour laisser le focus se faire proprement sur mobile
+    div.querySelectorAll('[contenteditable="true"]').forEach(el => {
       el.addEventListener('pointerdown', e => e.stopPropagation());
-    });
-
-    div.querySelectorAll('.tag-item').forEach(el => {
       el.addEventListener('blur', (e) => {
-        const tIdx = e.target.getAttribute('data-tag-idx');
-        n.tags[tIdx].text = e.target.innerText;
+        const prop = e.target.getAttribute('data-prop');
+        const tagIdx = e.target.getAttribute('data-tag-idx');
+        
+        if (tagIdx !== null) {
+          n.tags[tagIdx].text = e.target.innerText;
+        } else if (prop) {
+          n[prop] = e.target.innerText;
+        }
         save();
       });
-      el.addEventListener('pointerdown', e => e.stopPropagation());
     });
 
     div.querySelectorAll('.bullet-text').forEach(el => {
+      el.addEventListener('pointerdown', e => e.stopPropagation());
       el.addEventListener('blur', (e) => {
         const idx = e.target.closest('.bullet-item').getAttribute('data-index');
         const text = e.target.innerText.trim();
-        if (text === "") { n.bullets.splice(idx, 1); render(); } else { n.bullets[idx] = text; save(); buildJournal(); }
+        if (text === "") { n.bullets.splice(idx, 1); } else { n.bullets[idx] = text; }
+        save();
+        render();
       });
-      el.addEventListener('pointerdown', e => e.stopPropagation());
     });
 
     div.querySelectorAll('.bullet-checkbox').forEach(el => {
+      el.addEventListener('pointerdown', e => e.stopPropagation());
       el.addEventListener('click', (e) => {
-        e.stopPropagation();
         const idx = parseInt(e.target.closest('.bullet-item').getAttribute('data-index'));
         if(!n.checkedBullets) n.checkedBullets = [];
         n.checkedBullets = n.checkedBullets.includes(idx) ? n.checkedBullets.filter(i => i !== idx) : [...n.checkedBullets, idx];
-        save(); render();
+        save();
+        render();
       });
     });
 
-    div.querySelector('.toggle-mode-btn').addEventListener('click', (e) => {
-      e.stopPropagation(); n.useCheckboxes = !n.useCheckboxes; save(); render();
+    div.querySelector('.node-addbullet-btn').addEventListener('pointerdown', e => e.stopPropagation());
+    div.querySelector('.node-addbullet-btn').addEventListener('click', (e) => {
+      n.bullets.push("");
+      save();
+      render();
     });
 
-    div.querySelector('.action-btn.add-bullet-btn').addEventListener('click', (e) => {
-      e.stopPropagation(); n.bullets.push(""); save(); render();
-      const items = div.querySelectorAll('.bullet-text');
-      if(items.length > 0) items[items.length - 1].focus();
+    div.querySelector('.node-settings-btn').addEventListener('pointerdown', e => e.stopPropagation());
+    div.querySelector('.node-settings-btn').addEventListener('click', (e) => {
+      openConfigSheet(n);
     });
 
-    div.addEventListener('dblclick', (e) => {
-      e.stopPropagation(); openConfigSheet(n);
-    });
-
-    setupDrag(div, n);
-    setupResize(div, n);
     panZoomContent.appendChild(div);
   });
+
+  initInteractOnNodes();
   buildJournal();
   draw();
 }
 
-function openConfigSheet(n) {
-  activeNodeId = n.id;
-  document.getElementById('bgUrlInput').value = n.bg || "";
-  document.getElementById('nodeColorInput').value = n.color || "var(--gold)";
-  document.getElementById('nodeBgColorInput').value = n.cardBg || "#14151A";
-  
-  const parentsContainer = document.getElementById('nodeParentsCheckboxGroup');
-  parentsContainer.innerHTML = '';
-  
-  let validOptionsCount = 0;
-  dataset.forEach(opt => {
-    if(opt.id !== n.id) {
-      validOptionsCount++;
-      const isChecked = n.parents && n.parents.includes(opt.id);
+function openConfigSheet(node) {
+  activeNodeId = node.id;
+  tempTags = JSON.parse(JSON.stringify(node.tags || []));
+
+  document.getElementById('nodeTitleInput').value = node.title || '';
+  document.getElementById('nodeSubInput').value = node.sub || '';
+  document.getElementById('nodeIconInput').value = node.icon || '📂';
+  document.getElementById('nodeIsBentoInput').checked = !!node.isBento;
+  document.getElementById('nodeColorInput').value = node.color;
+  document.getElementById('nodeBgColorInput').value = node.cardBg || '#14151A';
+  document.getElementById('bgUrlInput').value = node.bg || '';
+  document.getElementById('bgOpacityInput').value = node.bgOpacity !== undefined ? node.bgOpacity : 85;
+  document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${document.getElementById('bgOpacityInput').value}%)`;
+  document.getElementById('showBlockInput').checked = !!node.showBlock;
+  document.getElementById('blockLabelInput').value = node.blockLabel || '';
+  document.getElementById('blockValInput').value = node.blockVal || '';
+  document.getElementById('nodeUseCheckboxesInput').checked = !!node.useCheckboxes;
+
+  // Liste des liaisons parentes
+  const parentContainer = document.getElementById('nodeParentsCheckboxGroup');
+  parentContainer.innerHTML = '';
+  dataset.forEach(item => {
+    if (item.id !== node.id) {
+      const isChecked = node.parents && node.parents.includes(item.id);
       const row = document.createElement('label');
       row.className = 'checkbox-row';
-      row.innerHTML = `
-        <input type="checkbox" value="${opt.id}" ${isChecked ? 'checked' : ''} class="node-parent-checkbox">
-        <span>${opt.title || opt.id}</span>
-      `;
-      parentsContainer.appendChild(row);
+      row.innerHTML = `<input type="checkbox" value="${item.id}" ${isChecked ? 'checked' : ''}> <span>${item.title || 'Sans titre'}</span>`;
+      parentContainer.appendChild(row);
     }
   });
 
-  if (validOptionsCount === 0) {
-    parentsContainer.innerHTML = '<div style="font-size:11px; color:var(--dim); font-style:italic;">Aucune autre carte disponible</div>';
-  }
-
-  const initialOpacity = n.bgOpacity !== undefined ? n.bgOpacity : 85;
-  document.getElementById('bgOpacityInput').value = initialOpacity;
-  document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${initialOpacity}%)`;
-
-  document.getElementById('showBlockInput').checked = !!n.showBlock;
-  document.getElementById('blockLabelInput').value = n.blockLabel || "";
-  document.getElementById('blockValInput').value = n.blockVal || "";
-  tempTags = JSON.parse(JSON.stringify(n.tags || []));
   renderSheetTags();
   document.getElementById('configSheet').classList.add('open');
 }
+
+function renderSheetTags() {
+  const container = document.getElementById('sheetTagsList');
+  container.innerHTML = '';
+  tempTags.forEach((t, idx) => {
+    const row = document.createElement('div');
+    row.className = 'sheet-tag-row';
+    row.innerHTML = `
+      <input type="text" value="${t.text}" style="flex:2;" data-idx="${idx}" class="sheet-tag-text">
+      <select style="flex:1;" data-idx="${idx}" class="sheet-tag-color">
+        <option value="var(--gold)" ${t.color === 'var(--gold)' ? 'selected' : ''}>Or</option>
+        <option value="var(--source)" ${t.color === 'var(--source)' ? 'selected' : ''}>Vert</option>
+        <option value="var(--cockpit)" ${t.color === 'var(--cockpit)' ? 'selected' : ''}>Bleu</option>
+        <option value="var(--moteur)" ${t.color === 'var(--moteur)' ? 'selected' : ''}>Violet</option>
+        <option value="var(--objectifs)" ${t.color === 'var(--objectifs)' ? 'selected' : ''}>Cyan</option>
+      </select>
+      <button class="action-btn remove-tag-btn" data-idx="${idx}" style="border-color:#ff4a4a; color:#ff4a4a;">×</button>
+    `;
+    
+    row.querySelector('.sheet-tag-text').addEventListener('input', (e) => {
+      tempTags[idx].text = e.target.value;
+    });
+    row.querySelector('.sheet-tag-color').addEventListener('change', (e) => {
+      tempTags[idx].color = e.target.value;
+    });
+    row.querySelector('.remove-tag-btn').addEventListener('click', () => {
+      tempTags.splice(idx, 1);
+      renderSheetTags();
+    });
+    
+    container.appendChild(row);
+  });
+}
+
+document.getElementById('sheetAddTagBtn').addEventListener('click', () => {
+  tempTags.push({ text: 'Nouveau', color: 'var(--gold)' });
+  renderSheetTags();
+});
 
 document.getElementById('bgOpacityInput').addEventListener('input', (e) => {
   document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${e.target.value}%)`;
 });
 
-function renderSheetTags() {
-  const container = document.getElementById('sheetTagsList');
-  container.innerHTML = '';
-  tempTags.forEach((tag, idx) => {
-    const row = document.createElement('div');
-    row.className = 'sheet-tag-row';
-    row.innerHTML = `
-      <input type="text" value="${tag.text}" placeholder="Texte" style="flex:2;" data-idx="${idx}" class="sheet-tag-text">
-      <select style="flex:1;" data-idx="${idx}" class="sheet-tag-color">
-        <option value="#3B9CFF" ${tag.color==='#3B9CFF'?'selected':''}>Bleu</option>
-        <option value="#12D99B" ${tag.color==='#12D99B'?'selected':''}>Vert</option>
-        <option value="#A56CFF" ${tag.color==='#A56CFF'?'selected':''}>Violet</option>
-        <option value="#FFB03B" ${tag.color==='#FFB03B'?'selected':''}>Or</option>
-        <option value="#ff4a4a" ${tag.color==='#ff4a4a'?'selected':''}>Rouge</option>
-      </select>
-      <button class="btn-danger remove-tag-btn" data-idx="${idx}" style="width:auto; padding:6px 10px;">×</button>
-    `;
-    container.appendChild(row);
-  });
-
-  container.querySelectorAll('.sheet-tag-text').forEach(input => {
-    input.addEventListener('input', (e) => { tempTags[e.target.dataset.idx].text = e.target.value; });
-  });
-  container.querySelectorAll('.sheet-tag-color').forEach(select => {
-    select.addEventListener('change', (e) => { tempTags[e.target.dataset.idx].color = e.target.value; });
-  });
-  container.querySelectorAll('.remove-tag-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      tempTags.splice(e.target.dataset.idx, 1);
-      renderSheetTags();
-    });
-  });
-}
-
-document.getElementById('sheetAddTagBtn').addEventListener('click', () => {
-  tempTags.push({ text: 'Nouveau tag', color: '#3B9CFF' });
-  renderSheetTags();
-});
-
 document.getElementById('saveNodeConfig').addEventListener('click', () => {
-  const n = dataset.find(item => item.id === activeNodeId);
-  if (n) {
-    n.bg = document.getElementById('bgUrlInput').value.trim();
-    n.color = document.getElementById('nodeColorInput').value;
-    n.cardBg = document.getElementById('nodeBgColorInput').value;
-    n.bgOpacity = parseInt(document.getElementById('bgOpacityInput').value) || 85;
-    n.showBlock = document.getElementById('showBlockInput').checked;
-    n.blockLabel = document.getElementById('blockLabelInput').value.trim();
-    n.blockVal = document.getElementById('blockValInput').value.trim();
-    n.tags = tempTags;
+  const node = dataset.find(n => n.id === activeNodeId);
+  if (node) {
+    node.title = document.getElementById('nodeTitleInput').value;
+    node.sub = document.getElementById('nodeSubInput').value;
+    node.icon = document.getElementById('nodeIconInput').value;
+    node.isBento = document.getElementById('nodeIsBentoInput').checked;
+    node.color = document.getElementById('nodeColorInput').value;
+    node.cardBg = document.getElementById('nodeBgColorInput').value;
+    node.bg = document.getElementById('bgUrlInput').value;
+    node.bgOpacity = parseInt(document.getElementById('bgOpacityInput').value);
+    node.showBlock = document.getElementById('showBlockInput').checked;
+    node.blockLabel = document.getElementById('blockLabelInput').value;
+    node.blockVal = document.getElementById('blockValInput').value;
+    node.useCheckboxes = document.getElementById('nodeUseCheckboxesInput').checked;
+    node.tags = tempTags;
 
-    const checkedBoxes = document.querySelectorAll('.node-parent-checkbox:checked');
-    n.parents = Array.from(checkedBoxes).map(cb => cb.value);
+    // Sauvegarde des parents sélectionnés
+    const checked = document.querySelectorAll('#nodeParentsCheckboxGroup input:checked');
+    node.parents = Array.from(checked).map(cb => cb.value);
 
     save();
     render();
+    document.getElementById('configSheet').classList.remove('open');
   }
-  document.getElementById('configSheet').classList.remove('open');
 });
 
 document.getElementById('deleteNodeBtn').addEventListener('click', () => {
-  if (confirm('Voulez-vous vraiment supprimer définitivement cette carte ?')) {
-    dataset = dataset.filter(item => item.id !== activeNodeId);
-    dataset.forEach(opt => {
-      if (opt.parents) opt.parents = opt.parents.filter(pId => pId !== activeNodeId);
+  if (confirm("Supprimer définitivement cette vignette ?")) {
+    dataset = dataset.filter(n => n.id !== activeNodeId);
+    // Nettoyer aussi les liaisons parentes chez les autres vignettes
+    dataset.forEach(n => {
+      if(n.parents) n.parents = n.parents.filter(pId => pId !== activeNodeId);
     });
     save();
     render();
@@ -943,109 +955,7 @@ document.getElementById('closeSheet').addEventListener('click', () => {
   document.getElementById('configSheet').classList.remove('open');
 });
 
-function setupDrag(div, n) {
-  let isDragging = false;
-  let startDragX = 0, startDragY = 0;
-
-  div.addEventListener('pointerdown', (e) => {
-    if (e.target.closest('[contenteditable="true"]') || e.target.closest('.action-btn') || e.target.closest('.resize-handle') || e.target.closest('.bullet-checkbox')) return;
-    isDragging = true;
-    div.setPointerCapture(e.pointerId);
-    startDragX = e.clientX - n.x * transformState.scale;
-    startDragY = e.clientY - n.y * transformState.scale;
-    div.classList.add('dragging');
-  });
-
-  div.addEventListener('pointermove', (e) => {
-    if (!isDragging) return;
-    n.x = (e.clientX - startDragX) / transformState.scale;
-    n.y = (e.clientY - startDragY) / transformState.scale;
-    div.style.left = n.x + 'px';
-    div.style.top = n.y + 'px';
-    draw();
-  });
-
-  const endDrag = (e) => {
-    if (!isDragging) return;
-    isDragging = false;
-    div.releasePointerCapture(e.pointerId);
-    div.classList.remove('dragging');
-    save();
-  };
-  div.addEventListener('pointerup', endDrag);
-  div.addEventListener('pointercancel', endDrag);
-}
-
-function setupResize(div, n) {
-  const handle = div.querySelector('.resize-handle');
-  let isResizing = false;
-  let startW = 0, startH = 0, startMouseX = 0, startMouseY = 0;
-
-  handle.addEventListener('pointerdown', (e) => {
-    e.stopPropagation();
-    isResizing = true;
-    handle.setPointerCapture(e.pointerId);
-    startW = n.w;
-    startH = n.h || div.offsetHeight;
-    startMouseX = e.clientX;
-    startMouseY = e.clientY;
-  });
-
-  handle.addEventListener('pointermove', (e) => {
-    if (!isResizing) return;
-    const deltaX = (e.clientX - startMouseX) / transformState.scale;
-    const deltaY = (e.clientY - startMouseY) / transformState.scale;
-    n.w = Math.max(160, startW + deltaX);
-    n.h = Math.max(140, startH + deltaY);
-    div.style.width = n.w + 'px';
-    div.style.height = n.h + 'px';
-    draw();
-  });
-
-  const endResize = (e) => {
-    if (!isResizing) return;
-    isResizing = false;
-    handle.releasePointerCapture(e.pointerId);
-    save();
-  };
-  handle.addEventListener('pointerup', endResize);
-  handle.addEventListener('pointercancel', endResize);
-}
-
-// FIX RESPONSIVE FORCÉ EN JS
-// On ne fait plus confiance uniquement au @media CSS : certaines plateformes d'intégration
-// (comme systeme.io) peuvent filtrer ou mal restituer les règles @media des blocs HTML
-// personnalisés. Ici, on force l'affichage via du style inline (priorité maximale en CSS),
-// recalculé à chaque redimensionnement / rotation d'écran. Seuil à 1024px pour couvrir
-// mobile ET tablette.
-let initialLayoutApplied = false;
-function applyResponsiveLayout() {
-  const isCompact = window.innerWidth <= 1024;
-  const tabsEl = document.querySelector('.tabs');
-  const toggleEl = document.getElementById('viewToggle');
-  const actionsEl = document.getElementById('actionsBar');
-  const sheetEl = document.getElementById('configSheet');
-  const fabEl = document.getElementById('fabAddMobile');
-
-  if (tabsEl) tabsEl.style.display = isCompact ? 'none' : 'flex';
-  if (toggleEl) toggleEl.style.display = isCompact ? 'flex' : 'none';
-  if (actionsEl) actionsEl.style.display = isCompact ? 'none' : 'flex';
-  if (sheetEl) sheetEl.style.width = isCompact ? '100%' : '360px';
-  if (fabEl) fabEl.style.display = isCompact ? 'flex' : 'none';
-
-  // Au tout premier chargement sur mobile/tablette, on ouvre directement la vue Journal :
-  // le canevas pannable/zoomable "Carte" n'est pas ergonomique sur petit écran tactile.
-  if (isCompact && !initialLayoutApplied) {
-    switchView('journal');
-  }
-  initialLayoutApplied = true;
-}
-window.addEventListener('resize', applyResponsiveLayout);
-window.addEventListener('orientationchange', applyResponsiveLayout);
-applyResponsiveLayout();
-
-// Lancement au chargement de la page
-loadData();
+window.addEventListener('DOMContentLoaded', loadData);
 </script>
 </body>
 </html>
