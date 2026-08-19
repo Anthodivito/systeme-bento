@@ -12,7 +12,7 @@
 <style>
   :root {
     --gold: #FFB03B; --source: #12D99B; --cockpit: #3B9CFF; --moteur: #A56CFF; --objectifs: #38D4F8;
-    --bg-main: #0B0B0E;        
+    --bg-main: #0B0B0E;      
     --panel-border: rgba(255,255,255,0.08);
     --text: #E3E4E8; --dim: #626775;
   }
@@ -143,6 +143,17 @@
   .journal-card.collapsed .journal-body { display: none; }
   .journal-card.collapsed .journal-chevron { transform: rotate(-90deg); }
 
+  /* STYLES VISION BOARD */
+  .vision-container { display: none; flex: 1; overflow-y: auto; padding: 24px; background: var(--bg-main); flex-direction: column; gap: 20px; }
+  .vision-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .vision-card { background: #14151A; border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .vision-img-box { width: 100%; height: 150px; background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--panel-border); }
+  .vision-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .vision-tag { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; display: inline-block; width: fit-content; text-transform: uppercase; }
+  .tag-owned { background: rgba(29, 185, 84, 0.15); color: #1DB954; border: 1px solid rgba(29, 185, 84, 0.3); }
+  .tag-wishlist { background: rgba(59, 156, 255, 0.15); color: #3B9CFF; border: 1px solid rgba(59, 156, 255, 0.3); }
+  .tag-damaged { background: rgba(255, 74, 74, 0.15); color: #FF4A4A; border: 1px solid rgba(255, 74, 74, 0.3); }
+
   [contenteditable="true"]:focus { background: rgba(255,255,255,0.04); border-radius: 4px; outline: none; }
   .flow-line { stroke-dasharray: 8, 6; animation: flowMovement 25s linear infinite; }
   @keyframes flowMovement { to { stroke-dashoffset: -1000; } }
@@ -179,13 +190,18 @@
     
     .app-container.mode-journal #canvasContainer { display: none !important; }
     .app-container.mode-journal #journalContainer { display: flex !important; }
+    .app-container.mode-journal #visionContainer { display: none !important; }
     
     .app-container.mode-map #canvasContainer { display: block !important; }
     .app-container.mode-map #journalContainer { display: none !important; }
+    .app-container.mode-map #visionContainer { display: none !important; }
+
+    .app-container.mode-vision #canvasContainer { display: none !important; }
+    .app-container.mode-vision #journalContainer { display: none !important; }
+    .app-container.mode-vision #visionContainer { display: flex !important; }
     
     .sheet { width: 100% !important; border-left: none; }
 
-    /* Ergonomie des cibles tactiles */
     .bullet-checkbox { width: 22px; height: 22px; }
     .action-btn { width: 34px; height: 34px; font-size: 16px; }
     .journal-title { font-size: 16px; }
@@ -222,11 +238,13 @@
     <div class="tabs">
       <div class="tab active" data-target="map">Architecture</div>
       <div class="tab" data-target="journal">Journal</div>
+      <div class="tab" data-target="vision">Vision Board</div>
     </div>
     
     <div class="view-toggle" id="viewToggle">
       <button class="toggle-btn" data-mode="journal">Journal</button>
       <button class="toggle-btn active" data-mode="map">Carte</button>
+      <button class="toggle-btn" data-mode="vision">Vision</button>
     </div>
 
     <div class="actions-bar" id="actionsBar">
@@ -242,6 +260,44 @@
   </div>
 
   <div class="journal-container" id="journalContainer"></div>
+
+  <!-- NOUVEL ESPACE VISION BOARD -->
+  <div class="vision-container" id="visionContainer">
+    <h2 style="font-family: 'Space Grotesk'; font-size: 20px; margin-bottom: 4px;">Vision Board : High-Tech Apple</h2>
+    <p style="font-size: 13px; color: var(--dim); margin-bottom: 16px;">Suivi visuel du matériel actuel, des envies et des critères de renouvellement.</p>
+    
+    <div class="vision-grid">
+      <!-- Exemple Produit 1 : Possédé -->
+      <div class="vision-card">
+        <span class="vision-tag tag-owned">Possédé (En service)</span>
+        <div class="vision-img-box">
+          <img src="" alt="Glissez votre PNG ici">
+        </div>
+        <h3 style="font-family: 'Space Grotesk'; font-size: 15px; margin: 0;">iPhone 15 Pro Max</h3>
+        <p style="font-size: 11px; color: var(--dim); margin: 0;">État général impeccable, batterie à 88%.</p>
+      </div>
+
+      <!-- Exemple Produit 2 : Wishlist / À remplacer -->
+      <div class="vision-card">
+        <span class="vision-tag tag-damaged">À renouveler (Abîmé)</span>
+        <div class="vision-img-box">
+          <img src="" alt="Glissez votre PNG ici">
+        </div>
+        <h3 style="font-family: 'Space Grotesk'; font-size: 15px; margin: 0;">Apple Watch Ultra</h3>
+        <p style="font-size: 11px; color: var(--dim); margin: 0;">Écran rayé, choc sur le boîtier titane.</p>
+      </div>
+
+      <!-- Exemple Produit 3 : Wishlist -->
+      <div class="vision-card">
+        <span class="vision-tag tag-wishlist">Wishlist</span>
+        <div class="vision-img-box">
+          <img src="" alt="Glissez votre PNG ici">
+        </div>
+        <h3 style="font-family: 'Space Grotesk'; font-size: 15px; margin: 0;">Vision Pro (Gen 2)</h3>
+        <p style="font-size: 11px; color: var(--dim); margin: 0;">Cible d'investissement future.</p>
+      </div>
+    </div>
+  </div>
 
   <button class="fab-add-mobile" id="fabAddMobile" title="Ajouter une vignette">+</button>
 </div>
@@ -358,6 +414,7 @@ let dataset = [];
 const container = document.getElementById('canvasContainer');
 const panZoomContent = document.getElementById('panZoomContent');
 const journalContainer = document.getElementById('journalContainer');
+const visionContainer = document.getElementById('visionContainer');
 const svg = document.getElementById('svgFlow');
 const app = document.getElementById('app');
 const syncStatus = document.getElementById('syncStatus');
@@ -456,7 +513,7 @@ function switchView(mode) {
   document.querySelectorAll('.tabs .tab').forEach(t => {
     t.classList.toggle('active', t.getAttribute('data-target') === mode);
   });
-  app.classList.remove('mode-journal', 'mode-map');
+  app.classList.remove('mode-journal', 'mode-map', 'mode-vision');
   app.classList.add('mode-' + mode);
   if(mode === 'map') setTimeout(() => { draw(); updateTransform(); }, 50);
 }
@@ -504,7 +561,7 @@ document.getElementById('fabAddMobile').addEventListener('click', () => {
 
 function draw() {
   svg.innerHTML = '';
-  if (app.classList.contains('mode-journal')) return;
+  if (!app.classList.contains('mode-map')) return;
   
   dataset.forEach(n => {
     if (n.parents && n.parents.length > 0) {
@@ -590,7 +647,6 @@ function openConfigSheet(node) {
   document.getElementById('blockValInput').value = node.blockVal || '';
   document.getElementById('nodeUseCheckboxesInput').checked = !!node.useCheckboxes;
 
-  // Parents list checkboxes
   const cbGroup = document.getElementById('nodeParentsCheckboxGroup');
   cbGroup.innerHTML = '';
   dataset.forEach(n => {
@@ -722,257 +778,227 @@ function buildJournal() {
 
     let tagsHTML = '';
     if (n.tags.length > 0) {
-      tagsHTML = '<div class="tags-container" style="margin-top:10px;">';
+      tagsHTML = `<div class="tags-container" style="margin-top:10px;">`;
       n.tags.forEach(t => {
-        tagsHTML += `<div class="tag-item" style="--tc: ${t.color}">${t.text}</div>`;
+        tagsHTML += `<span class="tag-item" style="--tc: ${t.color}">${t.text}</span>`;
       });
-      tagsHTML += '</div>';
+      tagsHTML += `</div>`;
     }
 
     let blockHTML = '';
-    if (n.showBlock) {
+    if (n.showBlock && n.blockLabel) {
       blockHTML = `
         <div class="inner-block" style="margin-top:10px;">
-          <div class="inner-label">${n.blockLabel || 'LABEL'}</div>
-          <div class="inner-val">${n.blockVal || ''}</div>
+          <div class="inner-label">${n.blockLabel}</div>
+          <div class="inner-val" contenteditable="true">${n.blockVal || ''}</div>
         </div>`;
     }
 
     card.innerHTML = `
       <div class="journal-header">
         <div class="journal-meta">
-          <span class="icon-badge">${n.icon}</span>
+          <div class="icon-badge">${n.icon || '📂'}</div>
           <div>
-            <div class="journal-title" contenteditable="true" data-prop="title">${n.title || 'Sans titre'}</div>
-            <div class="journal-sub" contenteditable="true" data-prop="sub">${n.sub || ''}</div>
+            <div class="journal-title">${n.title || 'Sans titre'}</div>
+            <div class="journal-sub">${n.sub || ''}</div>
           </div>
         </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <div class="header-actions">
-            <button class="action-btn journal-addbullet-btn" title="Ajouter un objectif">+</button>
-            <button class="action-btn journal-settings-btn" title="Configuration complète">⚙️</button>
-          </div>
-          <div class="journal-chevron">▼</div>
-        </div>
+        <div class="journal-chevron">▼</div>
       </div>
       <div class="journal-body">
-        <div class="bullets-container" style="max-height:none; overflow:visible; flex:none;">
-          ${bulletsHTML || '<div style="color:var(--dim); font-style:italic; font-size:12px;">Aucun objectif.</div>'}
-        </div>
-        ${tagsHTML}
+        <div class="bullets-container">${bulletsHTML}</div>
         ${blockHTML}
+        ${tagsHTML}
       </div>
     `;
 
     card.querySelector('.journal-header').addEventListener('click', (e) => {
-      if (e.target.closest('[contenteditable="true"]') || e.target.closest('.action-btn')) return;
+      if(e.target.closest('[contenteditable]')) return;
       card.classList.toggle('collapsed');
     });
 
-    card.querySelectorAll('.journal-title, .journal-sub').forEach(el => {
-      el.addEventListener('click', e => e.stopPropagation());
-      el.addEventListener('blur', (e) => {
-        n[e.target.getAttribute('data-prop')] = e.target.innerText;
-        save();
-        render();
-      });
-    });
+    card.querySelectorAll('.bullet-item').forEach(bEl => {
+      const idx = parseInt(bEl.dataset.index);
+      const cb = bEl.querySelector('.bullet-checkbox');
+      const dot = bEl.querySelector('.bullet-dot');
+      const targetClickable = cb || dot;
 
-    card.querySelectorAll('.bullet-text').forEach(el => {
-      el.addEventListener('click', e => e.stopPropagation());
-      el.addEventListener('blur', (e) => {
-        const idx = e.target.closest('.bullet-item').getAttribute('data-index');
-        const text = e.target.innerText.trim();
-        if (text === "") { 
-          n.bullets.splice(idx, 1); 
-          n.checkedBullets = n.checkedBullets.filter(i => i !== parseInt(idx)).map(i => i > idx ? i - 1 : i);
-        } else { 
-          n.bullets[idx] = text; 
-        }
-        save();
-        render();
-      });
-    });
-
-    card.querySelectorAll('.bullet-checkbox, .bullet-dot').forEach(el => {
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const idx = parseInt(e.target.closest('.bullet-item').getAttribute('data-index'));
-        if(!n.checkedBullets) n.checkedBullets = [];
-        n.checkedBullets = n.checkedBullets.includes(idx) ? n.checkedBullets.filter(i => i !== idx) : [...n.checkedBullets, idx];
-        save();
-        render();
-      });
-    });
-
-    card.querySelector('.journal-addbullet-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      n.bullets.push("");
-      save();
-      render();
-      const refreshedCard = document.getElementById('journal_' + n.id);
-      if (refreshedCard) {
-        const items = refreshedCard.querySelectorAll('.bullet-text');
-        if (items.length > 0) items[items.length - 1].focus();
+      if(targetClickable) {
+        targetClickable.addEventListener('click', () => {
+          if (!n.checkedBullets) n.checkedBullets = [];
+          const pos = n.checkedBullets.indexOf(idx);
+          if (pos > -1) n.checkedBullets.splice(pos, 1);
+          else n.checkedBullets.push(idx);
+          save();
+          buildJournal();
+        });
       }
+
+      bEl.querySelector('.bullet-text').addEventListener('blur', (e) => {
+        n.bullets[idx] = e.target.innerText;
+        save();
+      });
     });
 
-    card.querySelector('.journal-settings-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      openConfigSheet(n);
-    });
+    if(n.showBlock) {
+      const valEl = card.querySelector('.inner-val');
+      if(valEl) {
+        valEl.addEventListener('blur', (e) => {
+          n.blockVal = e.target.innerText;
+          save();
+        });
+      }
+    }
 
     journalContainer.appendChild(card);
   });
 }
 
 function render() {
-  document.querySelectorAll('.node').forEach(n => n.remove());
-  
-  dataset.forEach(n => {
-    if(!n.bullets) n.bullets = [];
-    if(!n.checkedBullets) n.checkedBullets = [];
-    if(n.useCheckboxes === undefined) n.useCheckboxes = false;
-    if(n.showBlock === undefined) n.showBlock = !!n.blockLabel;
-    if(n.bgOpacity === undefined) n.bgOpacity = 85;
-    if(!n.tags) n.tags = [];
-    if(!n.cardBg) n.cardBg = '#14151A';
-    if(!n.parents) n.parents = [];
+  panZoomContent.querySelectorAll('.node').forEach(el => el.remove());
 
-    const div = document.createElement('div');
-    div.className = 'node' + (n.isBento ? ' bento-style' : '');
-    div.id = n.id;
-    div.style.left = n.x + 'px';
-    div.style.top = n.y + 'px';
-    div.style.width = n.w + 'px';
-    if(n.h) div.style.height = n.h + 'px';
-    div.style.setProperty('--nc', n.color);
-    div.style.backgroundColor = n.cardBg;
+  dataset.forEach(n => {
+    const nodeEl = document.createElement('div');
+    nodeEl.className = 'node' + (n.isBento ? ' bento-style' : '');
+    nodeEl.id = n.id;
+    nodeEl.style.left = (n.x || 100) + 'px';
+    nodeEl.style.top = (n.y || 100) + 'px';
+    nodeEl.style.width = (n.w || 240) + 'px';
+    nodeEl.style.height = (n.h || 260) + 'px';
+    nodeEl.style.backgroundColor = n.cardBg || '#14151A';
+    nodeEl.style.setProperty('--nc', n.color || 'var(--gold)');
 
     let bgLayerHTML = '';
-    if(n.bg) {
-      const opc = (n.bgOpacity / 100).toFixed(2);
+    if (n.bg) {
+      const op = n.bgOpacity !== undefined ? n.bgOpacity / 100 : 0.85;
       bgLayerHTML = `
-        <div class="node-bg-layer" style="background-image: url('${n.bg}'); opacity: ${opc};"></div>
+        <div class="node-bg-layer" style="background-image: url('${n.bg}'); opacity: ${op};"></div>
         <div class="node-overlay"></div>
       `;
     }
 
-    let blockHTML = (n.showBlock) ? `
-      <div class="inner-block">
-        <div class="inner-label">${n.blockLabel || 'LABEL'}</div>
-        <div class="inner-val" contenteditable="true" data-prop="blockVal">${n.blockVal || ''}</div>
-      </div>
-    ` : '';
-
-    let tagsHTML = '<div class="tags-container">';
-    n.tags.forEach((t, tIdx) => {
-      tagsHTML += `<div class="tag-item" contenteditable="true" data-tag-idx="${tIdx}" style="--tc: ${t.color}">${t.text}</div>`;
-    });
-    tagsHTML += '</div>';
-
     let bulletsHTML = '';
-    n.bullets.forEach((bText, idx) => {
-      const isChecked = n.checkedBullets && n.checkedBullets.includes(idx);
-      const indicator = n.useCheckboxes ? `<div class="bullet-checkbox"></div>` : `<div class="bullet-dot"></div>`;
-      bulletsHTML += `
-        <div class="bullet-item ${isChecked ? 'checked' : ''}" data-index="${idx}">
-          ${indicator}
-          <div class="bullet-text" contenteditable="true">${bText}</div>
-        </div>`;
-    });
+    if(n.bullets) {
+      n.bullets.forEach((bText, idx) => {
+        const isChecked = n.checkedBullets && n.checkedBullets.includes(idx);
+        const indicator = n.useCheckboxes ? `<div class="bullet-checkbox"></div>` : `<div class="bullet-dot"></div>`;
+        bulletsHTML += `
+          <div class="bullet-item ${isChecked ? 'checked' : ''}" data-index="${idx}">
+            ${indicator}
+            <div class="bullet-text" contenteditable="true">${bText}</div>
+          </div>`;
+      });
+    }
 
-    div.innerHTML = `
+    let blockHTML = '';
+    if (n.showBlock && n.blockLabel) {
+      blockHTML = `
+        <div class="inner-block">
+          <div class="inner-label">${n.blockLabel}</div>
+          <div class="inner-val" contenteditable="true">${n.blockVal || ''}</div>
+        </div>`;
+    }
+
+    let tagsHTML = '';
+    if (n.tags && n.tags.length > 0) {
+      tagsHTML = `<div class="tags-container">`;
+      n.tags.forEach(t => {
+        tagsHTML += `<span class="tag-item" style="--tc: ${t.color}" contenteditable="true">${t.text}</span>`;
+      });
+      tagsHTML += `</div>`;
+    }
+
+    nodeEl.innerHTML = `
       ${bgLayerHTML}
       <div class="node-content">
         <div class="node-header">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="icon-badge">${n.icon || '📂'}</span>
-            <div>
-              <div class="title" contenteditable="true" data-prop="title">${n.title || 'Sans titre'}</div>
-              <div class="sub" contenteditable="true" data-prop="sub">${n.sub || ''}</div>
-            </div>
+          <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+            <div class="icon-badge">${n.icon || '📂'}</div>
+            <div class="title" contenteditable="true">${n.title || 'Sans titre'}</div>
           </div>
           <div class="header-actions">
+            <button class="action-btn config-btn" title="Configurer">⚙️</button>
             <button class="action-btn add-bullet-btn" title="Ajouter une puce">+</button>
-            <button class="action-btn settings-btn" title="Configuration">⚙️</button>
           </div>
         </div>
-        <div class="bullets-container">
-          ${bulletsHTML}
-        </div>
-        ${tagsHTML}
+        <div class="sub" contenteditable="true">${n.sub || ''}</div>
+        <div class="bullets-container">${bulletsHTML}</div>
         ${blockHTML}
+        ${tagsHTML}
       </div>
       <div class="resize-handle"></div>
     `;
 
-    // INLINE EDITING EVENT LISTENERS FOR MAP VIGNETTE
-    div.querySelectorAll('[contenteditable="true"]').forEach(el => {
-      el.addEventListener('blur', (e) => {
-        const prop = e.target.getAttribute('data-prop');
-        const tagIdx = e.target.getAttribute('data-tag-idx');
-        
-        if (prop) {
-          n[prop] = e.target.innerText;
-        } else if (tagIdx !== null) {
-          n.tags[tagIdx].text = e.target.innerText;
-        }
-        save();
-      });
-    });
+    nodeEl.querySelector('.config-btn').addEventListener('click', () => openConfigSheet(n));
 
-    div.querySelectorAll('.bullet-text').forEach(el => {
-      el.addEventListener('blur', (e) => {
-        const idx = e.target.closest('.bullet-item').getAttribute('data-index');
-        const text = e.target.innerText.trim();
-        if (text === "") {
-          n.bullets.splice(idx, 1);
-          n.checkedBullets = n.checkedBullets.filter(i => i !== parseInt(idx)).map(i => i > idx ? i - 1 : i);
-        } else {
-          n.bullets[idx] = text;
-        }
-        save();
-        render();
-      });
-    });
-
-    div.querySelectorAll('.bullet-checkbox, .bullet-dot').forEach(el => {
-      el.addEventListener('click', (e) => {
-        const idx = parseInt(e.target.closest('.bullet-item').getAttribute('data-index'));
-        if(!n.checkedBullets) n.checkedBullets = [];
-        n.checkedBullets = n.checkedBullets.includes(idx) ? n.checkedBullets.filter(i => i !== idx) : [...n.checkedBullets, idx];
-        save();
-        render();
-      });
-    });
-
-    div.querySelector('.add-bullet-btn').addEventListener('click', () => {
-      n.bullets.push("");
+    nodeEl.querySelector('.add-bullet-btn').addEventListener('click', () => {
+      if(!n.bullets) n.bullets = [];
+      n.bullets.push("Nouvel objectif");
       save();
       render();
-      const refreshedNode = document.getElementById(n.id);
-      if (refreshedNode) {
-        const items = refreshedNode.querySelectorAll('.bullet-text');
-        if (items.length > 0) items[items.length - 1].focus();
+    });
+
+    nodeEl.querySelector('.title').addEventListener('blur', (e) => {
+      n.title = e.target.innerText;
+      save();
+    });
+
+    nodeEl.querySelector('.sub').addEventListener('blur', (e) => {
+      n.sub = e.target.innerText;
+      save();
+    });
+
+    nodeEl.querySelectorAll('.bullet-item').forEach(bEl => {
+      const idx = parseInt(bEl.dataset.index);
+      const cb = bEl.querySelector('.bullet-checkbox');
+      const dot = bEl.querySelector('.bullet-dot');
+      const targetClickable = cb || dot;
+
+      if(targetClickable) {
+        targetClickable.addEventListener('click', () => {
+          if (!n.checkedBullets) n.checkedBullets = [];
+          const pos = n.checkedBullets.indexOf(idx);
+          if (pos > -1) n.checkedBullets.splice(pos, 1);
+          else n.checkedBullets.push(idx);
+          save();
+          render();
+        });
       }
+
+      bEl.querySelector('.bullet-text').addEventListener('blur', (e) => {
+        n.bullets[idx] = e.target.innerText;
+        save();
+      });
     });
 
-    div.querySelector('.settings-btn').addEventListener('click', () => {
-      openConfigSheet(n);
-    });
+    if(n.showBlock) {
+      const valEl = nodeEl.querySelector('.inner-val');
+      if(valEl) {
+        valEl.addEventListener('blur', (e) => {
+          n.blockVal = e.target.innerText;
+          save();
+        });
+      }
+    }
 
-    panZoomContent.appendChild(div);
+    if(n.tags) {
+      nodeEl.querySelectorAll('.tag-item').forEach((tEl, tIdx) => {
+        tEl.addEventListener('blur', (e) => {
+          n.tags[tIdx].text = e.target.innerText;
+          save();
+        });
+      });
+    }
+
+    panZoomContent.appendChild(nodeEl);
   });
 
-  buildJournal();
   initInteractOnNodes();
   draw();
+  buildJournal();
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  loadData();
-});
+loadData();
 </script>
 </body>
 </html>
