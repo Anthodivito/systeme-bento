@@ -5,16 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>systeme.anthonycarrel.com / architecture multi-links</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght=500;600;700&family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- Inclusion d'interact.js pour une gestion tactile robuste -->
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <style>
   :root {
     --gold: #FFB03B; --source: #12D99B; --cockpit: #3B9CFF; --moteur: #A56CFF; --objectifs: #38D4F8;
-    --bg-main: #0B0B0E;      
-    --panel-border: rgba(255,255,255,0.08);
-    --text: #E3E4E8; --dim: #626775;
+    --bg-main: #000000;      
+    --panel-border: rgba(255,255,255,0.12);
+    --text: #E3E4E8; --dim: #8E92A0;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--bg-main); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; height: 100vh; -webkit-tap-highlight-color: transparent; }
@@ -143,16 +142,84 @@
   .journal-card.collapsed .journal-body { display: none; }
   .journal-card.collapsed .journal-chevron { transform: rotate(-90deg); }
 
-  /* STYLES VISION BOARD */
-  .vision-container { display: none; flex: 1; overflow-y: auto; padding: 24px; background: var(--bg-main); flex-direction: column; gap: 20px; }
-  .vision-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-  .vision-card { background: #14151A; border: 1px solid var(--panel-border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-  .vision-img-box { width: 100%; height: 150px; background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--panel-border); }
-  .vision-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
-  .vision-tag { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; display: inline-block; width: fit-content; text-transform: uppercase; }
-  .tag-owned { background: rgba(29, 185, 84, 0.15); color: #1DB954; border: 1px solid rgba(29, 185, 84, 0.3); }
-  .tag-wishlist { background: rgba(59, 156, 255, 0.15); color: #3B9CFF; border: 1px solid rgba(59, 156, 255, 0.3); }
-  .tag-damaged { background: rgba(255, 74, 74, 0.15); color: #FF4A4A; border: 1px solid rgba(255, 74, 74, 0.3); }
+  /* --- STYLES VISION BOARD APPLE BENTO UI/UX --- */
+  .vision-container { 
+    display: none; flex: 1; overflow-y: auto; padding: 32px; background: #000000; 
+    flex-direction: column; gap: 24px; 
+  }
+  .vision-header-intro { max-width: 600px; margin-bottom: 8px; }
+  .vision-header-intro h2 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; margin: 0 0 6px 0; color: #fff; letter-spacing: -0.5px; }
+  .vision-header-intro p { font-size: 14px; color: var(--dim); margin: 0; line-height: 1.5; }
+
+  .apple-bento-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: minmax(180px, auto);
+    gap: 16px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .apple-card {
+    background: #0d0e12;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+
+  .apple-card:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 30px rgba(255, 176, 59, 0.08), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+
+  /* Formats de la grille Bento */
+  .apple-card.col-span-2 { grid-column: span 2; }
+  .apple-card.col-span-3 { grid-column: span 3; }
+  .apple-card.col-span-4 { grid-column: span 4; }
+  .apple-card.row-span-2 { grid-row: span 2; }
+
+  .apple-card-glow {
+    position: absolute; top: 0; right: 0; width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(255,176,59,0.12) 0%, transparent 70%);
+    pointer-events: none; z-index: 1;
+  }
+  .apple-card-glow.blue { background: radial-gradient(circle, rgba(59,156,255,0.15) 0%, transparent 70%); }
+  .apple-card-glow.purple { background: radial-gradient(circle, rgba(165,108,255,0.15) 0%, transparent 70%); }
+  .apple-card-glow.emerald { background: radial-gradient(circle, rgba(18,217,155,0.15) 0%, transparent 70%); }
+
+  .apple-card-content { position: relative; z-index: 2; display: flex; flex-direction: column; height: 100%; justify-content: space-between; gap: 16px; }
+  
+  .apple-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .apple-badge {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 6px 12px; border-radius: 20px; backdrop-filter: blur(10px);
+  }
+  .badge-owned { background: rgba(18, 217, 155, 0.12); color: #12D99B; border: 1px solid rgba(18, 217, 155, 0.3); }
+  .badge-wishlist { background: rgba(59, 156, 255, 0.12); color: #3B9CFF; border: 1px solid rgba(59, 156, 255, 0.3); }
+  .badge-upgrade { background: rgba(255, 176, 59, 0.12); color: #FFB03B; border: 1px solid rgba(255, 176, 59, 0.3); }
+
+  .apple-card-title-group h3 { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600; color: #fff; margin: 0 0 4px 0; }
+  .apple-card-title-group p { font-size: 13px; color: var(--dim); margin: 0; line-height: 1.4; }
+
+  .apple-visual-container {
+    width: 100%; flex: 1; min-height: 140px; display: flex; align-items: center; justify-content: center; position: relative;
+  }
+  .apple-visual-container img {
+    max-width: 100%; max-height: 180px; object-fit: contain; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.6));
+    transition: transform 0.4s ease;
+  }
+  .apple-card:hover .apple-visual-container img { transform: scale(1.04); }
+
+  /* -------------------------------------- */
 
   [contenteditable="true"]:focus { background: rgba(255,255,255,0.04); border-radius: 4px; outline: none; }
   .flow-line { stroke-dasharray: 8, 6; animation: flowMovement 25s linear infinite; }
@@ -181,7 +248,7 @@
   .btn-danger { background: #ff4a4a; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; width: 100%; text-align: center; }
   .btn-secondary { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--panel-border); padding: 8px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 12px; }
 
-  /* FIX RESPONSIVE MOBILE + TABLETTE */
+  /* RESPONSIVE MOBILE + TABLETTE */
   @media (max-width: 1024px) {
     .header-nav { padding: 12px 16px; }
     .header-nav > div:last-child { display: none; } 
@@ -201,6 +268,8 @@
     .app-container.mode-vision #visionContainer { display: flex !important; }
     
     .sheet { width: 100% !important; border-left: none; }
+    .apple-bento-grid { grid-template-columns: 1fr; }
+    .apple-card.col-span-2, .apple-card.col-span-3, .apple-card.col-span-4 { grid-column: span 1; }
 
     .bullet-checkbox { width: 22px; height: 22px; }
     .action-btn { width: 34px; height: 34px; font-size: 16px; }
@@ -210,24 +279,10 @@
   }
 
   .fab-add-mobile {
-    display: none;
-    position: fixed;
-    bottom: 24px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--text);
-    color: #000;
-    font-size: 30px;
-    font-weight: 700;
-    line-height: 1;
-    border: none;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08);
-    z-index: 150;
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
+    display: none; position: fixed; bottom: 24px; right: 20px; width: 56px; height: 56px;
+    border-radius: 50%; background: var(--text); color: #000; font-size: 30px; font-weight: 700;
+    line-height: 1; border: none; box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08);
+    z-index: 150; cursor: pointer; align-items: center; justify-content: center;
   }
 </style>
 </head>
@@ -261,40 +316,112 @@
 
   <div class="journal-container" id="journalContainer"></div>
 
-  <!-- NOUVEL ESPACE VISION BOARD -->
+  <!-- NOUVEL ESPACE VISION BOARD : STYLE APPLE BENTO UI/UX -->
   <div class="vision-container" id="visionContainer">
-    <h2 style="font-family: 'Space Grotesk'; font-size: 20px; margin-bottom: 4px;">Vision Board : High-Tech Apple</h2>
-    <p style="font-size: 13px; color: var(--dim); margin-bottom: 16px;">Suivi visuel du matériel actuel, des envies et des critères de renouvellement.</p>
-    
-    <div class="vision-grid">
-      <!-- Exemple Produit 1 : Possédé -->
-      <div class="vision-card">
-        <span class="vision-tag tag-owned">Possédé (En service)</span>
-        <div class="vision-img-box">
-          <img src="" alt="Glissez votre PNG ici">
+    <div class="vision-header-intro">
+      <h2>Vision Board Écosystème</h2>
+      <p>Suivi visuel interactif du matériel actif, des cibles d'upgrade et de la roadmap matérielle haut de gamme.</p>
+    </div>
+
+    <div class="apple-bento-grid">
+      <!-- Carte 1 : iPhone Pro (Large) -->
+      <div class="apple-card col-span-2 row-span-2">
+        <div class="apple-card-glow"></div>
+        <div class="apple-card-content">
+          <div class="apple-card-top">
+            <span class="apple-badge badge-owned">Possédé - En service</span>
+            <span style="font-size: 12px; color: var(--dim);">Titanium Doré</span>
+          </div>
+          <div class="apple-visual-container">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-deserttitanium?wid=512&hei=512&fmt=p-jpg&qlt=80&.v=1723186443425" alt="iPhone Pro">
+          </div>
+          <div class="apple-card-title-group">
+            <h3>iPhone 16 Pro Max</h3>
+            <p>Écran Super Retina XDR 6.9", Puce A18 Pro, contrôle de la caméra pro et autonomie record.</p>
+          </div>
         </div>
-        <h3 style="font-family: 'Space Grotesk'; font-size: 15px; margin: 0;">iPhone 15 Pro Max</h3>
-        <p style="font-size: 11px; color: var(--dim); margin: 0;">État général impeccable, batterie à 88%.</p>
       </div>
 
-      <!-- Exemple Produit 2 : Wishlist / À remplacer -->
-      <div class="vision-card">
-        <span class="vision-tag tag-damaged">À renouveler (Abîmé)</span>
-        <div class="vision-img-box">
-          <img src="" alt="Glissez votre PNG ici">
+      <!-- Carte 2 : Apple Watch Ultra (Standard) -->
+      <div class="apple-card col-span-2">
+        <div class="apple-card-glow blue"></div>
+        <div class="apple-card-content">
+          <div class="apple-card-top">
+            <span class="apple-badge badge-upgrade">À surveiller / Upgrade</span>
+          </div>
+          <div class="apple-visual-container" style="min-height: 100px;">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/watch-ultra-digitalmat-gallery-1-202309?wid=360&hei=330&fmt=png-alpha&.v=1693006424599" alt="Apple Watch Ultra">
+          </div>
+          <div class="apple-card-title-group">
+            <h3>Apple Watch Ultra 2</h3>
+            <p>Boîtier titane aérospatial, verre saphir, micro-rayures d'usage à auditer.</p>
+          </div>
         </div>
-        <h3 style="font-family: 'Space Grotesk'; font-size: 15px; margin: 0;">Apple Watch Ultra</h3>
-        <p style="font-size: 11px; color: var(--dim); margin: 0;">Écran rayé, choc sur le boîtier titane.</p>
       </div>
 
-      <!-- Exemple Produit 3 : Wishlist -->
-      <div class="vision-card">
-        <span class="vision-tag tag-wishlist">Wishlist</span>
-        <div class="vision-img-box">
-          <img src="" alt="Glissez votre PNG ici">
+      <!-- Carte 3 : Puce / Performance -->
+      <div class="apple-card">
+        <div class="apple-card-glow purple"></div>
+        <div class="apple-card-content">
+          <div class="apple-card-top">
+            <span class="apple-badge badge-owned">Architecture</span>
+          </div>
+          <div class="apple-visual-container" style="min-height: 80px;">
+            <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=300&auto=format&fit=crop&q=80" alt="Setup Mac" style="border-radius: 12px;">
+          </div>
+          <div class="apple-card-title-group">
+            <h3>Apple Silicon M-Series</h3>
+            <p>Puissance de calcul unifiée pour l'IA locale.</p>
+          </div>
         </div>
-        <h3 style="font-family: 'Space Grotesk'; font-size: 15px; margin: 0;">Vision Pro (Gen 2)</h3>
-        <p style="font-size: 11px; color: var(--dim); margin: 0;">Cible d'investissement future.</p>
+      </div>
+
+      <!-- Carte 4 : Vision Pro (Wishlist) -->
+      <div class="apple-card">
+        <div class="apple-card-glow emerald"></div>
+        <div class="apple-card-content">
+          <div class="apple-card-top">
+            <span class="apple-badge badge-wishlist">Wishlist / Futur</span>
+          </div>
+          <div class="apple-visual-container" style="min-height: 80px;">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/apple-vision-pro-select-202306?wid=400&hei=400&fmt=png-alpha&.v=1685981774358" alt="Vision Pro">
+          </div>
+          <div class="apple-card-title-group">
+            <h3>Apple Vision Pro</h3>
+            <p>Interface spatiale immersive.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carte 5 : Audio Pro -->
+      <div class="apple-card col-span-2">
+        <div class="apple-card-glow blue"></div>
+        <div class="apple-card-content">
+          <div class="apple-card-top">
+            <span class="apple-badge badge-owned">Audio Actif</span>
+          </div>
+          <div class="apple-visual-container" style="min-height: 90px;">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/MME73?wid=300&hei=300&fmt=png-alpha&.v=1632861342000" alt="AirPods Pro">
+          </div>
+          <div class="apple-card-title-group">
+            <h3>AirPods Pro (Gen 2)</h3>
+            <p>Réduction active du bruit adaptative et audio spatial personnalisé.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carte 6 : Objectifs / Hub -->
+      <div class="apple-card col-span-2">
+        <div class="apple-card-glow"></div>
+        <div class="apple-card-content">
+          <div class="apple-card-top">
+            <span class="apple-badge badge-wishlist">Cible Station</span>
+          </div>
+          <div class="apple-card-title-group">
+            <h3>Studio Display 5K</h3>
+            <p>Écran rétina 27 pouces avec caméra 12MP Ultra Grand Angle et système à six haut-parleurs.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -465,7 +592,6 @@ function updateTransform() {
   panZoomContent.style.transform = `translate(${transformState.x}px, ${transformState.y}px) scale(${transformState.scale})`;
 }
 
-// GESTION PAN & ZOOM ROBUSTE AVEC INTERACT.JS (Desktop + Tactile)
 interact(container).gesturable({
   listeners: {
     move (event) {
