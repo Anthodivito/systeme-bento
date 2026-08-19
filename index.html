@@ -3,28 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>systeme.anthonycarrel.com / architecture multi-links</title>
+<title>systeme.anthonycarrel.com</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <style>
   :root {
     --gold: #FFB03B; --source: #12D99B; --cockpit: #3B9CFF; --moteur: #A56CFF; --objectifs: #38D4F8;
-    --bg-main: #000000;      
+    --bg-main: #000000;
     --panel-border: rgba(255,255,255,0.12);
     --text: #E3E4E8; --dim: #8E92A0;
+    --vb-bg: #000000;
+    --vb-card: #0d0d0f;
+    --vb-border: rgba(255,255,255,0.06);
+    --vb-text-dim: #86868b;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--bg-main); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; height: 100vh; -webkit-tap-highlight-color: transparent; }
-  
+
   .app-container { display: flex; flex-direction: column; height: 100vh; background: var(--bg-main); position: relative; }
-  
+
   .header-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background: #0B0B0E; border-bottom: 1px solid var(--panel-border); z-index: 110; gap: 12px; }
   .tabs { display: flex; gap: 8px; }
-  .tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--dim); cursor: pointer; user-select: none; }
+  .tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--dim); cursor: pointer; user-select: none; transition: all 0.2s; }
   .tab.active { background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--panel-border); }
-  
+
   .view-toggle { display: none; gap: 4px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 8px; border: 1px solid var(--panel-border); }
   .toggle-btn { background: none; border: none; color: var(--dim); padding: 6px 12px; font-size: 11px; font-weight: 600; border-radius: 6px; cursor: pointer; font-family: inherit; }
   .toggle-btn.active { background: var(--panel-border); color: var(--text); }
@@ -33,201 +37,189 @@
   .btn-primary { background: var(--text); color: #000; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; user-select: none; }
   .btn-primary:hover { opacity: 0.9; }
 
+  /* ===== ARCHITECTURE (CANVAS) ===== */
   .canvas-container {
     flex: 1; position: relative; width: 100%; overflow: hidden;
     background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 32px 32px;
     touch-action: none;
   }
-  
   .pan-zoom-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-origin: 0 0; will-change: transform; }
   .connector-svg { position: absolute; inset: 0; width: 5000px; height: 5000px; pointer-events: none; z-index: 1; }
 
   .node {
     position: absolute; z-index: 5; touch-action: none;
     border: 1px solid color-mix(in srgb, var(--nc) 40%, transparent);
-    border-radius: 12px; padding: 16px; 
+    border-radius: 12px; padding: 16px;
     box-shadow: 0 0 25px -4px color-mix(in srgb, var(--nc) 50%, transparent),
-                0 20px 40px rgba(0, 0, 0, 0.7), 
+                0 20px 40px rgba(0, 0, 0, 0.7),
                 0 0 0 1px rgba(0, 0, 0, 0.5);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     overflow: hidden;
   }
-  
-  .node.bento-style {
-    background: #111216;
-    border: 1px solid rgba(56, 212, 248, 0.2);
-    box-shadow: 0 0 40px -5px rgba(56, 212, 248, 0.15), 0 30px 60px rgba(0,0,0,0.8);
-  }
-
-  .node:hover { 
-    border-color: color-mix(in srgb, var(--nc) 80%, transparent); 
+  .node:hover {
+    border-color: color-mix(in srgb, var(--nc) 80%, transparent);
     box-shadow: 0 0 35px -2px color-mix(in srgb, var(--nc) 75%, transparent),
                 0 25px 50px rgba(0, 0, 0, 0.9);
   }
-  
-  .node-bg-layer {
-    position: absolute; inset: 0;
-    background-size: cover; background-position: center;
-    z-index: 0; pointer-events: none;
-  }
-  .node-overlay { content: ''; position: absolute; inset: 0; background: rgba(20, 21, 26, 0.4); z-index: 1; pointer-events: none; }
+  .node-bg-layer { position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 0; pointer-events: none; }
+  .node-overlay { position: absolute; inset: 0; background: rgba(20, 21, 26, 0.4); z-index: 1; pointer-events: none; }
   .node-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-  
   .node-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
   .header-actions { display: flex; gap: 8px; }
-
-  .icon-badge {
-    width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
-    background: color-mix(in srgb, var(--nc) 15%, rgba(0,0,0,0.4)); color: var(--nc); font-size: 14px;
-    border: 1px solid color-mix(in srgb, var(--nc) 30%, transparent); box-shadow: 0 0 12px -4px var(--nc);
-  }
-  
-  .action-btn {
-    background: transparent; border: 1px dashed color-mix(in srgb, var(--nc) 40%, transparent);
-    color: var(--dim); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: all 0.2s;
-  }
+  .icon-badge { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--nc) 15%, rgba(0,0,0,0.4)); color: var(--nc); font-size: 14px; border: 1px solid color-mix(in srgb, var(--nc) 30%, transparent); box-shadow: 0 0 12px -4px var(--nc); }
+  .action-btn { background: transparent; border: 1px dashed color-mix(in srgb, var(--nc) 40%, transparent); color: var(--dim); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: all 0.2s; }
   .action-btn:hover { color: var(--text); border-color: var(--nc); background: rgba(255,255,255,0.05); }
-  
   .title { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; color: var(--text); outline: none; }
   .sub { font-size: 11px; color: var(--dim); outline: none; margin-top: 4px; line-height: 1.4; margin-bottom: 8px; }
-  
   .tags-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; margin-bottom: 8px; padding-top: 4px; }
-  .tag-item {
-    font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
-    display: inline-flex; align-items: center; gap: 5px;
-    background: color-mix(in srgb, var(--tc) 12%, rgba(0,0,0,0.6));
-    color: var(--tc); border: 1px solid color-mix(in srgb, var(--tc) 40%, transparent);
-    box-shadow: 0 0 14px -2px color-mix(in srgb, var(--tc) 50%, transparent);
-    outline: none;
-  }
-
+  .tag-item { font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; background: color-mix(in srgb, var(--tc) 12%, rgba(0,0,0,0.6)); color: var(--tc); border: 1px solid color-mix(in srgb, var(--tc) 40%, transparent); box-shadow: 0 0 14px -2px color-mix(in srgb, var(--tc) 50%, transparent); outline: none; }
   .bullets-container { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; margin-bottom: 10px; overflow-y: auto; flex: 1; pointer-events: auto; }
   .bullet-item { display: flex; align-items: center; gap: 8px; font-size: 11px; line-height: 1.3; color: var(--text); position: relative; }
-  
   .bullet-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--nc); flex-shrink: 0; box-shadow: 0 0 8px var(--nc); }
-  .bullet-checkbox {
-    width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--dim); 
-    background: transparent; flex-shrink: 0; cursor: pointer; transition: all 0.2s;
-  }
-  .bullet-item.checked .bullet-checkbox {
-    background: var(--nc); border-color: var(--nc); box-shadow: 0 0 8px var(--nc);
-  }
+  .bullet-checkbox { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--dim); background: transparent; flex-shrink: 0; cursor: pointer; transition: all 0.2s; }
+  .bullet-item.checked .bullet-checkbox { background: var(--nc); border-color: var(--nc); box-shadow: 0 0 8px var(--nc); }
   .bullet-item.checked .bullet-text { color: var(--dim); text-decoration: line-through; }
-
   .bullet-text { flex: 1; outline: none; min-height: 14px; word-break: break-word; }
   .bullet-text:empty::before { content: "Nouvel objectif..."; color: var(--dim); font-style: italic; }
-  
   .inner-block { background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); border-radius: 8px; padding: 8px 12px; margin-top: 2px; flex-shrink: 0; }
   .inner-label { font-size: 8px; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
   .inner-val { font-size: 11px; color: var(--text); outline: none; }
-
   .resize-handle { position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; cursor: se-resize; z-index: 20; opacity: 0.6; }
-  .resize-handle::after {
-    content: ''; position: absolute; right: 4px; bottom: 4px; width: 4px; height: 4px; background: var(--text); border-radius: 50%;
-    box-shadow: -5px 0 var(--text), 0 -5px var(--text), -5px -5px var(--text);
-  }
-
-  .journal-container { display: none; flex: 1; overflow-y: auto; padding: 16px; background: var(--bg-main); flex-direction: column; gap: 12px; }
-  .journal-card {
-    background: #14151A;
-    border: 1px solid var(--panel-border); border-left: 4px solid var(--nc); border-radius: 12px; padding: 16px;
-  }
-  .journal-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-  .journal-meta { display: flex; align-items: center; gap: 12px; }
-  .journal-title { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px; color: var(--text); }
-  .journal-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
-  .journal-body { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--panel-border); padding-top: 12px; }
-  .journal-chevron { font-size: 12px; color: var(--dim); transition: transform 0.2s; }
-  .journal-card.collapsed .journal-body { display: none; }
-  .journal-card.collapsed .journal-chevron { transform: rotate(-90deg); }
-
-  /* --- STYLES VISION BOARD APPLE BENTO UI/UX --- */
-  .vision-container { 
-    display: none; flex: 1; overflow-y: auto; padding: 32px; background: #000000; 
-    flex-direction: column; gap: 24px; 
-  }
-  .vision-header-intro { max-width: 600px; margin-bottom: 8px; }
-  .vision-header-intro h2 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; margin: 0 0 6px 0; color: #fff; letter-spacing: -0.5px; }
-  .vision-header-intro p { font-size: 14px; color: var(--dim); margin: 0; line-height: 1.5; }
-
-  .apple-bento-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: minmax(180px, auto);
-    gap: 16px;
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-
-  .apple-card {
-    background: #0d0e12;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
-  }
-
-  .apple-card:hover {
-    border-color: rgba(255, 255, 255, 0.25);
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 30px rgba(255, 176, 59, 0.08), inset 0 1px 0 rgba(255,255,255,0.2);
-  }
-
-  /* Formats de la grille Bento */
-  .apple-card.col-span-2 { grid-column: span 2; }
-  .apple-card.col-span-3 { grid-column: span 3; }
-  .apple-card.col-span-4 { grid-column: span 4; }
-  .apple-card.row-span-2 { grid-row: span 2; }
-
-  .apple-card-glow {
-    position: absolute; top: 0; right: 0; width: 250px; height: 250px;
-    background: radial-gradient(circle, rgba(255,176,59,0.12) 0%, transparent 70%);
-    pointer-events: none; z-index: 1;
-  }
-  .apple-card-glow.blue { background: radial-gradient(circle, rgba(59,156,255,0.15) 0%, transparent 70%); }
-  .apple-card-glow.purple { background: radial-gradient(circle, rgba(165,108,255,0.15) 0%, transparent 70%); }
-  .apple-card-glow.emerald { background: radial-gradient(circle, rgba(18,217,155,0.15) 0%, transparent 70%); }
-
-  .apple-card-content { position: relative; z-index: 2; display: flex; flex-direction: column; height: 100%; justify-content: space-between; gap: 16px; }
-  
-  .apple-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
-  .apple-badge {
-    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
-    padding: 6px 12px; border-radius: 20px; backdrop-filter: blur(10px);
-  }
-  .badge-owned { background: rgba(18, 217, 155, 0.12); color: #12D99B; border: 1px solid rgba(18, 217, 155, 0.3); }
-  .badge-wishlist { background: rgba(59, 156, 255, 0.12); color: #3B9CFF; border: 1px solid rgba(59, 156, 255, 0.3); }
-  .badge-upgrade { background: rgba(255, 176, 59, 0.12); color: #FFB03B; border: 1px solid rgba(255, 176, 59, 0.3); }
-
-  .apple-card-title-group h3 { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600; color: #fff; margin: 0 0 4px 0; }
-  .apple-card-title-group p { font-size: 13px; color: var(--dim); margin: 0; line-height: 1.4; }
-
-  .apple-visual-container {
-    width: 100%; flex: 1; min-height: 140px; display: flex; align-items: center; justify-content: center; position: relative;
-  }
-  .apple-visual-container img {
-    max-width: 100%; max-height: 180px; object-fit: contain; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.6));
-    transition: transform 0.4s ease;
-  }
-  .apple-card:hover .apple-visual-container img { transform: scale(1.04); }
-
-  /* -------------------------------------- */
-
-  [contenteditable="true"]:focus { background: rgba(255,255,255,0.04); border-radius: 4px; outline: none; }
+  .resize-handle::after { content: ''; position: absolute; right: 4px; bottom: 4px; width: 4px; height: 4px; background: var(--text); border-radius: 50%; box-shadow: -5px 0 var(--text), 0 -5px var(--text), -5px -5px var(--text); }
   .flow-line { stroke-dasharray: 8, 6; animation: flowMovement 25s linear infinite; }
   @keyframes flowMovement { to { stroke-dashoffset: -1000; } }
 
+  /* ===== VISION BOARD ===== */
+  .vision-container {
+    display: none; flex: 1; overflow-y: auto; padding: 40px 24px;
+    background: var(--vb-bg); flex-direction: column; gap: 24px;
+  }
+  .vb-hero { text-align: center; padding: 20px 0 10px; position: relative; }
+  .vb-hero::before {
+    content: ''; position: absolute; top: -150px; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 400px;
+    background: radial-gradient(ellipse, rgba(255,176,59,0.06) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  .vb-hero h1 {
+    font-family: 'Space Grotesk', sans-serif; font-size: clamp(32px, 5vw, 56px);
+    font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 12px;
+    position: relative; z-index: 1;
+  }
+  .vb-hero h1 span {
+    background: linear-gradient(135deg, #FFB03B 0%, #FF6B35 50%, #FF4A82 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .vb-hero p { font-size: 16px; color: var(--vb-text-dim); max-width: 480px; margin: 0 auto; line-height: 1.5; position: relative; z-index: 1; }
+
+  .vb-legend { display: flex; justify-content: center; gap: 24px; padding: 0 0 20px; flex-wrap: wrap; }
+  .vb-legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--vb-text-dim); }
+  .vb-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .vb-legend-dot.owned { background: var(--source); box-shadow: 0 0 8px var(--source); }
+  .vb-legend-dot.wishlist { background: var(--cockpit); box-shadow: 0 0 8px var(--cockpit); }
+  .vb-legend-dot.upgrade { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+  .vb-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 280px; gap: 16px;
+    max-width: 1400px; margin: 0 auto; width: 100%;
+  }
+
+  .vb-card {
+    background: var(--vb-card); border: 1px solid var(--vb-border); border-radius: 24px;
+    padding: 24px; position: relative; overflow: hidden; cursor: pointer;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .vb-card::before {
+    content: ''; position: absolute; inset: 0; border-radius: 24px; padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent 50%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none; opacity: 0; transition: opacity 0.4s ease;
+  }
+  .vb-card:hover {
+    transform: translateY(-4px) scale(1.01); border-color: rgba(255,255,255,0.12);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255,176,59,0.05);
+  }
+  .vb-card:hover::before { opacity: 1; }
+
+  .vb-glow {
+    position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.12; pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .vb-card:hover .vb-glow { opacity: 0.22; }
+  .glow-gold { background: var(--gold); width: 200px; height: 200px; top: -60px; right: -60px; }
+  .glow-emerald { background: var(--source); width: 180px; height: 180px; top: -50px; right: -50px; }
+  .glow-blue { background: var(--cockpit); width: 180px; height: 180px; top: -50px; right: -50px; }
+  .glow-purple { background: var(--moteur); width: 180px; height: 180px; top: -50px; right: -50px; }
+  .glow-cyan { background: var(--objectifs); width: 180px; height: 180px; top: -50px; right: -50px; }
+  .glow-rose { background: var(--rose); width: 180px; height: 180px; top: -50px; right: -50px; }
+
+  .vb-span-2 { grid-column: span 2; }
+  .vb-span-2-rows { grid-row: span 2; }
+  .vb-span-4 { grid-column: span 4; }
+
+  .vb-card-header { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 2; }
+  .vb-badge {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 6px 12px; border-radius: 20px; backdrop-filter: blur(20px); border: 1px solid;
+  }
+  .vb-badge-owned { background: rgba(18, 217, 155, 0.1); color: var(--source); border-color: rgba(18, 217, 155, 0.3); }
+  .vb-badge-wishlist { background: rgba(59, 156, 255, 0.1); color: var(--cockpit); border-color: rgba(59, 156, 255, 0.3); }
+  .vb-badge-upgrade { background: rgba(255, 176, 59, 0.1); color: var(--gold); border-color: rgba(255, 176, 59, 0.3); }
+
+  .vb-edit-btn {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--vb-text-dim);
+    width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; transition: all 0.2s; opacity: 0;
+  }
+  .vb-card:hover .vb-edit-btn { opacity: 1; }
+  .vb-edit-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+  .vb-visual { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; min-height: 0; }
+  .vb-visual img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6)); transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+  .vb-card:hover .vb-visual img { transform: scale(1.05) translateY(-4px); }
+
+  .vb-info { position: relative; z-index: 2; }
+  .vb-info h3 { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 6px; letter-spacing: -0.02em; }
+  .vb-info p { font-size: 13px; color: var(--vb-text-dim); line-height: 1.5; }
+  .vb-specs { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+  .vb-spec { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--dim); }
+
+  /* ===== MODAL EDITION VISION BOARD ===== */
+  .vb-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px);
+    z-index: 1000; display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  .vb-modal-overlay.active { display: flex; }
+  .vb-modal {
+    background: #141416; border: 1px solid var(--panel-border); border-radius: 24px;
+    width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; padding: 32px; position: relative;
+  }
+  .vb-modal-close { position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--dim); font-size: 24px; cursor: pointer; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .vb-modal-close:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .vb-modal h2 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 600; margin-bottom: 24px; }
+  .vb-form-group { margin-bottom: 20px; }
+  .vb-form-group label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--dim); margin-bottom: 8px; }
+  .vb-form-group input, .vb-form-group select, .vb-form-group textarea {
+    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); border-radius: 12px;
+    padding: 12px 14px; color: var(--text); font-size: 14px; font-family: inherit; transition: border-color 0.2s;
+  }
+  .vb-form-group input:focus, .vb-form-group select:focus, .vb-form-group textarea:focus { outline: none; border-color: var(--gold); }
+  .vb-form-group textarea { resize: vertical; min-height: 80px; }
+  .vb-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .vb-btn-primary { width: 100%; background: var(--text); color: #000; border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; margin-top: 8px; }
+  .vb-btn-primary:hover { opacity: 0.9; }
+  .vb-btn-secondary { width: 100%; background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--panel-border); padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+  .vb-btn-secondary:hover { background: rgba(255,255,255,0.08); }
+
+  /* ===== CONFIG SHEET (ARCHITECTURE) ===== */
   .sheet {
     position: fixed; top: 0; right: 0; bottom: 0; width: 380px; background: #14151A;
-    border-left: 1px solid var(--panel-border); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); z-index: 200; padding: 24px; transform: translateX(100%); transition: transform 0.3s ease;
+    border-left: 1px solid var(--panel-border); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    z-index: 200; padding: 24px; transform: translateX(100%); transition: transform 0.3s ease;
     box-shadow: -10px 0 30px rgba(0,0,0,0.5); overflow-y: auto;
   }
   .sheet.open { transform: translateX(0); }
@@ -235,333 +227,155 @@
   .field { margin-bottom: 20px; }
   .field label { display:block; font-size:10px; text-transform: uppercase; color:var(--dim); margin-bottom:6px; font-weight:600; }
   .field input, .field select { width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); border-radius:8px; padding:10px; color:#fff; font-size:12px; }
-  
-  .checkbox-group-container {
-    max-height: 140px; overflow-y: auto; border: 1px solid var(--panel-border);
-    background: rgba(0,0,0,0.2); border-radius: 8px; padding: 8px 12px; display: flex; flex-direction: column; gap: 8px;
-  }
+  .checkbox-group-container { max-height: 140px; overflow-y: auto; border: 1px solid var(--panel-border); background: rgba(0,0,0,0.2); border-radius: 8px; padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; }
   .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text); cursor: pointer; }
   .checkbox-row input { width: auto; cursor: pointer; }
-
   .sheet-tags-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
   .sheet-tag-row { display: flex; gap: 6px; align-items: center; }
   .btn-danger { background: #ff4a4a; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; width: 100%; text-align: center; }
   .btn-secondary { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--panel-border); padding: 8px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 12px; }
 
-  /* RESPONSIVE MOBILE + TABLETTE */
+  /* RESPONSIVE */
   @media (max-width: 1024px) {
     .header-nav { padding: 12px 16px; }
-    .header-nav > div:last-child { display: none; } 
+    .header-nav > div:last-child { display: none; }
     .tabs { display: none !important; }
     .view-toggle { display: flex !important; }
-    
-    .app-container.mode-journal #canvasContainer { display: none !important; }
-    .app-container.mode-journal #journalContainer { display: flex !important; }
-    .app-container.mode-journal #visionContainer { display: none !important; }
-    
     .app-container.mode-map #canvasContainer { display: block !important; }
-    .app-container.mode-map #journalContainer { display: none !important; }
     .app-container.mode-map #visionContainer { display: none !important; }
-
     .app-container.mode-vision #canvasContainer { display: none !important; }
-    .app-container.mode-vision #journalContainer { display: none !important; }
     .app-container.mode-vision #visionContainer { display: flex !important; }
-    
     .sheet { width: 100% !important; border-left: none; }
-    .apple-bento-grid { grid-template-columns: 1fr; }
-    .apple-card.col-span-2, .apple-card.col-span-3, .apple-card.col-span-4 { grid-column: span 1; }
-
-    .bullet-checkbox { width: 22px; height: 22px; }
-    .action-btn { width: 34px; height: 34px; font-size: 16px; }
-    .journal-title { font-size: 16px; }
-    .journal-sub { font-size: 12px; }
-    .fab-add-mobile { display: flex !important; }
+    .vb-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 240px; }
+    .vb-span-2 { grid-column: span 2; }
+    .vb-span-4 { grid-column: span 2; }
+  }
+  @media (max-width: 640px) {
+    .vb-grid { grid-template-columns: 1fr; grid-auto-rows: auto; }
+    .vb-span-2, .vb-span-4 { grid-column: span 1; }
+    .vb-span-2-rows { grid-row: span 1; }
+    .vb-hero h1 { font-size: 32px; }
+    .vb-card { min-height: 300px; }
   }
 
-  .fab-add-mobile {
-    display: none; position: fixed; bottom: 24px; right: 20px; width: 56px; height: 56px;
-    border-radius: 50%; background: var(--text); color: #000; font-size: 30px; font-weight: 700;
-    line-height: 1; border: none; box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08);
-    z-index: 150; cursor: pointer; align-items: center; justify-content: center;
-  }
+  .fab-add-mobile { display: none; position: fixed; bottom: 24px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--text); color: #000; font-size: 30px; font-weight: 700; line-height: 1; border: none; box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08); z-index: 150; cursor: pointer; align-items: center; justify-content: center; }
+
+  @keyframes vbFadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  .vb-card { animation: vbFadeInUp 0.6s ease backwards; }
+  .vb-card:nth-child(1) { animation-delay: 0.05s; }
+  .vb-card:nth-child(2) { animation-delay: 0.1s; }
+  .vb-card:nth-child(3) { animation-delay: 0.15s; }
+  .vb-card:nth-child(4) { animation-delay: 0.2s; }
+  .vb-card:nth-child(5) { animation-delay: 0.25s; }
+  .vb-card:nth-child(6) { animation-delay: 0.3s; }
+  .vb-card:nth-child(7) { animation-delay: 0.35s; }
+  .vb-card:nth-child(8) { animation-delay: 0.4s; }
 </style>
 </head>
-<body class="app-container mode-map">
+<body>
 
 <div class="app-container mode-map" id="app">
   <div class="header-nav">
     <div class="tabs">
       <div class="tab active" data-target="map">Architecture</div>
-      <div class="tab" data-target="journal">Journal</div>
       <div class="tab" data-target="vision">Vision Board</div>
     </div>
-    
     <div class="view-toggle" id="viewToggle">
-      <button class="toggle-btn" data-mode="journal">Journal</button>
       <button class="toggle-btn active" data-mode="map">Carte</button>
       <button class="toggle-btn" data-mode="vision">Vision</button>
     </div>
-
     <div class="actions-bar" id="actionsBar">
       <button class="btn-primary" id="addGlobalNodeBtn">+ Ajouter une vignette</button>
       <div style="font-size: 12px; color: var(--dim);" id="syncStatus">Studio Anthony Carrel</div>
     </div>
   </div>
 
+  <!-- ARCHITECTURE -->
   <div class="canvas-container" id="canvasContainer">
     <div class="pan-zoom-content" id="panZoomContent">
       <svg class="connector-svg" id="svgFlow"></svg>
     </div>
   </div>
 
-  <div class="journal-container" id="journalContainer"></div>
-
-  <!-- NOUVEL ESPACE VISION BOARD : STYLE APPLE BENTO UI/UX -->
+  <!-- VISION BOARD -->
   <div class="vision-container" id="visionContainer">
-    <div class="vision-header-intro">
-      <h2>Vision Board Écosystème</h2>
-      <p>Suivi visuel interactif du matériel actif, des cibles d'upgrade et de la roadmap matérielle haut de gamme.</p>
+    <div class="vb-hero">
+      <h1>Vision Board<br><span>Ecosystem</span></h1>
+      <p>Mon univers Apple — ce que j'ai, ce que je veux, ce que je vise.</p>
     </div>
-
-    <div class="apple-bento-grid">
-      <!-- Carte 1 : iPhone Pro (Large) -->
-      <div class="apple-card col-span-2 row-span-2">
-        <div class="apple-card-glow"></div>
-        <div class="apple-card-content">
-          <div class="apple-card-top">
-            <span class="apple-badge badge-owned">Possédé - En service</span>
-            <span style="font-size: 12px; color: var(--dim);">Titanium Doré</span>
-          </div>
-          <div class="apple-visual-container">
-            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-deserttitanium?wid=512&hei=512&fmt=p-jpg&qlt=80&.v=1723186443425" alt="iPhone Pro">
-          </div>
-          <div class="apple-card-title-group">
-            <h3>iPhone 16 Pro Max</h3>
-            <p>Écran Super Retina XDR 6.9", Puce A18 Pro, contrôle de la caméra pro et autonomie record.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Carte 2 : Apple Watch Ultra (Standard) -->
-      <div class="apple-card col-span-2">
-        <div class="apple-card-glow blue"></div>
-        <div class="apple-card-content">
-          <div class="apple-card-top">
-            <span class="apple-badge badge-upgrade">À surveiller / Upgrade</span>
-          </div>
-          <div class="apple-visual-container" style="min-height: 100px;">
-            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/watch-ultra-digitalmat-gallery-1-202309?wid=360&hei=330&fmt=png-alpha&.v=1693006424599" alt="Apple Watch Ultra">
-          </div>
-          <div class="apple-card-title-group">
-            <h3>Apple Watch Ultra 2</h3>
-            <p>Boîtier titane aérospatial, verre saphir, micro-rayures d'usage à auditer.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Carte 3 : Puce / Performance -->
-      <div class="apple-card">
-        <div class="apple-card-glow purple"></div>
-        <div class="apple-card-content">
-          <div class="apple-card-top">
-            <span class="apple-badge badge-owned">Architecture</span>
-          </div>
-          <div class="apple-visual-container" style="min-height: 80px;">
-            <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=300&auto=format&fit=crop&q=80" alt="Setup Mac" style="border-radius: 12px;">
-          </div>
-          <div class="apple-card-title-group">
-            <h3>Apple Silicon M-Series</h3>
-            <p>Puissance de calcul unifiée pour l'IA locale.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Carte 4 : Vision Pro (Wishlist) -->
-      <div class="apple-card">
-        <div class="apple-card-glow emerald"></div>
-        <div class="apple-card-content">
-          <div class="apple-card-top">
-            <span class="apple-badge badge-wishlist">Wishlist / Futur</span>
-          </div>
-          <div class="apple-visual-container" style="min-height: 80px;">
-            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/apple-vision-pro-select-202306?wid=400&hei=400&fmt=png-alpha&.v=1685981774358" alt="Vision Pro">
-          </div>
-          <div class="apple-card-title-group">
-            <h3>Apple Vision Pro</h3>
-            <p>Interface spatiale immersive.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Carte 5 : Audio Pro -->
-      <div class="apple-card col-span-2">
-        <div class="apple-card-glow blue"></div>
-        <div class="apple-card-content">
-          <div class="apple-card-top">
-            <span class="apple-badge badge-owned">Audio Actif</span>
-          </div>
-          <div class="apple-visual-container" style="min-height: 90px;">
-            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/MME73?wid=300&hei=300&fmt=png-alpha&.v=1632861342000" alt="AirPods Pro">
-          </div>
-          <div class="apple-card-title-group">
-            <h3>AirPods Pro (Gen 2)</h3>
-            <p>Réduction active du bruit adaptative et audio spatial personnalisé.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Carte 6 : Objectifs / Hub -->
-      <div class="apple-card col-span-2">
-        <div class="apple-card-glow"></div>
-        <div class="apple-card-content">
-          <div class="apple-card-top">
-            <span class="apple-badge badge-wishlist">Cible Station</span>
-          </div>
-          <div class="apple-card-title-group">
-            <h3>Studio Display 5K</h3>
-            <p>Écran rétina 27 pouces avec caméra 12MP Ultra Grand Angle et système à six haut-parleurs.</p>
-          </div>
-        </div>
-      </div>
+    <div class="vb-legend">
+      <div class="vb-legend-item"><div class="vb-legend-dot owned"></div><span>Possede</span></div>
+      <div class="vb-legend-item"><div class="vb-legend-dot wishlist"></div><span>A acquérir</span></div>
+      <div class="vb-legend-item"><div class="vb-legend-dot upgrade"></div><span>Upgrade</span></div>
     </div>
+    <div class="vb-grid" id="vbGrid"></div>
   </div>
 
   <button class="fab-add-mobile" id="fabAddMobile" title="Ajouter une vignette">+</button>
 </div>
 
-<!-- PANNEAU CONFIGURATION VIGNETTE -->
-<div class="sheet" id="configSheet">
-  <button class="sheet-close" id="closeSheet">×</button>
-  <h3 style="font-family:'Space Grotesk'; margin-top:10px; color:var(--text); margin-bottom: 24px;">Propriétés de la vignette</h3>
-  
-  <div class="field">
-    <label>Titre de la vignette</label>
-    <input type="text" id="nodeTitleInput" placeholder="Titre du projet">
-  </div>
-
-  <div class="field">
-    <label>Sous-titre / Description</label>
-    <input type="text" id="nodeSubInput" placeholder="Description courte">
-  </div>
-
-  <div class="field">
-    <label>Icône (Emoji)</label>
-    <input type="text" id="nodeIconInput" placeholder="Ex: 📂">
-  </div>
-
-  <div class="field" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--panel-border); margin-bottom: 20px;">
-    <label style="margin: 0;">Style Bento moderne</label>
-    <input type="checkbox" id="nodeIsBentoInput" style="width: auto; cursor: pointer;">
-  </div>
-
-  <div class="field">
-    <label>Couleur Thématique (Contour & Icône)</label>
-    <select id="nodeColorInput">
-      <option value="var(--gold)">Or (Studio Anthony)</option>
-      <option value="var(--source)">Vert émeraude (La Source)</option>
-      <option value="var(--cockpit)">Bleu cockpit (Pilotage)</option>
-      <option value="var(--moteur)">Violet pur (Moteur IA / Contenu)</option>
-      <option value="var(--objectifs)">Cyan électrique (Objectifs)</option>
-      <option value="#FF4A82">Rose Rubis</option>
-      <option value="#FF6B35">Orange Intense</option>
-      <option value="#00F5D4">Menthe Néo</option>
-      <option value="#7209B7">Indigo Profond</option>
-      <option value="#FFD166">Jaune Pastel</option>
-      <option value="#4EA8DE">Bleu Ciel Ardoise</option>
-      <option value="#DEa4ff">Mauve Orchidée</option>
-      <option value="#FF4A4A">Rouge Alerte</option>
-      <option value="#FFFFFF">Blanc Pur</option>
-    </select>
-  </div>
-
-  <div class="field">
-    <label>Couleur du fond (Nuances de sombre/gris)</label>
-    <select id="nodeBgColorInput">
-      <option value="#070709">Noir Profond (#070709)</option>
-      <option value="#14151A">Anthracite Classique (#14151A)</option>
-      <option value="#1B1C22">Gris Sombre (#1B1C22)</option>
-      <option value="#252730">Gris Foncé Lunod (#252730)</option>
-      <option value="#343742">Gris Intermédiaire (#343742)</option>
-      <option value="#454957">Gris Moyen Flou (#454957)</option>
-    </select>
-  </div>
-
-  <div class="field">
-    <label>Liaisons Parentes (Multi-sélection autorisée)</label>
-    <div class="checkbox-group-container" id="nodeParentsCheckboxGroup"></div>
-  </div>
-
-  <div class="field">
-    <label>Image de fond (URL)</label>
-    <input type="text" id="bgUrlInput" placeholder="https://...">
-  </div>
-
-  <div class="field">
-    <label id="bgOpacityLabel">Opacité de l'image (85%)</label>
-    <input type="range" id="bgOpacityInput" min="0" max="100" step="5" style="accent-color: var(--text);">
-  </div>
-
-  <div class="field" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--panel-border);">
-    <label style="margin: 0;">Activer l'encoche (Bas de carte)</label>
-    <input type="checkbox" id="showBlockInput" style="width: auto; cursor: pointer;">
-  </div>
-
-  <div class="field">
-    <label>Libellé & Valeur de l'encoche</label>
-    <div style="display: flex; gap: 6px;">
-      <input type="text" id="blockLabelInput" placeholder="Ex: OUTIL" style="flex:1;">
-      <input type="text" id="blockValInput" placeholder="Ex: Gemini" style="flex:2;">
+<!-- MODAL EDITION VISION BOARD -->
+<div class="vb-modal-overlay" id="vbModal">
+  <div class="vb-modal">
+    <button class="vb-modal-close" id="vbModalClose">&times;</button>
+    <h2>Modifier la carte</h2>
+    <div class="vb-form-group"><label>Image (URL)</label><input type="text" id="vbEditImage" placeholder="https://..."></div>
+    <div class="vb-form-row">
+      <div class="vb-form-group"><label>Titre</label><input type="text" id="vbEditTitle"></div>
+      <div class="vb-form-group"><label>Statut</label><select id="vbEditStatus"><option value="owned">Possede</option><option value="wishlist">A acquérir</option><option value="upgrade">Upgrade</option></select></div>
     </div>
+    <div class="vb-form-group"><label>Description</label><textarea id="vbEditDesc"></textarea></div>
+    <div class="vb-form-group"><label>Couleur du glow</label><select id="vbEditGlow"><option value="gold">Or</option><option value="emerald">Emeraude</option><option value="blue">Bleu</option><option value="purple">Violet</option><option value="cyan">Cyan</option><option value="rose">Rose</option></select></div>
+    <button class="vb-btn-primary" id="vbSaveEdit">Enregistrer</button>
+    <button class="vb-btn-secondary" id="vbCancelEdit">Annuler</button>
   </div>
+</div>
 
-  <div class="field" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--panel-border); margin-bottom: 20px;">
-    <label style="margin: 0;">Transformer les puces en Checkboxes</label>
-    <input type="checkbox" id="nodeUseCheckboxesInput" style="width: auto; cursor: pointer;">
-  </div>
-
-  <div class="field" style="border-top: 1px solid var(--panel-border); padding-top: 16px;">
-    <label>Tags Design (Glow - Fin de vignette)</label>
-    <div class="sheet-tags-list" id="sheetTagsList"></div>
-    <button class="btn-secondary" id="sheetAddTagBtn">+ Ajouter un tag</button>
-  </div>
-
+<!-- CONFIG SHEET ARCHITECTURE -->
+<div class="sheet" id="configSheet">
+  <button class="sheet-close" id="closeSheet">&times;</button>
+  <h3 style="font-family:'Space Grotesk'; margin-top:10px; color:var(--text); margin-bottom: 24px;">Proprietes de la vignette</h3>
+  <div class="field"><label>Titre</label><input type="text" id="nodeTitleInput" placeholder="Titre du projet"></div>
+  <div class="field"><label>Sous-titre</label><input type="text" id="nodeSubInput" placeholder="Description courte"></div>
+  <div class="field"><label>Icone (Emoji)</label><input type="text" id="nodeIconInput" placeholder="Ex: 📂"></div>
+  <div class="field"><label>Couleur</label><select id="nodeColorInput"><option value="var(--gold)">Or</option><option value="var(--source)">Vert</option><option value="var(--cockpit)">Bleu</option><option value="var(--moteur)">Violet</option><option value="var(--objectifs)">Cyan</option></select></div>
+  <div class="field"><label>Couleur du fond</label><select id="nodeBgColorInput"><option value="#14151A">Anthracite</option><option value="#070709">Noir</option><option value="#1B1C22">Gris</option></select></div>
+  <div class="field"><label>Liaisons Parentes</label><div class="checkbox-group-container" id="nodeParentsCheckboxGroup"></div></div>
+  <div class="field"><label>Image de fond (URL)</label><input type="text" id="bgUrlInput" placeholder="https://..."></div>
   <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px;">
-    <button id="saveNodeConfig" style="width:100%; background:var(--text); color:#000; border:none; padding:12px; border-radius:8px; font-weight:700; cursor:pointer;">Appliquer les modifications</button>
-    <button id="deleteNodeBtn" class="btn-danger">Supprimer définitivement cette vignette</button>
+    <button id="saveNodeConfig" style="width:100%; background:var(--text); color:#000; border:none; padding:12px; border-radius:8px; font-weight:700; cursor:pointer;">Appliquer</button>
+    <button id="deleteNodeBtn" class="btn-danger">Supprimer</button>
   </div>
 </div>
 
 <script>
+// ============================================================
+// SUPABASE CONFIG
+// ============================================================
 const SUPABASE_URL = "https://oftfrsezwjjybpohknim.supabase.co";
-const SUPABASE_KEY = "sb_publishable_FD8fOiN6Z71LGJQbqL6MEQ_NtKzEReT";
-supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mdGZyc2V6d2pqeWJwb2hrbmltIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDUzMjAwMSwiZXhwIjoyMTAwMTA4MDAxfQ.gm3iDY7ni06sJ9iYvN6wD2QGIv1mtp1Tf2oN4yM6IGI";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ============================================================
+// ARCHITECTURE DATA
+// ============================================================
 let dataset = [];
-
 const container = document.getElementById('canvasContainer');
 const panZoomContent = document.getElementById('panZoomContent');
-const journalContainer = document.getElementById('journalContainer');
-const visionContainer = document.getElementById('visionContainer');
 const svg = document.getElementById('svgFlow');
 const app = document.getElementById('app');
 const syncStatus = document.getElementById('syncStatus');
 let activeNodeId = null;
-let tempTags = [];
-
 let transformState = { x: 0, y: 0, scale: 1 };
 
 async function save() {
   syncStatus.innerText = "Synchronisation...";
   try {
-    const { error } = await supabase
-      .from('bento_architecture')
-      .upsert({ id: 1, data: dataset });
-
+    const { error } = await supabase.from('bento_architecture').upsert({ id: 1, data: dataset });
     if (error) throw error;
     syncStatus.innerText = "Studio Anthony Carrel (En ligne)";
   } catch (err) {
-    console.error("Erreur de sauvegarde Supabase:", err);
-    syncStatus.innerText = "Erreur de synchro (Sauvegarde locale)";
+    syncStatus.innerText = "Erreur (Local)";
     localStorage.setItem('anthony_system_v6', JSON.stringify(dataset));
   }
 }
@@ -569,23 +383,15 @@ async function save() {
 async function loadData() {
   syncStatus.innerText = "Chargement...";
   try {
-    const { data, error } = await supabase
-      .from('bento_architecture')
-      .select('data')
-      .eq('id', 1)
-      .single();
-
+    const { data, error } = await supabase.from('bento_architecture').select('data').eq('id', 1).single();
     if (error || !data) throw error;
     dataset = data.data;
     syncStatus.innerText = "Studio Anthony Carrel (En ligne)";
   } catch (err) {
-    console.warn("Échec de chargement Supabase, récupération locale:", err);
-    if (localStorage.getItem('anthony_system_v6')) {
-      dataset = JSON.parse(localStorage.getItem('anthony_system_v6'));
-    }
+    if (localStorage.getItem('anthony_system_v6')) dataset = JSON.parse(localStorage.getItem('anthony_system_v6'));
     syncStatus.innerText = "Studio Anthony Carrel (Local)";
   }
-  render();
+  renderNodes();
 }
 
 function updateTransform() {
@@ -594,23 +400,18 @@ function updateTransform() {
 
 interact(container).gesturable({
   listeners: {
-    move (event) {
+    move(event) {
       transformState.scale = Math.max(0.1, Math.min(2, transformState.scale * (1 + event.ds)));
-      transformState.x += event.dx;
-      transformState.y += event.dy;
-      updateTransform();
-      draw();
+      transformState.x += event.dx; transformState.y += event.dy;
+      updateTransform(); draw();
     }
   }
 }).draggable({
-  inertia: true,
-  startAxis: 'xy',
-  lockAxis: 'any',
+  inertia: true, startAxis: 'xy', lockAxis: 'any',
   listeners: {
-    move (event) {
-      if (event.target.closest('.node') || event.target.closest('.resize-handle') || event.target.closest('.sheet')) return;
-      transformState.x += event.dx;
-      transformState.y += event.dy;
+    move(event) {
+      if (event.target.closest('.node') || event.target.closest('.resize-handle')) return;
+      transformState.x += event.dx; transformState.y += event.dy;
       updateTransform();
     }
   }
@@ -618,67 +419,41 @@ interact(container).gesturable({
 
 container.addEventListener('wheel', (e) => {
   e.preventDefault();
-  const zoomFactor = 0.05;
-  const delta = e.deltaY < 0 ? 1 : -1;
+  const zoomFactor = 0.05, delta = e.deltaY < 0 ? 1 : -1;
   const oldScale = transformState.scale;
   let newScale = Math.max(0.1, Math.min(2, oldScale + delta * zoomFactor));
   const rect = container.getBoundingClientRect();
-  const mouseX = e.clientX - rect.left;
-  const mouseY = e.clientY - rect.top;
+  const mouseX = e.clientX - rect.left, mouseY = e.clientY - rect.top;
   transformState.x = mouseX - (mouseX - transformState.x) * (newScale / oldScale);
   transformState.y = mouseY - (mouseY - transformState.y) * (newScale / oldScale);
   transformState.scale = newScale;
-  updateTransform();
-  draw();
+  updateTransform(); draw();
 }, { passive: false });
 
 function switchView(mode) {
-  document.querySelectorAll('#viewToggle .toggle-btn').forEach(b => {
-    b.classList.toggle('active', b.getAttribute('data-mode') === mode);
-  });
-  document.querySelectorAll('.tabs .tab').forEach(t => {
-    t.classList.toggle('active', t.getAttribute('data-target') === mode);
-  });
-  app.classList.remove('mode-journal', 'mode-map', 'mode-vision');
+  document.querySelectorAll('#viewToggle .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.target === mode));
+  app.classList.remove('mode-map', 'mode-vision');
   app.classList.add('mode-' + mode);
-  if(mode === 'map') setTimeout(() => { draw(); updateTransform(); }, 50);
+  if (mode === 'map') setTimeout(() => { updateTransform(); draw(); }, 50);
 }
 
 document.querySelectorAll('#viewToggle .toggle-btn').forEach(btn => {
-  btn.addEventListener('click', () => switchView(btn.getAttribute('data-mode')));
+  btn.addEventListener('click', () => switchView(btn.dataset.mode));
 });
-
 document.querySelectorAll('.tabs .tab').forEach(tab => {
-  tab.addEventListener('click', () => switchView(tab.getAttribute('data-target')));
+  tab.addEventListener('click', () => switchView(tab.dataset.target));
 });
 
 document.getElementById('addGlobalNodeBtn').addEventListener('click', () => {
   const newId = 'node_' + Date.now();
-  const newNode = {
-    id: newId,
-    x: (window.innerWidth / 2 - 110 - transformState.x) / transformState.scale,
-    y: (window.innerHeight / 2 - 120 - transformState.y) / transformState.scale,
-    w: 240,
-    h: 260,
-    color: 'var(--gold)',
-    cardBg: '#14151A',
-    icon: '📂',
-    title: 'Nouveau projet',
-    sub: 'Description du projet',
-    blockLabel: 'STATUT',
-    blockVal: 'Nouveau',
-    parents: [],
-    isBento: false,
-    showBlock: false,
-    useCheckboxes: false,
-    bgOpacity: 85,
-    tags: [],
-    bullets: ["Premier objectif"],
-    checkedBullets: []
-  };
-  dataset.push(newNode);
-  save();
-  render();
+  dataset.push({
+    id: newId, x: (window.innerWidth/2 - 110 - transformState.x)/transformState.scale,
+    y: (window.innerHeight/2 - 120 - transformState.y)/transformState.scale, w: 240, h: 260,
+    color: 'var(--gold)', cardBg: '#14151A', icon: '📂', title: 'Nouveau projet',
+    sub: 'Description', parents: [], tags: [], bullets: ["Premier objectif"], checkedBullets: []
+  });
+  save(); renderNodes();
 });
 
 document.getElementById('fabAddMobile').addEventListener('click', () => {
@@ -688,24 +463,18 @@ document.getElementById('fabAddMobile').addEventListener('click', () => {
 function draw() {
   svg.innerHTML = '';
   if (!app.classList.contains('mode-map')) return;
-  
   dataset.forEach(n => {
-    if (n.parents && n.parents.length > 0) {
+    if (n.parents?.length > 0) {
       n.parents.forEach(pId => {
-        const parentNode = dataset.find(item => item.id === pId);
-        if (parentNode) {
-          const pX = parentNode.x + parentNode.w / 2;
-          const pY = parentNode.y + (parentNode.h || 260) / 2;
-          const cX = n.x + n.w / 2;
-          const cY = n.y + (n.h || 260) / 2;
-          
+        const parent = dataset.find(item => item.id === pId);
+        if (parent) {
+          const pX = parent.x + parent.w/2, pY = parent.y + (parent.h||260)/2;
+          const cX = n.x + n.w/2, cY = n.y + (n.h||260)/2;
           const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-          const d = `M ${pX} ${pY} Q ${(pX+cX)/2} ${(pY+cY)/2 - 50}, ${cX} ${cY}`;
-          path.setAttribute("d", d);
+          path.setAttribute("d", `M ${pX} ${pY} Q ${(pX+cX)/2} ${(pY+cY)/2 - 50}, ${cX} ${cY}`);
           path.setAttribute("class", "flow-line");
           path.setAttribute("stroke", n.color || "rgba(255,255,255,0.2)");
-          path.setAttribute("stroke-width", "2");
-          path.setAttribute("fill", "none");
+          path.setAttribute("stroke-width", "2"); path.setAttribute("fill", "none");
           svg.appendChild(path);
         }
       });
@@ -718,120 +487,47 @@ function initInteractOnNodes() {
     ignoreFrom: 'input, select, textarea, [contenteditable="true"], .action-btn, .bullets-container, .resize-handle',
     listeners: {
       move(event) {
-        const id = event.target.id;
-        const node = dataset.find(n => n.id === id);
-        if (node) {
-          node.x += event.dx / transformState.scale;
-          node.y += event.dy / transformState.scale;
-          event.target.style.left = node.x + 'px';
-          event.target.style.top = node.y + 'px';
-          draw();
-        }
+        const node = dataset.find(n => n.id === event.target.id);
+        if (node) { node.x += event.dx/transformState.scale; node.y += event.dy/transformState.scale;
+          event.target.style.left = node.x + 'px'; event.target.style.top = node.y + 'px'; draw(); }
       },
-      end(event) {
-        save();
-      }
+      end() { save(); }
     }
   });
-
   interact('.resize-handle').draggable({
     listeners: {
       move(event) {
         const nodeEl = event.target.closest('.node');
-        const id = nodeEl.id;
-        const node = dataset.find(n => n.id === id);
-        if (node) {
-          node.w = Math.max(180, node.w + event.dx / transformState.scale);
-          node.h = Math.max(160, (node.h || 260) + event.dy / transformState.scale);
-          nodeEl.style.width = node.w + 'px';
-          nodeEl.style.height = node.h + 'px';
-          draw();
-        }
+        const node = dataset.find(n => n.id === nodeEl.id);
+        if (node) { node.w = Math.max(180, node.w + event.dx/transformState.scale);
+          node.h = Math.max(160, (node.h||260) + event.dy/transformState.scale);
+          nodeEl.style.width = node.w + 'px'; nodeEl.style.height = node.h + 'px'; draw(); }
       },
-      end(event) {
-        save();
-      }
+      end() { save(); }
     }
   });
 }
 
 function openConfigSheet(node) {
   activeNodeId = node.id;
-  tempTags = node.tags ? JSON.parse(JSON.stringify(node.tags)) : [];
-  
   document.getElementById('nodeTitleInput').value = node.title || '';
   document.getElementById('nodeSubInput').value = node.sub || '';
   document.getElementById('nodeIconInput').value = node.icon || '';
-  document.getElementById('nodeIsBentoInput').checked = !!node.isBento;
   document.getElementById('nodeColorInput').value = node.color || 'var(--gold)';
   document.getElementById('nodeBgColorInput').value = node.cardBg || '#14151A';
   document.getElementById('bgUrlInput').value = node.bg || '';
-  document.getElementById('bgOpacityInput').value = node.bgOpacity !== undefined ? node.bgOpacity : 85;
-  document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${document.getElementById('bgOpacityInput').value}%)`;
-  document.getElementById('showBlockInput').checked = !!node.showBlock;
-  document.getElementById('blockLabelInput').value = node.blockLabel || '';
-  document.getElementById('blockValInput').value = node.blockVal || '';
-  document.getElementById('nodeUseCheckboxesInput').checked = !!node.useCheckboxes;
-
   const cbGroup = document.getElementById('nodeParentsCheckboxGroup');
   cbGroup.innerHTML = '';
-  dataset.forEach(n => {
-    if (n.id !== node.id) {
-      const isChecked = node.parents && node.parents.includes(n.id);
-      const row = document.createElement('label');
-      row.className = 'checkbox-row';
-      row.innerHTML = `<input type="checkbox" value="${n.id}" ${isChecked ? 'checked' : ''}> <span>${n.title || 'Sans titre'}</span>`;
-      cbGroup.appendChild(row);
-    }
-  });
-
-  renderSheetTags();
+  dataset.forEach(n => { if (n.id !== node.id) {
+    const row = document.createElement('label'); row.className = 'checkbox-row';
+    row.innerHTML = `<input type="checkbox" value="${n.id}" ${node.parents?.includes(n.id)?'checked':''}> <span>${n.title||'Sans titre'}</span>`;
+    cbGroup.appendChild(row);
+  }});
   document.getElementById('configSheet').classList.add('open');
 }
 
-function renderSheetTags() {
-  const container = document.getElementById('sheetTagsList');
-  container.innerHTML = '';
-  tempTags.forEach((t, idx) => {
-    const row = document.createElement('div');
-    row.className = 'sheet-tag-row';
-    row.innerHTML = `
-      <input type="text" value="${t.text}" style="flex:2;" data-idx="${idx}" class="sheet-tag-text-input">
-      <input type="color" value="${t.color.startsWith('var') ? '#FFB03B' : t.color}" style="flex:1; padding:2px; height:36px;" data-idx="${idx}" class="sheet-tag-color-input">
-      <button class="action-btn" style="border:1px solid #ff4a4a; color:#ff4a4a;" onclick="removeTempTag(${idx})">×</button>
-    `;
-    container.appendChild(row);
-  });
-
-  container.querySelectorAll('.sheet-tag-text-input').forEach(input => {
-    input.addEventListener('input', (e) => {
-      tempTags[e.target.dataset.idx].text = e.target.value;
-    });
-  });
-  container.querySelectorAll('.sheet-tag-color-input').forEach(input => {
-    input.addEventListener('input', (e) => {
-      tempTags[e.target.dataset.idx].color = e.target.value;
-    });
-  });
-}
-
-window.removeTempTag = function(idx) {
-  tempTags.splice(idx, 1);
-  renderSheetTags();
-};
-
-document.getElementById('sheetAddTagBtn').addEventListener('click', () => {
-  tempTags.push({ text: 'Nouveau tag', color: 'var(--gold)' });
-  renderSheetTags();
-});
-
-document.getElementById('bgOpacityInput').addEventListener('input', (e) => {
-  document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${e.target.value}%)`;
-});
-
 document.getElementById('closeSheet').addEventListener('click', () => {
-  document.getElementById('configSheet').classList.remove('open');
-  activeNodeId = null;
+  document.getElementById('configSheet').classList.remove('open'); activeNodeId = null;
 });
 
 document.getElementById('saveNodeConfig').addEventListener('click', () => {
@@ -841,290 +537,141 @@ document.getElementById('saveNodeConfig').addEventListener('click', () => {
     node.title = document.getElementById('nodeTitleInput').value;
     node.sub = document.getElementById('nodeSubInput').value;
     node.icon = document.getElementById('nodeIconInput').value;
-    node.isBento = document.getElementById('nodeIsBentoInput').checked;
     node.color = document.getElementById('nodeColorInput').value;
     node.cardBg = document.getElementById('nodeBgColorInput').value;
     node.bg = document.getElementById('bgUrlInput').value;
-    node.bgOpacity = parseInt(document.getElementById('bgOpacityInput').value);
-    node.showBlock = document.getElementById('showBlockInput').checked;
-    node.blockLabel = document.getElementById('blockLabelInput').value;
-    node.blockVal = document.getElementById('blockValInput').value;
-    node.useCheckboxes = document.getElementById('nodeUseCheckboxesInput').checked;
-    node.tags = tempTags;
-
     const checkedParents = [];
-    document.querySelectorAll('#nodeParentsCheckboxGroup input:checked').forEach(cb => {
-      checkedParents.push(cb.value);
-    });
+    document.querySelectorAll('#nodeParentsCheckboxGroup input:checked').forEach(cb => checkedParents.push(cb.value));
     node.parents = checkedParents;
-
-    save();
-    render();
+    save(); renderNodes();
   }
   document.getElementById('configSheet').classList.remove('open');
 });
 
 document.getElementById('deleteNodeBtn').addEventListener('click', () => {
   if (!activeNodeId) return;
-  if (confirm("Supprimer définitivement cette vignette ?")) {
+  if (confirm("Supprimer cette vignette ?")) {
     dataset = dataset.filter(n => n.id !== activeNodeId);
-    dataset.forEach(n => {
-      if(n.parents) n.parents = n.parents.filter(pId => pId !== activeNodeId);
-    });
-    save();
-    render();
-    document.getElementById('configSheet').classList.remove('open');
+    dataset.forEach(n => { if(n.parents) n.parents = n.parents.filter(p => p !== activeNodeId); });
+    save(); renderNodes(); document.getElementById('configSheet').classList.remove('open');
   }
 });
 
-function buildJournal() {
-  journalContainer.innerHTML = '';
-  dataset.forEach(n => {
-    if(!n.bullets) n.bullets = [];
-    if(!n.checkedBullets) n.checkedBullets = [];
-    if(n.useCheckboxes === undefined) n.useCheckboxes = false;
-    if(n.showBlock === undefined) n.showBlock = !!n.blockLabel;
-    if(!n.tags) n.tags = [];
-
-    const card = document.createElement('div');
-    card.className = 'journal-card';
-    card.id = 'journal_' + n.id;
-    card.style.setProperty('--nc', n.color);
-
-    let bulletsHTML = '';
-    n.bullets.forEach((bText, idx) => {
-      const isChecked = n.checkedBullets && n.checkedBullets.includes(idx);
-      const indicator = n.useCheckboxes ? `<div class="bullet-checkbox"></div>` : `<div class="bullet-dot"></div>`;
-      bulletsHTML += `
-        <div class="bullet-item ${isChecked ? 'checked' : ''}" data-index="${idx}">
-          ${indicator}
-          <div class="bullet-text" contenteditable="true">${bText}</div>
-        </div>`;
-    });
-
-    let tagsHTML = '';
-    if (n.tags.length > 0) {
-      tagsHTML = `<div class="tags-container" style="margin-top:10px;">`;
-      n.tags.forEach(t => {
-        tagsHTML += `<span class="tag-item" style="--tc: ${t.color}">${t.text}</span>`;
-      });
-      tagsHTML += `</div>`;
-    }
-
-    let blockHTML = '';
-    if (n.showBlock && n.blockLabel) {
-      blockHTML = `
-        <div class="inner-block" style="margin-top:10px;">
-          <div class="inner-label">${n.blockLabel}</div>
-          <div class="inner-val" contenteditable="true">${n.blockVal || ''}</div>
-        </div>`;
-    }
-
-    card.innerHTML = `
-      <div class="journal-header">
-        <div class="journal-meta">
-          <div class="icon-badge">${n.icon || '📂'}</div>
-          <div>
-            <div class="journal-title">${n.title || 'Sans titre'}</div>
-            <div class="journal-sub">${n.sub || ''}</div>
-          </div>
-        </div>
-        <div class="journal-chevron">▼</div>
-      </div>
-      <div class="journal-body">
-        <div class="bullets-container">${bulletsHTML}</div>
-        ${blockHTML}
-        ${tagsHTML}
-      </div>
-    `;
-
-    card.querySelector('.journal-header').addEventListener('click', (e) => {
-      if(e.target.closest('[contenteditable]')) return;
-      card.classList.toggle('collapsed');
-    });
-
-    card.querySelectorAll('.bullet-item').forEach(bEl => {
-      const idx = parseInt(bEl.dataset.index);
-      const cb = bEl.querySelector('.bullet-checkbox');
-      const dot = bEl.querySelector('.bullet-dot');
-      const targetClickable = cb || dot;
-
-      if(targetClickable) {
-        targetClickable.addEventListener('click', () => {
-          if (!n.checkedBullets) n.checkedBullets = [];
-          const pos = n.checkedBullets.indexOf(idx);
-          if (pos > -1) n.checkedBullets.splice(pos, 1);
-          else n.checkedBullets.push(idx);
-          save();
-          buildJournal();
-        });
-      }
-
-      bEl.querySelector('.bullet-text').addEventListener('blur', (e) => {
-        n.bullets[idx] = e.target.innerText;
-        save();
-      });
-    });
-
-    if(n.showBlock) {
-      const valEl = card.querySelector('.inner-val');
-      if(valEl) {
-        valEl.addEventListener('blur', (e) => {
-          n.blockVal = e.target.innerText;
-          save();
-        });
-      }
-    }
-
-    journalContainer.appendChild(card);
-  });
-}
-
-function render() {
+function renderNodes() {
   panZoomContent.querySelectorAll('.node').forEach(el => el.remove());
-
   dataset.forEach(n => {
     const nodeEl = document.createElement('div');
-    nodeEl.className = 'node' + (n.isBento ? ' bento-style' : '');
-    nodeEl.id = n.id;
-    nodeEl.style.left = (n.x || 100) + 'px';
-    nodeEl.style.top = (n.y || 100) + 'px';
-    nodeEl.style.width = (n.w || 240) + 'px';
-    nodeEl.style.height = (n.h || 260) + 'px';
+    nodeEl.className = 'node'; nodeEl.id = n.id;
+    nodeEl.style.left = (n.x||100)+'px'; nodeEl.style.top = (n.y||100)+'px';
+    nodeEl.style.width = (n.w||240)+'px'; nodeEl.style.height = (n.h||260)+'px';
     nodeEl.style.backgroundColor = n.cardBg || '#14151A';
     nodeEl.style.setProperty('--nc', n.color || 'var(--gold)');
-
-    let bgLayerHTML = '';
-    if (n.bg) {
-      const op = n.bgOpacity !== undefined ? n.bgOpacity / 100 : 0.85;
-      bgLayerHTML = `
-        <div class="node-bg-layer" style="background-image: url('${n.bg}'); opacity: ${op};"></div>
-        <div class="node-overlay"></div>
-      `;
-    }
-
-    let bulletsHTML = '';
-    if(n.bullets) {
-      n.bullets.forEach((bText, idx) => {
-        const isChecked = n.checkedBullets && n.checkedBullets.includes(idx);
-        const indicator = n.useCheckboxes ? `<div class="bullet-checkbox"></div>` : `<div class="bullet-dot"></div>`;
-        bulletsHTML += `
-          <div class="bullet-item ${isChecked ? 'checked' : ''}" data-index="${idx}">
-            ${indicator}
-            <div class="bullet-text" contenteditable="true">${bText}</div>
-          </div>`;
-      });
-    }
-
-    let blockHTML = '';
-    if (n.showBlock && n.blockLabel) {
-      blockHTML = `
-        <div class="inner-block">
-          <div class="inner-label">${n.blockLabel}</div>
-          <div class="inner-val" contenteditable="true">${n.blockVal || ''}</div>
-        </div>`;
-    }
-
-    let tagsHTML = '';
-    if (n.tags && n.tags.length > 0) {
-      tagsHTML = `<div class="tags-container">`;
-      n.tags.forEach(t => {
-        tagsHTML += `<span class="tag-item" style="--tc: ${t.color}" contenteditable="true">${t.text}</span>`;
-      });
-      tagsHTML += `</div>`;
-    }
-
-    nodeEl.innerHTML = `
-      ${bgLayerHTML}
-      <div class="node-content">
-        <div class="node-header">
-          <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
-            <div class="icon-badge">${n.icon || '📂'}</div>
-            <div class="title" contenteditable="true">${n.title || 'Sans titre'}</div>
-          </div>
-          <div class="header-actions">
-            <button class="action-btn config-btn" title="Configurer">⚙️</button>
-            <button class="action-btn add-bullet-btn" title="Ajouter une puce">+</button>
-          </div>
-        </div>
-        <div class="sub" contenteditable="true">${n.sub || ''}</div>
-        <div class="bullets-container">${bulletsHTML}</div>
-        ${blockHTML}
-        ${tagsHTML}
-      </div>
-      <div class="resize-handle"></div>
-    `;
-
+    let bgLayer = n.bg ? `<div class="node-bg-layer" style="background-image:url('${n.bg}');opacity:0.85;"></div><div class="node-overlay"></div>` : '';
+    let bullets = '';
+    if(n.bullets) n.bullets.forEach((b, i) => {
+      const checked = n.checkedBullets?.includes(i);
+      bullets += `<div class="bullet-item ${checked?'checked':''}" data-index="${i}"><div class="bullet-checkbox"></div><div class="bullet-text" contenteditable="true">${b}</div></div>`;
+    });
+    let tags = '';
+    if(n.tags?.length) { tags='<div class="tags-container">'; n.tags.forEach(t=>tags+=`<span class="tag-item" style="--tc:${t.color}">${t.text}</span>`); tags+='</div>'; }
+    nodeEl.innerHTML = `${bgLayer}<div class="node-content"><div class="node-header"><div style="display:flex;align-items:center;gap:8px;overflow:hidden;"><div class="icon-badge">${n.icon||'📂'}</div><div class="title" contenteditable="true">${n.title||'Sans titre'}</div></div><div class="header-actions"><button class="action-btn config-btn">⚙️</button><button class="action-btn add-bullet-btn">+</button></div></div><div class="sub" contenteditable="true">${n.sub||''}</div><div class="bullets-container">${bullets}</div>${tags}</div><div class="resize-handle"></div>`;
     nodeEl.querySelector('.config-btn').addEventListener('click', () => openConfigSheet(n));
-
-    nodeEl.querySelector('.add-bullet-btn').addEventListener('click', () => {
-      if(!n.bullets) n.bullets = [];
-      n.bullets.push("Nouvel objectif");
-      save();
-      render();
-    });
-
-    nodeEl.querySelector('.title').addEventListener('blur', (e) => {
-      n.title = e.target.innerText;
-      save();
-    });
-
-    nodeEl.querySelector('.sub').addEventListener('blur', (e) => {
-      n.sub = e.target.innerText;
-      save();
-    });
-
-    nodeEl.querySelectorAll('.bullet-item').forEach(bEl => {
-      const idx = parseInt(bEl.dataset.index);
-      const cb = bEl.querySelector('.bullet-checkbox');
-      const dot = bEl.querySelector('.bullet-dot');
-      const targetClickable = cb || dot;
-
-      if(targetClickable) {
-        targetClickable.addEventListener('click', () => {
-          if (!n.checkedBullets) n.checkedBullets = [];
-          const pos = n.checkedBullets.indexOf(idx);
-          if (pos > -1) n.checkedBullets.splice(pos, 1);
-          else n.checkedBullets.push(idx);
-          save();
-          render();
-        });
-      }
-
-      bEl.querySelector('.bullet-text').addEventListener('blur', (e) => {
-        n.bullets[idx] = e.target.innerText;
-        save();
+    nodeEl.querySelector('.add-bullet-btn').addEventListener('click', () => { n.bullets=n.bullets||[]; n.bullets.push("Nouvel objectif"); save(); renderNodes(); });
+    nodeEl.querySelector('.title').addEventListener('blur', e=>{n.title=e.target.innerText;save();});
+    nodeEl.querySelector('.sub').addEventListener('blur', e=>{n.sub=e.target.innerText;save();});
+    nodeEl.querySelectorAll('.bullet-item').forEach(bEl=>{
+      const idx=parseInt(bEl.dataset.index);
+      bEl.querySelector('.bullet-checkbox').addEventListener('click',()=>{
+        n.checkedBullets=n.checkedBullets||[];
+        const pos=n.checkedBullets.indexOf(idx);
+        if(pos>-1)n.checkedBullets.splice(pos,1);else n.checkedBullets.push(idx);
+        save(); renderNodes();
       });
+      bEl.querySelector('.bullet-text').addEventListener('blur',e=>{n.bullets[idx]=e.target.innerText;save();});
     });
-
-    if(n.showBlock) {
-      const valEl = nodeEl.querySelector('.inner-val');
-      if(valEl) {
-        valEl.addEventListener('blur', (e) => {
-          n.blockVal = e.target.innerText;
-          save();
-        });
-      }
-    }
-
-    if(n.tags) {
-      nodeEl.querySelectorAll('.tag-item').forEach((tEl, tIdx) => {
-        tEl.addEventListener('blur', (e) => {
-          n.tags[tIdx].text = e.target.innerText;
-          save();
-        });
-      });
-    }
-
     panZoomContent.appendChild(nodeEl);
   });
-
-  initInteractOnNodes();
-  draw();
-  buildJournal();
+  initInteractOnNodes(); draw();
 }
 
+// ============================================================
+// VISION BOARD DATA
+// ============================================================
+let vbDevices = [
+  { id:'iphone17', title:'iPhone 17 Pro Max', desc:'Ecran Super Retina XDR 6.9", puce A19 Pro, titanium naturel, autonomie record.', image:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-17-pro-model-select-202509?wid=512&hei=512&fmt=png-alpha&.v=1750701261561', status:'owned', glow:'gold', span:'vb-span-2 vb-span-2-rows', specs:['6.9"','A19 Pro','Titanium'] },
+  { id:'macbook', title:'MacBook Pro 16" M4', desc:'Puce M4 Pro, 24 Go RAM, ecran Liquid Retina XDR, finition argent.', image:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/macbook-pro-16-silver-202410?wid=400&hei=400&fmt=png-alpha&.v=1728336275432', status:'owned', glow:'emerald', span:'vb-span-2', specs:['M4 Pro','24 Go','Argent'] },
+  { id:'watch', title:'Apple Watch Ultra 3', desc:'Boitier titane 49 mm, action button, GPS de precision, autonomie 72h.', image:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/apple-watch-ultra-3-202509?wid=400&hei=400&fmt=png-alpha&.v=1750701261561', status:'owned', glow:'blue', span:'', specs:['49 mm','Titanium','72h'] },
+  { id:'airpods3', title:'AirPods Pro 3', desc:'Reduction active adaptative, audio spatial personnalise, H3 chip.', image:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/airpods-pro-3-202509?wid=400&hei=400&fmt=png-alpha&.v=1750701261561', status:'owned', glow:'purple', span:'', specs:['ANC','H3','Spatial'] },
+  { id:'ipad', title:'iPad Pro 11" M4', desc:'Ecran Ultra Retina XDR tandem OLED, puce M4, finition argent.', image:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-pro-11-silver-202405?wid=400&hei=400&fmt=png-alpha&.v=1713920820149', status:'owned', glow:'cyan', span:'vb-span-2', specs:['11"','M4','OLED'] },
+  { id:'studio', title:'Studio Display 2', desc:'Ecran 27" 5K Retina, camera 12 MP Center Stage, Thunderbolt 5, six haut-parleurs.', image:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/studio-display-202503?wid=400&hei=400&fmt=png-alpha&.v=1741622170939', status:'wishlist', glow:'blue', span:'vb-span-2', specs:['27" 5K','TB5','6 speakers'] },
+  { id:'iphone18', title:'iPhone 18 Pro Max', desc:'Prochaine generation — puce A20 Pro, design revolutionnaire, camera periscope.', image:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-18-pro-model-select-202609?wid=400&hei=400&fmt=png-alpha&.v=1762234567890', status:'wishlist', glow:'rose', span:'vb-span-2', specs:['A20 Pro','Periscope','Future'] },
+  { id:'airpods4', title:'AirPods Pro 4', desc:'Prochaine generation — H4 chip, reduction adaptative 3.0, sante auditive avancee.', image:'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/airpods-pro-4-202609?wid=400&hei=400&fmt=png-alpha&.v=1762234567890', status:'wishlist', glow:'purple', span:'', specs:['H4','ANC 3.0','Sante'] }
+];
+
+const vbGrid = document.getElementById('vbGrid');
+let vbEditingId = null;
+
+function getVbBadgeClass(s) { return 'vb-badge-'+s; }
+function getVbBadgeText(s) { const m={owned:'Possede',wishlist:'A acquérir',upgrade:'Upgrade'}; return m[s]||s; }
+
+function renderVisionBoard() {
+  vbGrid.innerHTML = '';
+  vbDevices.forEach(d => {
+    const card = document.createElement('div');
+    card.className = `vb-card ${d.span}`;
+    card.dataset.id = d.id;
+    const specsHTML = d.specs.map(s => `<div class="vb-spec">${s}</div>`).join('');
+    card.innerHTML = `
+      <div class="vb-glow glow-${d.glow}"></div>
+      <div class="vb-card-header">
+        <span class="vb-badge ${getVbBadgeClass(d.status)}">${getVbBadgeText(d.status)}</span>
+        <button class="vb-edit-btn" data-id="${d.id}">⚙️</button>
+      </div>
+      <div class="vb-visual">
+        <img src="${d.image}" alt="${d.title}" loading="lazy" onerror="this.style.display='none'">
+      </div>
+      <div class="vb-info">
+        <h3>${d.title}</h3>
+        <p>${d.desc}</p>
+        <div class="vb-specs">${specsHTML}</div>
+      </div>`;
+    card.querySelector('.vb-edit-btn').addEventListener('click', e => { e.stopPropagation(); openVbEdit(d.id); });
+    vbGrid.appendChild(card);
+  });
+}
+
+const vbModal = document.getElementById('vbModal');
+function openVbEdit(id) {
+  vbEditingId = id;
+  const d = vbDevices.find(x => x.id === id);
+  if(!d) return;
+  document.getElementById('vbEditImage').value = d.image;
+  document.getElementById('vbEditTitle').value = d.title;
+  document.getElementById('vbEditStatus').value = d.status;
+  document.getElementById('vbEditDesc').value = d.desc;
+  document.getElementById('vbEditGlow').value = d.glow;
+  vbModal.classList.add('active');
+}
+function closeVbEdit() { vbModal.classList.remove('active'); vbEditingId = null; }
+function saveVbEdit() {
+  if(!vbEditingId) return;
+  const d = vbDevices.find(x => x.id === vbEditingId);
+  if(d) { d.image=document.getElementById('vbEditImage').value; d.title=document.getElementById('vbEditTitle').value;
+    d.status=document.getElementById('vbEditStatus').value; d.desc=document.getElementById('vbEditDesc').value;
+    d.glow=document.getElementById('vbEditGlow').value; renderVisionBoard(); }
+  closeVbEdit();
+}
+document.getElementById('vbModalClose').addEventListener('click', closeVbEdit);
+document.getElementById('vbCancelEdit').addEventListener('click', closeVbEdit);
+document.getElementById('vbSaveEdit').addEventListener('click', saveVbEdit);
+vbModal.addEventListener('click', e => { if(e.target===vbModal) closeVbEdit(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape' && vbModal.classList.contains('active')) closeVbEdit(); });
+
+// ============================================================
+// INIT
+// ============================================================
 loadData();
+renderVisionBoard();
 </script>
 </body>
 </html>
