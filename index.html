@@ -33,6 +33,12 @@
   .btn-primary { background: var(--text); color: #000; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; user-select: none; }
   .btn-primary:hover { opacity: 0.9; }
 
+  /* Layout picker */
+  .layout-picker { display: flex; gap: 4px; background: rgba(0,0,0,0.3); padding: 3px; border-radius: 8px; border: 1px solid var(--panel-border); }
+  .layout-btn { background: none; border: none; color: var(--dim); padding: 6px 12px; font-size: 11px; font-weight: 600; border-radius: 6px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .layout-btn.active { background: rgba(255,255,255,0.08); color: var(--text); }
+  .layout-btn:hover:not(.active) { color: var(--text); }
+
   .canvas-container {
     flex: 1; position: relative; width: 100%; overflow: hidden;
     background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
@@ -43,6 +49,7 @@
   .pan-zoom-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-origin: 0 0; will-change: transform; }
   .connector-svg { position: absolute; inset: 0; width: 5000px; height: 5000px; pointer-events: none; z-index: 1; }
 
+  /* ========== STYLE 1 : CLASSIQUE (original) ========== */
   .node {
     position: absolute; z-index: 5; touch-action: none;
     border: 1px solid color-mix(in srgb, var(--nc) 40%, transparent);
@@ -64,6 +71,97 @@
     border-color: color-mix(in srgb, var(--nc) 80%, transparent); 
     box-shadow: 0 0 35px -2px color-mix(in srgb, var(--nc) 75%, transparent),
                 0 25px 50px rgba(0, 0, 0, 0.9);
+  }
+
+  /* ========== STYLE 2 : GLASSMORPHISME (inspire image) ========== */
+  .node.glass-style {
+    background: rgba(255, 255, 255, 0.03);
+    background: linear-gradient(180deg, 
+      rgba(255,255,255,0.06) 0%, 
+      rgba(255,255,255,0.01) 40%,
+      rgba(0,0,0,0.1) 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid color-mix(in srgb, var(--nc) 60%, transparent);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 
+      0 0 60px -15px color-mix(in srgb, var(--nc) 25%, transparent),
+      0 20px 50px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.08),
+      inset 0 -1px 0 color-mix(in srgb, var(--nc) 15%, transparent);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .node.glass-style::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 1.5px;
+    background: linear-gradient(180deg, 
+      rgba(255,255,255,0.15) 0%, 
+      transparent 40%,
+      color-mix(in srgb, var(--nc) 50%, transparent) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .node.glass-style::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 10%; right: 10%; height: 40%;
+    background: radial-gradient(ellipse at center bottom, 
+      color-mix(in srgb, var(--nc) 35%, transparent) 0%, 
+      transparent 70%);
+    filter: blur(20px);
+    pointer-events: none;
+    z-index: -1;
+    border-radius: 50%;
+  }
+
+  .node.glass-style:hover {
+    border-bottom-color: color-mix(in srgb, var(--nc) 90%, transparent);
+    box-shadow: 
+      0 0 80px -10px color-mix(in srgb, var(--nc) 40%, transparent),
+      0 25px 60px rgba(0,0,0,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -1px 0 color-mix(in srgb, var(--nc) 25%, transparent);
+    transform: translateY(-2px);
+  }
+
+  .node.glass-style .icon-badge {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 0 16px -4px var(--nc), inset 0 1px 0 rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+  }
+
+  .node.glass-style .title {
+    font-size: 15px;
+    letter-spacing: -0.3px;
+  }
+
+  .node.glass-style .sub {
+    color: rgba(255,255,255,0.5);
+  }
+
+  .node.glass-style .tag-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 0 20px -4px color-mix(in srgb, var(--tc) 30%, transparent);
+  }
+
+  .node.glass-style .inner-block {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .node.glass-style .bullet-dot {
+    box-shadow: 0 0 12px var(--nc);
   }
   
   .node-bg-layer {
@@ -127,20 +225,6 @@
     content: ''; position: absolute; right: 4px; bottom: 4px; width: 4px; height: 4px; background: var(--text); border-radius: 50%;
     box-shadow: -5px 0 var(--text), 0 -5px var(--text), -5px -5px var(--text);
   }
-
-  .journal-container { display: none; flex: 1; overflow-y: auto; padding: 16px; background: var(--bg-main); flex-direction: column; gap: 12px; }
-  .journal-card {
-    background: #14151A;
-    border: 1px solid var(--panel-border); border-left: 4px solid var(--nc); border-radius: 12px; padding: 16px;
-  }
-  .journal-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-  .journal-meta { display: flex; align-items: center; gap: 12px; }
-  .journal-title { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px; color: var(--text); }
-  .journal-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
-  .journal-body { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--panel-border); padding-top: 12px; }
-  .journal-chevron { font-size: 12px; color: var(--dim); transition: transform 0.2s; }
-  .journal-card.collapsed .journal-body { display: none; }
-  .journal-card.collapsed .journal-chevron { transform: rotate(-90deg); }
 
   /* --- STYLES VISION BOARD APPLE BENTO UI/UX --- */
   .vision-container { 
@@ -254,17 +338,12 @@
     .header-nav > div:last-child { display: none; } 
     .tabs { display: none !important; }
     .view-toggle { display: flex !important; }
-    
-    .app-container.mode-journal #canvasContainer { display: none !important; }
-    .app-container.mode-journal #journalContainer { display: flex !important; }
-    .app-container.mode-journal #visionContainer { display: none !important; }
+    .layout-picker { display: none !important; }
     
     .app-container.mode-map #canvasContainer { display: block !important; }
-    .app-container.mode-map #journalContainer { display: none !important; }
     .app-container.mode-map #visionContainer { display: none !important; }
 
     .app-container.mode-vision #canvasContainer { display: none !important; }
-    .app-container.mode-vision #journalContainer { display: none !important; }
     .app-container.mode-vision #visionContainer { display: flex !important; }
     
     .sheet { width: 100% !important; border-left: none; }
@@ -273,8 +352,6 @@
 
     .bullet-checkbox { width: 22px; height: 22px; }
     .action-btn { width: 34px; height: 34px; font-size: 16px; }
-    .journal-title { font-size: 16px; }
-    .journal-sub { font-size: 12px; }
     .fab-add-mobile { display: flex !important; }
   }
 
@@ -292,17 +369,20 @@
   <div class="header-nav">
     <div class="tabs">
       <div class="tab active" data-target="map">Architecture</div>
-      <div class="tab" data-target="journal">Journal</div>
       <div class="tab" data-target="vision">Vision Board</div>
     </div>
     
     <div class="view-toggle" id="viewToggle">
-      <button class="toggle-btn" data-mode="journal">Journal</button>
       <button class="toggle-btn active" data-mode="map">Carte</button>
       <button class="toggle-btn" data-mode="vision">Vision</button>
     </div>
 
     <div class="actions-bar" id="actionsBar">
+      <div class="layout-picker" id="layoutPicker">
+        <button class="layout-btn active" data-layout="free">Libre</button>
+        <button class="layout-btn" data-layout="grid">Grille</button>
+        <button class="layout-btn" data-layout="tree">Arbre</button>
+      </div>
       <button class="btn-primary" id="addGlobalNodeBtn">+ Ajouter une vignette</button>
       <div style="font-size: 12px; color: var(--dim);" id="syncStatus">Studio Anthony Carrel</div>
     </div>
@@ -314,13 +394,11 @@
     </div>
   </div>
 
-  <div class="journal-container" id="journalContainer"></div>
-
   <!-- NOUVEL ESPACE VISION BOARD : STYLE APPLE BENTO UI/UX -->
   <div class="vision-container" id="visionContainer">
     <div class="vision-header-intro">
-      <h2>Vision Board Écosystème</h2>
-      <p>Suivi visuel interactif du matériel actif, des cibles d'upgrade et de la roadmap matérielle haut de gamme.</p>
+      <h2>Vision Board Ecosystem</h2>
+      <p>Suivi visuel interactif du materiel actif, des cibles d'upgrade et de la roadmap materielle haut de gamme.</p>
     </div>
 
     <div class="apple-bento-grid">
@@ -329,15 +407,15 @@
         <div class="apple-card-glow"></div>
         <div class="apple-card-content">
           <div class="apple-card-top">
-            <span class="apple-badge badge-owned">Possédé - En service</span>
-            <span style="font-size: 12px; color: var(--dim);">Titanium Doré</span>
+            <span class="apple-badge badge-owned">Possede - En service</span>
+            <span style="font-size: 12px; color: var(--dim);">Titanium Dore</span>
           </div>
           <div class="apple-visual-container">
             <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-deserttitanium?wid=512&hei=512&fmt=p-jpg&qlt=80&.v=1723186443425" alt="iPhone Pro">
           </div>
           <div class="apple-card-title-group">
             <h3>iPhone 16 Pro Max</h3>
-            <p>Écran Super Retina XDR 6.9", Puce A18 Pro, contrôle de la caméra pro et autonomie record.</p>
+            <p>Ecran Super Retina XDR 6.9", Puce A18 Pro, controle de la camera pro et autonomie record.</p>
           </div>
         </div>
       </div>
@@ -347,14 +425,14 @@
         <div class="apple-card-glow blue"></div>
         <div class="apple-card-content">
           <div class="apple-card-top">
-            <span class="apple-badge badge-upgrade">À surveiller / Upgrade</span>
+            <span class="apple-badge badge-upgrade">A surveiller / Upgrade</span>
           </div>
           <div class="apple-visual-container" style="min-height: 100px;">
             <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/watch-ultra-digitalmat-gallery-1-202309?wid=360&hei=330&fmt=png-alpha&.v=1693006424599" alt="Apple Watch Ultra">
           </div>
           <div class="apple-card-title-group">
             <h3>Apple Watch Ultra 2</h3>
-            <p>Boîtier titane aérospatial, verre saphir, micro-rayures d'usage à auditer.</p>
+            <p>Boitier titane aerospatial, verre saphir, micro-rayures d'usage a auditer.</p>
           </div>
         </div>
       </div>
@@ -371,7 +449,7 @@
           </div>
           <div class="apple-card-title-group">
             <h3>Apple Silicon M-Series</h3>
-            <p>Puissance de calcul unifiée pour l'IA locale.</p>
+            <p>Puissance de calcul unifiee pour l'IA locale.</p>
           </div>
         </div>
       </div>
@@ -405,7 +483,7 @@
           </div>
           <div class="apple-card-title-group">
             <h3>AirPods Pro (Gen 2)</h3>
-            <p>Réduction active du bruit adaptative et audio spatial personnalisé.</p>
+            <p>Reduction active du bruit adaptative et audio spatial personnalise.</p>
           </div>
         </div>
       </div>
@@ -419,7 +497,7 @@
           </div>
           <div class="apple-card-title-group">
             <h3>Studio Display 5K</h3>
-            <p>Écran rétina 27 pouces avec caméra 12MP Ultra Grand Angle et système à six haut-parleurs.</p>
+            <p>Ecran retina 27 pouces avec camera 12MP Ultra Grand Angle et systeme a six haut-parleurs.</p>
           </div>
         </div>
       </div>
@@ -431,8 +509,8 @@
 
 <!-- PANNEAU CONFIGURATION VIGNETTE -->
 <div class="sheet" id="configSheet">
-  <button class="sheet-close" id="closeSheet">×</button>
-  <h3 style="font-family:'Space Grotesk'; margin-top:10px; color:var(--text); margin-bottom: 24px;">Propriétés de la vignette</h3>
+  <button class="sheet-close" id="closeSheet">x</button>
+  <h3 style="font-family:'Space Grotesk'; margin-top:10px; color:var(--text); margin-bottom: 24px;">Proprietes de la vignette</h3>
   
   <div class="field">
     <label>Titre de la vignette</label>
@@ -445,8 +523,8 @@
   </div>
 
   <div class="field">
-    <label>Icône (Emoji)</label>
-    <input type="text" id="nodeIconInput" placeholder="Ex: 📂">
+    <label>Icone (Emoji)</label>
+    <input type="text" id="nodeIconInput" placeholder="Ex: ">
   </div>
 
   <div class="field" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--panel-border); margin-bottom: 20px;">
@@ -454,21 +532,26 @@
     <input type="checkbox" id="nodeIsBentoInput" style="width: auto; cursor: pointer;">
   </div>
 
+  <div class="field" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--panel-border); margin-bottom: 20px;">
+    <label style="margin: 0;">Style Glassmorphisme (Option 2)</label>
+    <input type="checkbox" id="nodeIsGlassInput" style="width: auto; cursor: pointer;">
+  </div>
+
   <div class="field">
-    <label>Couleur Thématique (Contour & Icône)</label>
+    <label>Couleur Thematique (Contour & Icone)</label>
     <select id="nodeColorInput">
       <option value="var(--gold)">Or (Studio Anthony)</option>
-      <option value="var(--source)">Vert émeraude (La Source)</option>
+      <option value="var(--source)">Vert emeraude (La Source)</option>
       <option value="var(--cockpit)">Bleu cockpit (Pilotage)</option>
       <option value="var(--moteur)">Violet pur (Moteur IA / Contenu)</option>
-      <option value="var(--objectifs)">Cyan électrique (Objectifs)</option>
+      <option value="var(--objectifs)">Cyan electrique (Objectifs)</option>
       <option value="#FF4A82">Rose Rubis</option>
       <option value="#FF6B35">Orange Intense</option>
-      <option value="#00F5D4">Menthe Néo</option>
+      <option value="#00F5D4">Menthe Neo</option>
       <option value="#7209B7">Indigo Profond</option>
       <option value="#FFD166">Jaune Pastel</option>
       <option value="#4EA8DE">Bleu Ciel Ardoise</option>
-      <option value="#DEa4ff">Mauve Orchidée</option>
+      <option value="#DEa4ff">Mauve Orchidee</option>
       <option value="#FF4A4A">Rouge Alerte</option>
       <option value="#FFFFFF">Blanc Pur</option>
     </select>
@@ -480,14 +563,14 @@
       <option value="#070709">Noir Profond (#070709)</option>
       <option value="#14151A">Anthracite Classique (#14151A)</option>
       <option value="#1B1C22">Gris Sombre (#1B1C22)</option>
-      <option value="#252730">Gris Foncé Lunod (#252730)</option>
-      <option value="#343742">Gris Intermédiaire (#343742)</option>
+      <option value="#252730">Gris Fonce Lunod (#252730)</option>
+      <option value="#343742">Gris Intermediaire (#343742)</option>
       <option value="#454957">Gris Moyen Flou (#454957)</option>
     </select>
   </div>
 
   <div class="field">
-    <label>Liaisons Parentes (Multi-sélection autorisée)</label>
+    <label>Liaisons Parentes (Multi-selection autorisee)</label>
     <div class="checkbox-group-container" id="nodeParentsCheckboxGroup"></div>
   </div>
 
@@ -497,7 +580,7 @@
   </div>
 
   <div class="field">
-    <label id="bgOpacityLabel">Opacité de l'image (85%)</label>
+    <label id="bgOpacityLabel">Opacite de l'image (85%)</label>
     <input type="range" id="bgOpacityInput" min="0" max="100" step="5" style="accent-color: var(--text);">
   </div>
 
@@ -507,7 +590,7 @@
   </div>
 
   <div class="field">
-    <label>Libellé & Valeur de l'encoche</label>
+    <label>Libelle & Valeur de l'encoche</label>
     <div style="display: flex; gap: 6px;">
       <input type="text" id="blockLabelInput" placeholder="Ex: OUTIL" style="flex:1;">
       <input type="text" id="blockValInput" placeholder="Ex: Gemini" style="flex:2;">
@@ -527,7 +610,7 @@
 
   <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px;">
     <button id="saveNodeConfig" style="width:100%; background:var(--text); color:#000; border:none; padding:12px; border-radius:8px; font-weight:700; cursor:pointer;">Appliquer les modifications</button>
-    <button id="deleteNodeBtn" class="btn-danger">Supprimer définitivement cette vignette</button>
+    <button id="deleteNodeBtn" class="btn-danger">Supprimer definitivement cette vignette</button>
   </div>
 </div>
 
@@ -540,13 +623,13 @@ let dataset = [];
 
 const container = document.getElementById('canvasContainer');
 const panZoomContent = document.getElementById('panZoomContent');
-const journalContainer = document.getElementById('journalContainer');
 const visionContainer = document.getElementById('visionContainer');
 const svg = document.getElementById('svgFlow');
 const app = document.getElementById('app');
 const syncStatus = document.getElementById('syncStatus');
 let activeNodeId = null;
 let tempTags = [];
+let currentLayout = 'free';
 
 let transformState = { x: 0, y: 0, scale: 1 };
 
@@ -579,7 +662,7 @@ async function loadData() {
     dataset = data.data;
     syncStatus.innerText = "Studio Anthony Carrel (En ligne)";
   } catch (err) {
-    console.warn("Échec de chargement Supabase, récupération locale:", err);
+    console.warn("Echec de chargement Supabase, recuperation locale:", err);
     if (localStorage.getItem('anthony_system_v6')) {
       dataset = JSON.parse(localStorage.getItem('anthony_system_v6'));
     }
@@ -618,7 +701,7 @@ interact(container).gesturable({
 
 container.addEventListener('wheel', (e) => {
   e.preventDefault();
-  const zoomFactor = 0.05;
+  const zoomFactor = 0.025;
   const delta = e.deltaY < 0 ? 1 : -1;
   const oldScale = transformState.scale;
   let newScale = Math.max(0.1, Math.min(2, oldScale + delta * zoomFactor));
@@ -639,7 +722,7 @@ function switchView(mode) {
   document.querySelectorAll('.tabs .tab').forEach(t => {
     t.classList.toggle('active', t.getAttribute('data-target') === mode);
   });
-  app.classList.remove('mode-journal', 'mode-map', 'mode-vision');
+  app.classList.remove('mode-map', 'mode-vision');
   app.classList.add('mode-' + mode);
   if(mode === 'map') setTimeout(() => { draw(); updateTransform(); }, 50);
 }
@@ -652,6 +735,96 @@ document.querySelectorAll('.tabs .tab').forEach(tab => {
   tab.addEventListener('click', () => switchView(tab.getAttribute('data-target')));
 });
 
+/* ========== LAYOUT MANAGER ========== */
+function applyLayout(layout) {
+  currentLayout = layout;
+  
+  document.querySelectorAll('.layout-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-layout') === layout);
+  });
+
+  if (layout === 'free') {
+    // En mode libre, on restaure les positions sauvegardees
+    // Les positions sont deja dans dataset, rien a faire
+    render();
+    return;
+  }
+
+  if (layout === 'grid') {
+    const cols = Math.max(3, Math.floor(Math.sqrt(dataset.length)));
+    const gapX = 40;
+    const gapY = 40;
+    const startX = 100;
+    const startY = 100;
+    
+    dataset.forEach((n, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      n.x = startX + col * (n.w + gapX);
+      n.y = startY + row * ((n.h || 260) + gapY);
+    });
+  }
+
+  if (layout === 'tree') {
+    // Arbre hierarchique base sur les parents
+    const rootNodes = dataset.filter(n => !n.parents || n.parents.length === 0);
+    const levelHeight = 320;
+    const nodeGap = 40;
+    const startX = 100;
+    const startY = 80;
+
+    function positionNode(node, x, y, level) {
+      node.x = x;
+      node.y = y;
+      
+      const children = dataset.filter(n => n.parents && n.parents.includes(node.id));
+      if (children.length === 0) return x + node.w + nodeGap;
+
+      let childX = x;
+      const childY = y + levelHeight;
+      children.forEach(child => {
+        childX = positionNode(child, childX, childY, level + 1);
+      });
+      
+      // Centre le parent au-dessus de ses enfants
+      const firstChild = children[0];
+      const lastChild = children[children.length - 1];
+      const childrenCenter = firstChild.x + (lastChild.x + lastChild.w - firstChild.x) / 2;
+      node.x = childrenCenter - node.w / 2;
+      
+      return childX;
+    }
+
+    let currentX = startX;
+    rootNodes.forEach(root => {
+      currentX = positionNode(root, currentX, startY, 0);
+      currentX += 80; // espace entre les arbres
+    });
+  }
+
+  // Centre la vue sur les cartes
+  if (dataset.length > 0) {
+    const minX = Math.min(...dataset.map(n => n.x));
+    const minY = Math.min(...dataset.map(n => n.y));
+    const maxX = Math.max(...dataset.map(n => n.x + n.w));
+    const maxY = Math.max(...dataset.map(n => n.y + (n.h || 260)));
+    
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    
+    transformState.x = container.clientWidth / 2 - centerX * transformState.scale;
+    transformState.y = container.clientHeight / 2 - centerY * transformState.scale;
+    updateTransform();
+  }
+
+  save();
+  render();
+}
+
+document.querySelectorAll('.layout-btn').forEach(btn => {
+  btn.addEventListener('click', () => applyLayout(btn.getAttribute('data-layout')));
+});
+
 document.getElementById('addGlobalNodeBtn').addEventListener('click', () => {
   const newId = 'node_' + Date.now();
   const newNode = {
@@ -662,13 +835,14 @@ document.getElementById('addGlobalNodeBtn').addEventListener('click', () => {
     h: 260,
     color: 'var(--gold)',
     cardBg: '#14151A',
-    icon: '📂',
+    icon: '',
     title: 'Nouveau projet',
     sub: 'Description du projet',
     blockLabel: 'STATUT',
     blockVal: 'Nouveau',
     parents: [],
     isBento: false,
+    isGlass: false,
     showBlock: false,
     useCheckboxes: false,
     bgOpacity: 85,
@@ -763,11 +937,12 @@ function openConfigSheet(node) {
   document.getElementById('nodeSubInput').value = node.sub || '';
   document.getElementById('nodeIconInput').value = node.icon || '';
   document.getElementById('nodeIsBentoInput').checked = !!node.isBento;
+  document.getElementById('nodeIsGlassInput').checked = !!node.isGlass;
   document.getElementById('nodeColorInput').value = node.color || 'var(--gold)';
   document.getElementById('nodeBgColorInput').value = node.cardBg || '#14151A';
   document.getElementById('bgUrlInput').value = node.bg || '';
   document.getElementById('bgOpacityInput').value = node.bgOpacity !== undefined ? node.bgOpacity : 85;
-  document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${document.getElementById('bgOpacityInput').value}%)`;
+  document.getElementById('bgOpacityLabel').innerText = `Opacite de l'image (${document.getElementById('bgOpacityInput').value}%)`;
   document.getElementById('showBlockInput').checked = !!node.showBlock;
   document.getElementById('blockLabelInput').value = node.blockLabel || '';
   document.getElementById('blockValInput').value = node.blockVal || '';
@@ -798,7 +973,7 @@ function renderSheetTags() {
     row.innerHTML = `
       <input type="text" value="${t.text}" style="flex:2;" data-idx="${idx}" class="sheet-tag-text-input">
       <input type="color" value="${t.color.startsWith('var') ? '#FFB03B' : t.color}" style="flex:1; padding:2px; height:36px;" data-idx="${idx}" class="sheet-tag-color-input">
-      <button class="action-btn" style="border:1px solid #ff4a4a; color:#ff4a4a;" onclick="removeTempTag(${idx})">×</button>
+      <button class="action-btn" style="border:1px solid #ff4a4a; color:#ff4a4a;" onclick="removeTempTag(${idx})">x</button>
     `;
     container.appendChild(row);
   });
@@ -826,7 +1001,7 @@ document.getElementById('sheetAddTagBtn').addEventListener('click', () => {
 });
 
 document.getElementById('bgOpacityInput').addEventListener('input', (e) => {
-  document.getElementById('bgOpacityLabel').innerText = `Opacité de l'image (${e.target.value}%)`;
+  document.getElementById('bgOpacityLabel').innerText = `Opacite de l'image (${e.target.value}%)`;
 });
 
 document.getElementById('closeSheet').addEventListener('click', () => {
@@ -842,6 +1017,7 @@ document.getElementById('saveNodeConfig').addEventListener('click', () => {
     node.sub = document.getElementById('nodeSubInput').value;
     node.icon = document.getElementById('nodeIconInput').value;
     node.isBento = document.getElementById('nodeIsBentoInput').checked;
+    node.isGlass = document.getElementById('nodeIsGlassInput').checked;
     node.color = document.getElementById('nodeColorInput').value;
     node.cardBg = document.getElementById('nodeBgColorInput').value;
     node.bg = document.getElementById('bgUrlInput').value;
@@ -866,7 +1042,7 @@ document.getElementById('saveNodeConfig').addEventListener('click', () => {
 
 document.getElementById('deleteNodeBtn').addEventListener('click', () => {
   if (!activeNodeId) return;
-  if (confirm("Supprimer définitivement cette vignette ?")) {
+  if (confirm("Supprimer definitivement cette vignette ?")) {
     dataset = dataset.filter(n => n.id !== activeNodeId);
     dataset.forEach(n => {
       if(n.parents) n.parents = n.parents.filter(pId => pId !== activeNodeId);
@@ -877,115 +1053,15 @@ document.getElementById('deleteNodeBtn').addEventListener('click', () => {
   }
 });
 
-function buildJournal() {
-  journalContainer.innerHTML = '';
-  dataset.forEach(n => {
-    if(!n.bullets) n.bullets = [];
-    if(!n.checkedBullets) n.checkedBullets = [];
-    if(n.useCheckboxes === undefined) n.useCheckboxes = false;
-    if(n.showBlock === undefined) n.showBlock = !!n.blockLabel;
-    if(!n.tags) n.tags = [];
-
-    const card = document.createElement('div');
-    card.className = 'journal-card';
-    card.id = 'journal_' + n.id;
-    card.style.setProperty('--nc', n.color);
-
-    let bulletsHTML = '';
-    n.bullets.forEach((bText, idx) => {
-      const isChecked = n.checkedBullets && n.checkedBullets.includes(idx);
-      const indicator = n.useCheckboxes ? `<div class="bullet-checkbox"></div>` : `<div class="bullet-dot"></div>`;
-      bulletsHTML += `
-        <div class="bullet-item ${isChecked ? 'checked' : ''}" data-index="${idx}">
-          ${indicator}
-          <div class="bullet-text" contenteditable="true">${bText}</div>
-        </div>`;
-    });
-
-    let tagsHTML = '';
-    if (n.tags.length > 0) {
-      tagsHTML = `<div class="tags-container" style="margin-top:10px;">`;
-      n.tags.forEach(t => {
-        tagsHTML += `<span class="tag-item" style="--tc: ${t.color}">${t.text}</span>`;
-      });
-      tagsHTML += `</div>`;
-    }
-
-    let blockHTML = '';
-    if (n.showBlock && n.blockLabel) {
-      blockHTML = `
-        <div class="inner-block" style="margin-top:10px;">
-          <div class="inner-label">${n.blockLabel}</div>
-          <div class="inner-val" contenteditable="true">${n.blockVal || ''}</div>
-        </div>`;
-    }
-
-    card.innerHTML = `
-      <div class="journal-header">
-        <div class="journal-meta">
-          <div class="icon-badge">${n.icon || '📂'}</div>
-          <div>
-            <div class="journal-title">${n.title || 'Sans titre'}</div>
-            <div class="journal-sub">${n.sub || ''}</div>
-          </div>
-        </div>
-        <div class="journal-chevron">▼</div>
-      </div>
-      <div class="journal-body">
-        <div class="bullets-container">${bulletsHTML}</div>
-        ${blockHTML}
-        ${tagsHTML}
-      </div>
-    `;
-
-    card.querySelector('.journal-header').addEventListener('click', (e) => {
-      if(e.target.closest('[contenteditable]')) return;
-      card.classList.toggle('collapsed');
-    });
-
-    card.querySelectorAll('.bullet-item').forEach(bEl => {
-      const idx = parseInt(bEl.dataset.index);
-      const cb = bEl.querySelector('.bullet-checkbox');
-      const dot = bEl.querySelector('.bullet-dot');
-      const targetClickable = cb || dot;
-
-      if(targetClickable) {
-        targetClickable.addEventListener('click', () => {
-          if (!n.checkedBullets) n.checkedBullets = [];
-          const pos = n.checkedBullets.indexOf(idx);
-          if (pos > -1) n.checkedBullets.splice(pos, 1);
-          else n.checkedBullets.push(idx);
-          save();
-          buildJournal();
-        });
-      }
-
-      bEl.querySelector('.bullet-text').addEventListener('blur', (e) => {
-        n.bullets[idx] = e.target.innerText;
-        save();
-      });
-    });
-
-    if(n.showBlock) {
-      const valEl = card.querySelector('.inner-val');
-      if(valEl) {
-        valEl.addEventListener('blur', (e) => {
-          n.blockVal = e.target.innerText;
-          save();
-        });
-      }
-    }
-
-    journalContainer.appendChild(card);
-  });
-}
-
 function render() {
   panZoomContent.querySelectorAll('.node').forEach(el => el.remove());
 
   dataset.forEach(n => {
     const nodeEl = document.createElement('div');
-    nodeEl.className = 'node' + (n.isBento ? ' bento-style' : '');
+    let className = 'node';
+    if (n.isBento) className += ' bento-style';
+    if (n.isGlass) className += ' glass-style';
+    nodeEl.className = className;
     nodeEl.id = n.id;
     nodeEl.style.left = (n.x || 100) + 'px';
     nodeEl.style.top = (n.y || 100) + 'px';
@@ -1039,11 +1115,11 @@ function render() {
       <div class="node-content">
         <div class="node-header">
           <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
-            <div class="icon-badge">${n.icon || '📂'}</div>
+            <div class="icon-badge">${n.icon || ''}</div>
             <div class="title" contenteditable="true">${n.title || 'Sans titre'}</div>
           </div>
           <div class="header-actions">
-            <button class="action-btn config-btn" title="Configurer">⚙️</button>
+            <button class="action-btn config-btn" title="Configurer">⚙</button>
             <button class="action-btn add-bullet-btn" title="Ajouter une puce">+</button>
           </div>
         </div>
@@ -1121,7 +1197,6 @@ function render() {
 
   initInteractOnNodes();
   draw();
-  buildJournal();
 }
 
 loadData();
