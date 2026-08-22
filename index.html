@@ -33,7 +33,6 @@
   .btn-primary { background: var(--text); color: #000; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; user-select: none; }
   .btn-primary:hover { opacity: 0.9; }
 
-  /* Layout picker */
   .layout-picker { display: flex; gap: 4px; background: rgba(0,0,0,0.3); padding: 3px; border-radius: 8px; border: 1px solid var(--panel-border); }
   .layout-btn { background: none; border: none; color: var(--dim); padding: 6px 12px; font-size: 11px; font-weight: 600; border-radius: 6px; cursor: pointer; font-family: inherit; white-space: nowrap; }
   .layout-btn.active { background: rgba(255,255,255,0.08); color: var(--text); }
@@ -49,7 +48,6 @@
   .pan-zoom-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-origin: 0 0; will-change: transform; }
   .connector-svg { position: absolute; inset: 0; width: 5000px; height: 5000px; pointer-events: none; z-index: 1; }
 
-  /* ========== STYLE 1 : CLASSIQUE (original) ========== */
   .node {
     position: absolute; z-index: 5; touch-action: none;
     border: 1px solid color-mix(in srgb, var(--nc) 40%, transparent);
@@ -73,7 +71,6 @@
                 0 25px 50px rgba(0, 0, 0, 0.9);
   }
 
-  /* ========== STYLE 2 : GLASSMORPHISME (inspire image) ========== */
   .node.glass-style {
     background: rgba(255, 255, 255, 0.03);
     background: linear-gradient(180deg, 
@@ -140,29 +137,18 @@
     backdrop-filter: blur(10px);
   }
 
-  .node.glass-style .title {
-    font-size: 15px;
-    letter-spacing: -0.3px;
-  }
-
-  .node.glass-style .sub {
-    color: rgba(255,255,255,0.5);
-  }
-
+  .node.glass-style .title { font-size: 15px; letter-spacing: -0.3px; }
+  .node.glass-style .sub { color: rgba(255,255,255,0.5); }
   .node.glass-style .tag-item {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.1);
     box-shadow: 0 0 20px -4px color-mix(in srgb, var(--tc) 30%, transparent);
   }
-
   .node.glass-style .inner-block {
     background: rgba(0,0,0,0.25);
     border: 1px solid rgba(255,255,255,0.06);
   }
-
-  .node.glass-style .bullet-dot {
-    box-shadow: 0 0 12px var(--nc);
-  }
+  .node.glass-style .bullet-dot { box-shadow: 0 0 12px var(--nc); }
   
   .node-bg-layer {
     position: absolute; inset: 0;
@@ -226,7 +212,6 @@
     box-shadow: -5px 0 var(--text), 0 -5px var(--text), -5px -5px var(--text);
   }
 
-  /* --- STYLES VISION BOARD APPLE BENTO UI/UX --- */
   .vision-container { 
     display: none; flex: 1; overflow-y: auto; padding: 32px; background: #000000; 
     flex-direction: column; gap: 24px; 
@@ -265,7 +250,6 @@
     box-shadow: 0 20px 40px rgba(0,0,0,0.7), 0 0 30px rgba(255, 176, 59, 0.08), inset 0 1px 0 rgba(255,255,255,0.2);
   }
 
-  /* Formats de la grille Bento */
   .apple-card.col-span-2 { grid-column: span 2; }
   .apple-card.col-span-3 { grid-column: span 3; }
   .apple-card.col-span-4 { grid-column: span 4; }
@@ -303,8 +287,6 @@
   }
   .apple-card:hover .apple-visual-container img { transform: scale(1.04); }
 
-  /* -------------------------------------- */
-
   [contenteditable="true"]:focus { background: rgba(255,255,255,0.04); border-radius: 4px; outline: none; }
   .flow-line { stroke-dasharray: 8, 6; animation: flowMovement 25s linear infinite; }
   @keyframes flowMovement { to { stroke-dashoffset: -1000; } }
@@ -332,7 +314,6 @@
   .btn-danger { background: #ff4a4a; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; width: 100%; text-align: center; }
   .btn-secondary { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--panel-border); padding: 8px; border-radius: 6px; cursor: pointer; width: 100%; font-size: 12px; }
 
-  /* RESPONSIVE MOBILE + TABLETTE */
   @media (max-width: 1024px) {
     .header-nav { padding: 12px 16px; }
     .header-nav > div:last-child { display: none; } 
@@ -363,7 +344,7 @@
   }
 </style>
 </head>
-<body class="app-container mode-map">
+<body>
 
 <div class="app-container mode-map" id="app">
   <div class="header-nav">
@@ -394,7 +375,6 @@
     </div>
   </div>
 
-  <!-- NOUVEL ESPACE VISION BOARD : STYLE APPLE BENTO UI/UX -->
   <div class="vision-container" id="visionContainer">
     <div class="vision-header-intro">
       <h2>Vision Board Ecosystem</h2>
@@ -402,7 +382,7 @@
     </div>
 
     <div class="apple-bento-grid">
-      <!-- Carte 1 : iPhone Pro (Large) -->
+      <!-- ... tes cartes Apple restent identiques ... -->
       <div class="apple-card col-span-2 row-span-2">
         <div class="apple-card-glow"></div>
         <div class="apple-card-content">
@@ -420,7 +400,6 @@
         </div>
       </div>
 
-      <!-- Carte 2 : Apple Watch Ultra (Standard) -->
       <div class="apple-card col-span-2">
         <div class="apple-card-glow blue"></div>
         <div class="apple-card-content">
@@ -437,7 +416,6 @@
         </div>
       </div>
 
-      <!-- Carte 3 : Puce / Performance -->
       <div class="apple-card">
         <div class="apple-card-glow purple"></div>
         <div class="apple-card-content">
@@ -454,7 +432,6 @@
         </div>
       </div>
 
-      <!-- Carte 4 : Vision Pro (Wishlist) -->
       <div class="apple-card">
         <div class="apple-card-glow emerald"></div>
         <div class="apple-card-content">
@@ -471,7 +448,6 @@
         </div>
       </div>
 
-      <!-- Carte 5 : Audio Pro -->
       <div class="apple-card col-span-2">
         <div class="apple-card-glow blue"></div>
         <div class="apple-card-content">
@@ -488,7 +464,6 @@
         </div>
       </div>
 
-      <!-- Carte 6 : Objectifs / Hub -->
       <div class="apple-card col-span-2">
         <div class="apple-card-glow"></div>
         <div class="apple-card-content">
@@ -509,7 +484,7 @@
 
 <!-- PANNEAU CONFIGURATION VIGNETTE -->
 <div class="sheet" id="configSheet">
-  <button class="sheet-close" id="closeSheet">x</button>
+  <button class="sheet-close" id="closeSheet">×</button>
   <h3 style="font-family:'Space Grotesk'; margin-top:10px; color:var(--text); margin-bottom: 24px;">Proprietes de la vignette</h3>
   
   <div class="field">
@@ -524,7 +499,7 @@
 
   <div class="field">
     <label>Icone (Emoji)</label>
-    <input type="text" id="nodeIconInput" placeholder="Ex: ">
+    <input type="text" id="nodeIconInput" placeholder="Ex: 🚀">
   </div>
 
   <div class="field" style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--panel-border); margin-bottom: 20px;">
@@ -617,13 +592,12 @@
 <script>
 const SUPABASE_URL = "https://oftfrsezwjjybpohknim.supabase.co";
 const SUPABASE_KEY = "sb_publishable_FD8fOiN6Z71LGJQbqL6MEQ_NtKzEReT";
-supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let dataset = [];
 
 const container = document.getElementById('canvasContainer');
 const panZoomContent = document.getElementById('panZoomContent');
-const visionContainer = document.getElementById('visionContainer');
 const svg = document.getElementById('svgFlow');
 const app = document.getElementById('app');
 const syncStatus = document.getElementById('syncStatus');
@@ -658,13 +632,14 @@ async function loadData() {
       .eq('id', 1)
       .single();
 
-    if (error || !data) throw error;
-    dataset = data.data;
+    if (error || !data) throw error || new Error('No data');
+    dataset = Array.isArray(data.data) ? data.data : [];
     syncStatus.innerText = "Studio Anthony Carrel (En ligne)";
   } catch (err) {
     console.warn("Echec de chargement Supabase, recuperation locale:", err);
-    if (localStorage.getItem('anthony_system_v6')) {
-      dataset = JSON.parse(localStorage.getItem('anthony_system_v6'));
+    const local = localStorage.getItem('anthony_system_v6');
+    if (local) {
+      try { dataset = JSON.parse(local); } catch(e) { dataset = []; }
     }
     syncStatus.innerText = "Studio Anthony Carrel (Local)";
   }
@@ -724,7 +699,7 @@ function switchView(mode) {
   });
   app.classList.remove('mode-map', 'mode-vision');
   app.classList.add('mode-' + mode);
-  if(mode === 'map') setTimeout(() => { draw(); updateTransform(); }, 50);
+  if (mode === 'map') setTimeout(() => { draw(); updateTransform(); }, 50);
 }
 
 document.querySelectorAll('#viewToggle .toggle-btn').forEach(btn => {
@@ -744,14 +719,12 @@ function applyLayout(layout) {
   });
 
   if (layout === 'free') {
-    // En mode libre, on restaure les positions sauvegardees
-    // Les positions sont deja dans dataset, rien a faire
     render();
     return;
   }
 
   if (layout === 'grid') {
-    const cols = Math.max(3, Math.floor(Math.sqrt(dataset.length)));
+    const cols = Math.max(3, Math.floor(Math.sqrt(dataset.length || 1)));
     const gapX = 40;
     const gapY = 40;
     const startX = 100;
@@ -760,54 +733,51 @@ function applyLayout(layout) {
     dataset.forEach((n, i) => {
       const col = i % cols;
       const row = Math.floor(i / cols);
-      n.x = startX + col * (n.w + gapX);
+      n.x = startX + col * ((n.w || 240) + gapX);
       n.y = startY + row * ((n.h || 260) + gapY);
     });
   }
 
   if (layout === 'tree') {
-    // Arbre hierarchique base sur les parents
     const rootNodes = dataset.filter(n => !n.parents || n.parents.length === 0);
     const levelHeight = 320;
     const nodeGap = 40;
     const startX = 100;
     const startY = 80;
 
-    function positionNode(node, x, y, level) {
+    function positionNode(node, x, y) {
       node.x = x;
       node.y = y;
       
       const children = dataset.filter(n => n.parents && n.parents.includes(node.id));
-      if (children.length === 0) return x + node.w + nodeGap;
+      if (children.length === 0) return x + (node.w || 240) + nodeGap;
 
       let childX = x;
       const childY = y + levelHeight;
       children.forEach(child => {
-        childX = positionNode(child, childX, childY, level + 1);
+        childX = positionNode(child, childX, childY);
       });
       
-      // Centre le parent au-dessus de ses enfants
       const firstChild = children[0];
       const lastChild = children[children.length - 1];
-      const childrenCenter = firstChild.x + (lastChild.x + lastChild.w - firstChild.x) / 2;
-      node.x = childrenCenter - node.w / 2;
+      const childrenCenter = firstChild.x + ((lastChild.x + (lastChild.w || 240) - firstChild.x) / 2);
+      node.x = childrenCenter - (node.w || 240) / 2;
       
       return childX;
     }
 
     let currentX = startX;
     rootNodes.forEach(root => {
-      currentX = positionNode(root, currentX, startY, 0);
-      currentX += 80; // espace entre les arbres
+      currentX = positionNode(root, currentX, startY);
+      currentX += 80;
     });
   }
 
-  // Centre la vue sur les cartes
   if (dataset.length > 0) {
-    const minX = Math.min(...dataset.map(n => n.x));
-    const minY = Math.min(...dataset.map(n => n.y));
-    const maxX = Math.max(...dataset.map(n => n.x + n.w));
-    const maxY = Math.max(...dataset.map(n => n.y + (n.h || 260)));
+    const minX = Math.min(...dataset.map(n => n.x || 0));
+    const minY = Math.min(...dataset.map(n => n.y || 0));
+    const maxX = Math.max(...dataset.map(n => (n.x || 0) + (n.w || 240)));
+    const maxY = Math.max(...dataset.map(n => (n.y || 0) + (n.h || 260)));
     
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
@@ -829,13 +799,13 @@ document.getElementById('addGlobalNodeBtn').addEventListener('click', () => {
   const newId = 'node_' + Date.now();
   const newNode = {
     id: newId,
-    x: (window.innerWidth / 2 - 110 - transformState.x) / transformState.scale,
-    y: (window.innerHeight / 2 - 120 - transformState.y) / transformState.scale,
+    x: (container.clientWidth / 2 - 120 - transformState.x) / transformState.scale,
+    y: (container.clientHeight / 2 - 130 - transformState.y) / transformState.scale,
     w: 240,
     h: 260,
     color: 'var(--gold)',
     cardBg: '#14151A',
-    icon: '',
+    icon: '✨',
     title: 'Nouveau projet',
     sub: 'Description du projet',
     blockLabel: 'STATUT',
@@ -868,10 +838,10 @@ function draw() {
       n.parents.forEach(pId => {
         const parentNode = dataset.find(item => item.id === pId);
         if (parentNode) {
-          const pX = parentNode.x + parentNode.w / 2;
-          const pY = parentNode.y + (parentNode.h || 260) / 2;
-          const cX = n.x + n.w / 2;
-          const cY = n.y + (n.h || 260) / 2;
+          const pX = (parentNode.x || 0) + (parentNode.w || 240) / 2;
+          const pY = (parentNode.y || 0) + (parentNode.h || 260) / 2;
+          const cX = (n.x || 0) + (n.w || 240) / 2;
+          const cY = (n.y || 0) + (n.h || 260) / 2;
           
           const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
           const d = `M ${pX} ${pY} Q ${(pX+cX)/2} ${(pY+cY)/2 - 50}, ${cX} ${cY}`;
@@ -888,6 +858,10 @@ function draw() {
 }
 
 function initInteractOnNodes() {
+  // Important : on nettoie les anciens listeners pour éviter l'empilement
+  interact('.node').unset();
+  interact('.resize-handle').unset();
+
   interact('.node').draggable({
     ignoreFrom: 'input, select, textarea, [contenteditable="true"], .action-btn, .bullets-container, .resize-handle',
     listeners: {
@@ -895,14 +869,14 @@ function initInteractOnNodes() {
         const id = event.target.id;
         const node = dataset.find(n => n.id === id);
         if (node) {
-          node.x += event.dx / transformState.scale;
-          node.y += event.dy / transformState.scale;
+          node.x = (node.x || 0) + event.dx / transformState.scale;
+          node.y = (node.y || 0) + event.dy / transformState.scale;
           event.target.style.left = node.x + 'px';
           event.target.style.top = node.y + 'px';
           draw();
         }
       },
-      end(event) {
+      end() {
         save();
       }
     }
@@ -912,17 +886,18 @@ function initInteractOnNodes() {
     listeners: {
       move(event) {
         const nodeEl = event.target.closest('.node');
+        if (!nodeEl) return;
         const id = nodeEl.id;
         const node = dataset.find(n => n.id === id);
         if (node) {
-          node.w = Math.max(180, node.w + event.dx / transformState.scale);
+          node.w = Math.max(180, (node.w || 240) + event.dx / transformState.scale);
           node.h = Math.max(160, (node.h || 260) + event.dy / transformState.scale);
           nodeEl.style.width = node.w + 'px';
           nodeEl.style.height = node.h + 'px';
           draw();
         }
       },
-      end(event) {
+      end() {
         save();
       }
     }
@@ -971,9 +946,9 @@ function renderSheetTags() {
     const row = document.createElement('div');
     row.className = 'sheet-tag-row';
     row.innerHTML = `
-      <input type="text" value="${t.text}" style="flex:2;" data-idx="${idx}" class="sheet-tag-text-input">
-      <input type="color" value="${t.color.startsWith('var') ? '#FFB03B' : t.color}" style="flex:1; padding:2px; height:36px;" data-idx="${idx}" class="sheet-tag-color-input">
-      <button class="action-btn" style="border:1px solid #ff4a4a; color:#ff4a4a;" onclick="removeTempTag(${idx})">x</button>
+      <input type="text" value="${t.text || ''}" style="flex:2;" data-idx="${idx}" class="sheet-tag-text-input">
+      <input type="color" value="${(t.color && t.color.startsWith('var')) ? '#FFB03B' : (t.color || '#FFB03B')}" style="flex:1; padding:2px; height:36px;" data-idx="${idx}" class="sheet-tag-color-input">
+      <button class="action-btn" style="border:1px solid #ff4a4a; color:#ff4a4a;" onclick="removeTempTag(${idx})">×</button>
     `;
     container.appendChild(row);
   });
@@ -1021,7 +996,7 @@ document.getElementById('saveNodeConfig').addEventListener('click', () => {
     node.color = document.getElementById('nodeColorInput').value;
     node.cardBg = document.getElementById('nodeBgColorInput').value;
     node.bg = document.getElementById('bgUrlInput').value;
-    node.bgOpacity = parseInt(document.getElementById('bgOpacityInput').value);
+    node.bgOpacity = parseInt(document.getElementById('bgOpacityInput').value) || 85;
     node.showBlock = document.getElementById('showBlockInput').checked;
     node.blockLabel = document.getElementById('blockLabelInput').value;
     node.blockVal = document.getElementById('blockValInput').value;
@@ -1045,7 +1020,7 @@ document.getElementById('deleteNodeBtn').addEventListener('click', () => {
   if (confirm("Supprimer definitivement cette vignette ?")) {
     dataset = dataset.filter(n => n.id !== activeNodeId);
     dataset.forEach(n => {
-      if(n.parents) n.parents = n.parents.filter(pId => pId !== activeNodeId);
+      if (n.parents) n.parents = n.parents.filter(pId => pId !== activeNodeId);
     });
     save();
     render();
@@ -1054,6 +1029,7 @@ document.getElementById('deleteNodeBtn').addEventListener('click', () => {
 });
 
 function render() {
+  // On supprime uniquement les nodes (on garde le SVG)
   panZoomContent.querySelectorAll('.node').forEach(el => el.remove());
 
   dataset.forEach(n => {
@@ -1080,14 +1056,14 @@ function render() {
     }
 
     let bulletsHTML = '';
-    if(n.bullets) {
+    if (n.bullets && Array.isArray(n.bullets)) {
       n.bullets.forEach((bText, idx) => {
         const isChecked = n.checkedBullets && n.checkedBullets.includes(idx);
         const indicator = n.useCheckboxes ? `<div class="bullet-checkbox"></div>` : `<div class="bullet-dot"></div>`;
         bulletsHTML += `
           <div class="bullet-item ${isChecked ? 'checked' : ''}" data-index="${idx}">
             ${indicator}
-            <div class="bullet-text" contenteditable="true">${bText}</div>
+            <div class="bullet-text" contenteditable="true">${bText || ''}</div>
           </div>`;
       });
     }
@@ -1105,7 +1081,7 @@ function render() {
     if (n.tags && n.tags.length > 0) {
       tagsHTML = `<div class="tags-container">`;
       n.tags.forEach(t => {
-        tagsHTML += `<span class="tag-item" style="--tc: ${t.color}" contenteditable="true">${t.text}</span>`;
+        tagsHTML += `<span class="tag-item" style="--tc: ${t.color || 'var(--gold)'}" contenteditable="true">${t.text || ''}</span>`;
       });
       tagsHTML += `</div>`;
     }
@@ -1131,10 +1107,14 @@ function render() {
       <div class="resize-handle"></div>
     `;
 
-    nodeEl.querySelector('.config-btn').addEventListener('click', () => openConfigSheet(n));
+    nodeEl.querySelector('.config-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openConfigSheet(n);
+    });
 
-    nodeEl.querySelector('.add-bullet-btn').addEventListener('click', () => {
-      if(!n.bullets) n.bullets = [];
+    nodeEl.querySelector('.add-bullet-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!n.bullets) n.bullets = [];
       n.bullets.push("Nouvel objectif");
       save();
       render();
@@ -1152,12 +1132,11 @@ function render() {
 
     nodeEl.querySelectorAll('.bullet-item').forEach(bEl => {
       const idx = parseInt(bEl.dataset.index);
-      const cb = bEl.querySelector('.bullet-checkbox');
-      const dot = bEl.querySelector('.bullet-dot');
-      const targetClickable = cb || dot;
+      const targetClickable = bEl.querySelector('.bullet-checkbox') || bEl.querySelector('.bullet-dot');
 
-      if(targetClickable) {
-        targetClickable.addEventListener('click', () => {
+      if (targetClickable) {
+        targetClickable.addEventListener('click', (e) => {
+          e.stopPropagation();
           if (!n.checkedBullets) n.checkedBullets = [];
           const pos = n.checkedBullets.indexOf(idx);
           if (pos > -1) n.checkedBullets.splice(pos, 1);
@@ -1173,9 +1152,9 @@ function render() {
       });
     });
 
-    if(n.showBlock) {
+    if (n.showBlock) {
       const valEl = nodeEl.querySelector('.inner-val');
-      if(valEl) {
+      if (valEl) {
         valEl.addEventListener('blur', (e) => {
           n.blockVal = e.target.innerText;
           save();
@@ -1183,10 +1162,10 @@ function render() {
       }
     }
 
-    if(n.tags) {
+    if (n.tags) {
       nodeEl.querySelectorAll('.tag-item').forEach((tEl, tIdx) => {
         tEl.addEventListener('blur', (e) => {
-          n.tags[tIdx].text = e.target.innerText;
+          if (n.tags[tIdx]) n.tags[tIdx].text = e.target.innerText;
           save();
         });
       });
