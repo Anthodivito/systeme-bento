@@ -128,6 +128,7 @@
   .bcard.s5 { grid-column:span 5; }
   .bcard.s6 { grid-column:span 6; }
   .bcard.tall { grid-row:span 2; }
+  .bcard.s2.tall, .bcard.s3.tall, .bcard.s4.tall, .bcard.s5.tall, .bcard.s6.tall { grid-row:span 2; }
   @keyframes brise { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
   @media (prefers-reduced-motion:reduce){ .bcard{animation:none} .binner{transition:none} }
 
@@ -137,11 +138,13 @@
     backface-visibility:hidden; -webkit-backface-visibility:hidden; }
 
   /* ---- RECTO : le visuel ---- */
-  .face.front { background:#0E0F11; border:1px solid rgba(255,255,255,.085); transition:border-color .35s, background .35s; }
+  .face.front { background:#0E0F11; border:1px solid rgba(255,255,255,.085);
+    border-bottom:1px solid color-mix(in srgb, var(--gc,#FFB03B) 34%, rgba(255,255,255,.085));
+    transition:border-color .35s, background .35s; }
   .face.front::after { content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
     background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 46%); }
   .bcard:hover .face.front { border-color:rgba(255,255,255,.18); background:#141519; }
-  .bglow { position:absolute; inset:-30% -20% auto -20%; height:80%; pointer-events:none; opacity:.5;
+  .bglow { position:absolute; inset:-30% -20% auto -20%; height:80%; pointer-events:none; opacity:.78;
     background:radial-gradient(50% 60% at 50% 0%, var(--gc,transparent) 0%, transparent 72%); filter:blur(26px); }
   .bstatus { position:absolute; top:15px; right:16px; z-index:4; width:22px; height:22px; border:0; background:none; padding:0; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:default; }
   .bstatus i { width:7px; height:7px; border-radius:50%; display:block; }
@@ -172,7 +175,7 @@
     background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); box-shadow:0 0 16px -5px var(--gc,#5E5CE6), inset 0 1px 0 rgba(255,255,255,.12); }
   .bback-chip svg { width:13px; height:15px; opacity:.9; }
   .bback-title { font-size:14px; font-weight:600; letter-spacing:-.015em; color:#fff; }
-  .bnotes { position:relative; z-index:2; flex:1; overflow-y:auto; font-size:13px; line-height:1.55; color:rgba(255,255,255,.80);
+  .bnotes { position:relative; z-index:2; flex:0 0 auto; font-size:13px; line-height:1.55; color:rgba(255,255,255,.80);
     outline:none; white-space:pre-wrap; letter-spacing:-.005em; }
   .bnotes:empty::before { content:"Pourquoi tu le veux, pour quand, ce que ça représente…"; color:rgba(255,255,255,.32); font-style:italic; }
   .bfoot { position:relative; z-index:2; margin-top:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
@@ -195,6 +198,42 @@
   .btools button.danger:hover { background:rgba(255,55,95,.4); border-color:rgba(255,55,95,.55); }
   .bcard.drop .face.front { outline:2px dashed var(--blue); outline-offset:-6px; }
 
+
+
+  /* ---- image : cadrage et taille ---- */
+  .bcover { position:absolute; inset:0; background-size:cover; background-position:center; z-index:1; }
+  .bcover::after { content:''; position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,.10) 0%, rgba(0,0,0,.04) 38%, rgba(0,0,0,.86) 100%); }
+  .bcard.cover .face.front { justify-content:flex-end; }
+  .bcard.cover .bglow { display:none; }
+  .bvis img, .bvis svg { max-height:var(--ih, 132px); }
+  .bcard.tall .bvis img, .bcard.tall .bvis svg { max-height:var(--iht, 290px); }
+
+  /* ---- verso complet : notes, puces, tags, encoche ---- */
+  .bback-body { position:relative; z-index:2; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:2px; }
+  .bbul { display:flex; flex-direction:column; gap:7px; }
+  .bbul-item { display:flex; align-items:flex-start; gap:9px; font-size:12.5px; line-height:1.4; color:rgba(255,255,255,.82); }
+  .bbul-box { width:15px; height:15px; border-radius:50%; border:1.5px solid rgba(255,255,255,.34); flex:none; margin-top:2px; cursor:pointer; transition:all .2s; }
+  .bbul-item.done .bbul-box { background:var(--gc,#5E5CE6); border-color:var(--gc,#5E5CE6); box-shadow:0 0 10px var(--gc,#5E5CE6); }
+  .bbul-item.done .bbul-txt { color:rgba(255,255,255,.42); text-decoration:line-through; }
+  .bbul-txt { flex:1; outline:none; word-break:break-word; }
+  .bbul-txt:empty::before { content:"Une étape…"; color:rgba(255,255,255,.3); font-style:italic; }
+  .bbul-del { flex:none; width:18px; height:18px; border:0; background:none; color:rgba(255,255,255,.3); cursor:pointer;
+    font-size:14px; line-height:1; font-family:inherit; display:none; }
+  .vision-container[data-edit="on"] .bbul-item:hover .bbul-del { display:block; }
+  .bbul-del:hover { color:#FF6B6B; }
+  .bblock { background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.09); border-radius:11px; padding:8px 12px; }
+  .bblock-l { font-size:8.5px; font-weight:700; color:rgba(255,255,255,.42); text-transform:uppercase; letter-spacing:.06em; margin-bottom:2px; outline:none; }
+  .bblock-v { font-size:12px; color:#fff; outline:none; }
+  .btags { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .btag-item { font-size:10.5px; font-weight:600; padding:4px 11px; border-radius:999px; outline:none; white-space:nowrap;
+    background:color-mix(in srgb, var(--tc,#FFB03B) 14%, rgba(0,0,0,.55)); color:color-mix(in srgb, var(--tc,#FFB03B) 80%, #fff);
+    border:1px solid color-mix(in srgb, var(--tc,#FFB03B) 42%, transparent); }
+  .bmini { font-family:inherit; font-size:10.5px; font-weight:600; color:rgba(255,255,255,.66); background:rgba(255,255,255,.08);
+    border:1px dashed rgba(255,255,255,.20); border-radius:999px; padding:4px 10px; cursor:pointer; display:none; }
+  .vision-container[data-edit="on"] .bmini { display:inline-block; }
+  .bmini:hover { color:#fff; background:rgba(255,255,255,.16); }
+  .bback-foot { position:relative; z-index:2; margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
 
   /* ---- cartes décor : pas de retournement, pas de statut ---- */
   .beyebrow { font-size:12px; font-weight:500; color:var(--ink-2); letter-spacing:-.005em; outline:none; }
@@ -306,7 +345,7 @@
   }
 </style>
 </head>
-<body class="app-container mode-map">
+<body class="app-container mode-vision">
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
  <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2B2D33"/><stop offset="100%" stop-color="#111216"/></linearGradient>
@@ -360,16 +399,16 @@
   <path d="M36 24 H116 L100 54 L116 84 H36 Z" fill="url(#glass)" stroke="rgba(255,255,255,.26)" stroke-width="1.6" stroke-linejoin="round"/></symbol>
 </defs></svg>
 
-<div class="app-container mode-map" id="app">
+<div class="app-container mode-vision" id="app">
 
   <div class="header-nav">
     <div class="tabs">
-      <div class="tab active" data-target="map">Architecture</div>
-      <div class="tab" data-target="vision">Vision Board</div>
+      <div class="tab active" data-target="vision">Vision Board</div>
+      <div class="tab" data-target="map">Architecture</div>
     </div>
     <div class="view-toggle" id="viewToggle">
-      <button class="toggle-btn active" data-mode="map">Carte</button>
-      <button class="toggle-btn" data-mode="vision">Vision</button>
+      <button class="toggle-btn active" data-mode="vision">Vision</button>
+      <button class="toggle-btn" data-mode="map">Carte</button>
     </div>
     <div class="actions-bar" id="actionsBar">
       <div class="layout-picker" id="layoutPicker">
@@ -400,6 +439,7 @@
             <span><i class="vdot own"></i>Acquis</span>
             <span><i class="vdot want"></i>Visé</span>
           </div>
+          <button class="vbtn" id="flipAllBtn" type="button">Tout retourner</button>
           <button class="vbtn add" id="visionAddBtn" type="button">+ Ajouter</button>
           <div class="addmenu" id="addMenu">
             <button type="button" data-kind="device">Carte appareil / objectif</button>
@@ -445,12 +485,44 @@
       <option value="want">Visé (orange)</option>
     </select>
   </div>
-  <div class="field"><label>Taille de la carte</label>
+  <div class="field"><label>Type de carte</label>
+    <select id="nodeKindInput">
+      <option value="device">Appareil / objectif (avec verso)</option>
+      <option value="note">Texte</option>
+      <option value="stat">Compteur</option>
+      <option value="word">Mot en dégradé</option>
+      <option value="chips">Trois tuiles</option>
+      <option value="finish">Pastilles couleur</option>
+      <option value="ports">Rangée d'éléments</option>
+      <option value="os">Bandeau dégradé</option>
+    </select>
+  </div>
+  <div class="field"><label>Largeur de la carte</label>
     <select id="nodeSpanInput">
+      <option value="s2">Étroite</option>
       <option value="s3">Normale</option>
       <option value="s4">Large</option>
-      <option value="s6">Très large</option>
-      <option value="s6 tall">Vedette</option>
+      <option value="s5">Très large</option>
+      <option value="s6">Pleine demi-largeur</option>
+      <option value="s2 tall">Étroite · double hauteur</option>
+      <option value="s3 tall">Normale · double hauteur</option>
+      <option value="s4 tall">Large · double hauteur</option>
+      <option value="s5 tall">Très large · double hauteur</option>
+      <option value="s6 tall">Vedette · double hauteur</option>
+    </select>
+  </div>
+  <div class="field"><label>Cadrage de l'image</label>
+    <select id="nodeImgFitInput">
+      <option value="contain">Visuel centré</option>
+      <option value="cover">Couverture — pleine vignette</option>
+    </select>
+  </div>
+  <div class="field"><label>Taille du visuel</label>
+    <select id="nodeImgScaleInput">
+      <option value="70">Petit</option>
+      <option value="100">Moyen</option>
+      <option value="135">Grand</option>
+      <option value="175">Très grand</option>
     </select>
   </div>
   <div class="field"><label>Visuel de la carte</label>
@@ -539,6 +611,7 @@ let tempTags = [];
 let currentLayout = 'free';
 let currentBoard = 'hightech';
 let visionEdit = false;
+let allFlipped = false;
 let pickerTarget = null;
 let transformState = { x:0, y:0, scale:1 };
 
@@ -560,6 +633,11 @@ function migrate(n){
   if (n.glyph  === undefined) n.glyph  = '#d-spark';
   if (n.img    === undefined) n.img    = '';
   if (n.notes  === undefined) n.notes  = '';
+  if (n.imgFit === undefined) n.imgFit = 'contain';
+  if (n.imgScale === undefined) n.imgScale = 100;
+  if (!Array.isArray(n.bullets)) n.bullets = [];
+  if (!Array.isArray(n.checkedBullets)) n.checkedBullets = [];
+  if (!Array.isArray(n.tags)) n.tags = [];
   return n;
 }
 
@@ -584,13 +662,19 @@ const SEED_HIGHTECH = [
 
   {key:'mbp',    kind:'device', span:'s5 tall', status:'own',  glyph:'#d-mac', color:'var(--cockpit)', icon:'💻',
    title:'MacBook Pro 16″ · M4', sub:'Argent · la machine principale',
-   notes:"La pièce centrale du studio. Tout passe par elle : retouche, montage, livraison client."},
+   notes:"La pièce centrale du studio. Tout passe par elle : retouche, montage, livraison client.",
+   bullets:['Sauvegarde Time Machine à jour','Calibrer l’écran'], checkedBullets:[0],
+   tags:[{text:'Studio',color:'var(--cockpit)'},{text:'Quotidien',color:'var(--source)'}],
+   showBlock:true, blockLabel:'ÉTAT', blockVal:'En service'},
   {key:'ipad',   kind:'device', span:'s2', status:'own',  glyph:'#d-ipad', color:'var(--moteur)', icon:'📱',
    title:'iPad Pro 11″ · M4', sub:'Argent', notes:"Retour client sur le terrain, croquis de cadrage, lecture."},
   {key:'watch',  kind:'device', span:'s2', status:'own',  glyph:'#d-watch', color:'var(--gold)', icon:'⌚️',
    title:'Apple Watch Ultra 3', sub:'Titane', notes:"Au poignet en permanence. Sport, sommeil, notifications filtrées."},
   {key:'display',kind:'device', span:'s3', status:'want', glyph:'#d-display', color:'var(--objectifs)', icon:'🖥️',
-   title:'Studio Display 2', sub:'Pour compléter le poste', notes:"Le vrai manque du setup actuel. Calibrer la retouche sur un écran fixe."},
+   title:'Studio Display 2', sub:'Pour compléter le poste',
+   notes:"Le vrai manque du setup actuel. Calibrer la retouche sur un écran fixe.",
+   bullets:['Comparer avec le Pro Display XDR','Décider du bras de fixation'],
+   tags:[{text:'Priorité 1',color:'var(--objectifs)'}]},
   {key:'finish', kind:'finish', span:'s4', title:'Argent', sub:'Mac et iPad assortis', eyebrow:'Finition',
    swatches:['linear-gradient(145deg,#F2F2F4,#B9BAC0 55%,#8E8F96)','linear-gradient(145deg,#3A3B40,#151619)']},
   {key:'iphone', kind:'device', span:'s3', status:'want', glyph:'#d-phone', color:'var(--source)', icon:'📲',
@@ -609,7 +693,10 @@ const SEED_HIGHTECH = [
 const SEED_VIE = [
   {key:'appart', kind:'device', span:'s6 tall', status:'want', glyph:'#d-home', color:'var(--gold)', icon:'🏡',
    title:'Mon appartement', sub:'Devenir propriétaire',
-   notes:"Le projet de fond. Écrire ici le quartier, le budget, l’échéance visée."},
+   notes:"Le projet de fond. Écrire ici le quartier, le budget, l’échéance visée.",
+   bullets:['Définir le quartier','Constituer l’apport','Rencontrer un courtier'],
+   tags:[{text:'Long terme',color:'var(--gold)'}],
+   showBlock:true, blockLabel:'ÉCHÉANCE', blockVal:'À définir'},
   {key:'tatoo',  kind:'device', span:'s3', status:'want', glyph:'#d-spark', color:'#FF4A82', icon:'🖋️',
    title:'Nouveau tatouage', sub:'Le prochain motif', notes:"Le motif, l’emplacement, l’artiste. À préciser."},
   {key:'photo',  kind:'device', span:'s3', status:'own', glyph:'#d-camera', color:'var(--objectifs)', icon:'📷',
@@ -706,10 +793,16 @@ const FRONTS = {
     const st = el('button','bstatus'); st.type='button'; st.dataset.act='status';
     st.setAttribute('aria-label','Changer le statut'); st.appendChild(el('i'));
     front.appendChild(st);
-    const vis = el('div','bvis');
-    if (n.img) { const im = el('img'); im.src = n.img; im.alt=''; vis.appendChild(im); }
-    else vis.appendChild(svgIcon(n.glyph));
-    front.appendChild(vis);
+    if (n.img && n.imgFit === 'cover') {
+      const cov = el('div','bcover');
+      cov.style.backgroundImage = 'url("' + n.img + '")';
+      front.appendChild(cov);
+    } else {
+      const vis = el('div','bvis');
+      if (n.img) { const im = el('img'); im.src = n.img; im.alt=''; vis.appendChild(im); }
+      else vis.appendChild(svgIcon(n.glyph));
+      front.appendChild(vis);
+    }
     const meta = el('div','bmeta');
     meta.appendChild(edit(el('div','btitle', n.title || 'Sans titre'), 'title'));
     meta.appendChild(edit(el('div','bsub',   n.sub   || ''), 'sub'));
@@ -777,11 +870,15 @@ const FRONTS = {
 
 function buildCard(n, i){
   const kind = FRONTS[n.kind] ? n.kind : 'device';
-  const card = el('div','bcard ' + (n.span || 's3') + ' k-' + kind);
+  const cover = !!(n.img && n.imgFit === 'cover');
+  const card = el('div','bcard ' + (n.span || 's3') + ' k-' + kind + (cover ? ' cover' : ''));
   card.dataset.id = n.id;
   card.dataset.kind = kind;
   card.style.setProperty('--d', i);
   card.style.setProperty('--gc', n.color || 'var(--gold)');
+  const sc = Number(n.imgScale) || 100;
+  card.style.setProperty('--ih',  Math.round(132 * sc / 100) + 'px');
+  card.style.setProperty('--iht', Math.round(290 * sc / 100) + 'px');
   if (kind === 'device') card.dataset.status = n.status;
 
   const inner = el('div','binner');
@@ -790,18 +887,58 @@ function buildCard(n, i){
   FRONTS[kind](front, n);
   inner.appendChild(front);
 
-  /* verso : uniquement les cartes appareil / objectif */
+  /* ---------- verso : tout ce que faisait une vignette Architecture ---------- */
   if (kind === 'device') {
     const back = el('div','face back');
+
     const head = el('div','bback-head');
     const chip = el('div','bback-chip'); chip.appendChild(svgIcon(n.glyph));
     head.appendChild(chip);
-    head.appendChild(el('div','bback-title', n.title || 'Sans titre'));
+    const ht = el('div','bback-title', n.title || 'Sans titre');
+    ht.style.flex = '1';
+    head.appendChild(ht);
+    head.appendChild(el('span','btag', n.status === 'own' ? 'Acquis' : 'Visé'));
     back.appendChild(head);
-    back.appendChild(edit(el('div','bnotes', n.notes || ''), 'notes'));
-    const foot = el('div','bfoot');
-    foot.appendChild(el('span','btag', n.status === 'own' ? 'Acquis' : 'Visé'));
+
+    const body = el('div','bback-body');
+    body.appendChild(edit(el('div','bnotes', n.notes || ''), 'notes'));
+
+    const bul = el('div','bbul');
+    (n.bullets || []).forEach((txt, idx) => {
+      const done = (n.checkedBullets || []).indexOf(idx) > -1;
+      const it = el('div','bbul-item' + (done ? ' done' : ''));
+      it.dataset.bi = idx;
+      const box = el('i','bbul-box'); box.dataset.act = 'bul-toggle';
+      const tx = el('div','bbul-txt', txt); tx.contentEditable = 'plaintext-only'; tx.dataset.bullet = idx;
+      const rm = el('button','bbul-del','×'); rm.type = 'button'; rm.dataset.act = 'bul-del';
+      it.appendChild(box); it.appendChild(tx); it.appendChild(rm);
+      bul.appendChild(it);
+    });
+    body.appendChild(bul);
+
+    if (n.showBlock) {
+      const blk = el('div','bblock');
+      blk.appendChild(edit(el('div','bblock-l', n.blockLabel || 'STATUT'), 'blockLabel'));
+      blk.appendChild(edit(el('div','bblock-v', n.blockVal || ''), 'blockVal'));
+      body.appendChild(blk);
+    }
+    back.appendChild(body);
+
+    const foot = el('div','bback-foot');
+    const tags = el('div','btags');
+    (n.tags || []).forEach((t, ti) => {
+      const c = el('span','btag-item', t.text);
+      c.style.setProperty('--tc', t.color || 'var(--gold)');
+      c.contentEditable = 'plaintext-only'; c.dataset.tag = ti;
+      tags.appendChild(c);
+    });
+    const bAddTag = el('button','bmini','+ tag'); bAddTag.type='button'; bAddTag.dataset.act='tag-add';
+    tags.appendChild(bAddTag);
+    foot.appendChild(tags);
+    const bAddBul = el('button','bmini','+ étape'); bAddBul.type='button'; bAddBul.dataset.act='bul-add';
+    foot.appendChild(bAddBul);
     back.appendChild(foot);
+
     inner.appendChild(back);
   }
   card.appendChild(inner);
@@ -813,7 +950,6 @@ function buildCard(n, i){
     card.appendChild(flip);
   }
 
-  /* flèches d'ordre — marchent partout, tactile compris */
   const mv = el('div','bmove');
   ['◀','▶'].forEach((sym, k) => {
     const b = el('button', null, sym); b.type='button';
@@ -825,7 +961,7 @@ function buildCard(n, i){
 
   const tools = el('div','btools');
   const acts = kind === 'device'
-    ? [['img','Image'],['glyph','Visuel'],['size','Taille'],['sheet','Détails']]
+    ? [['img','Image'],['fit','Cadrage'],['glyph','Visuel'],['size','Taille'],['sheet','Détails']]
     : [['size','Taille'],['sheet','Détails']];
   acts.forEach(([a2, label]) => { const b = el('button', null, label); b.type='button'; b.dataset.act=a2; tools.appendChild(b); });
   const del = el('button','danger','Retirer'); del.type='button'; del.dataset.act='del'; tools.appendChild(del);
@@ -836,6 +972,8 @@ function buildCard(n, i){
 }
 
 function renderVision(){
+  const flipped = new Set();
+  bentoGrid.querySelectorAll('.bcard.flipped').forEach(c => flipped.add(c.dataset.id));
   const nodes = boardNodes(currentBoard);
   bentoGrid.innerHTML = '';
 
@@ -855,6 +993,11 @@ function renderVision(){
   document.getElementById('vProgTxt').textContent = own + ' sur ' + devices.length;
   document.getElementById('vProgSub').textContent = currentBoard === 'hightech' ? "de l'écosystème visé" : 'objectifs atteints';
 
+  if (allFlipped) bentoGrid.querySelectorAll('.k-device').forEach(c => c.classList.add('flipped'));
+  else flipped.forEach(id => {
+    const c = bentoGrid.querySelector('.bcard[data-id="' + id + '"]');
+    if (c) c.classList.add('flipped');
+  });
   applyDragState();
 }
 
@@ -905,6 +1048,13 @@ document.getElementById('boardTabs').addEventListener('click', e => {
   renderVision();
 });
 
+document.getElementById('flipAllBtn').addEventListener('click', function(){
+  allFlipped = !allFlipped;
+  this.textContent = allFlipped ? 'Tout remettre' : 'Tout retourner';
+  this.classList.toggle('on', allFlipped);
+  bentoGrid.querySelectorAll('.k-device').forEach(c => c.classList.toggle('flipped', allFlipped));
+});
+
 document.getElementById('visionEditBtn').addEventListener('click', function(){
   visionEdit = !visionEdit;
   visionEl.dataset.edit = visionEdit ? 'on' : '';
@@ -917,6 +1067,9 @@ document.getElementById('visionEditBtn').addEventListener('click', function(){
 const SPANS  = ['s2','s3','s4','s5','s6','s6 tall'];
 const GLYPHS = ['#d-phone','#d-mac','#d-ipad','#d-watch','#d-pods','#d-display','#d-vision','#d-home','#d-camera','#d-flag','#d-spark'];
 
+const FITS = ['contain','cover'];
+const SCALES = [70,100,135,175];
+
 bentoGrid.addEventListener('click', e => {
   const card = e.target.closest('.bcard'); if (!card) return;
   const node = dataset.find(n => n.id === card.dataset.id); if (!node) return;
@@ -925,8 +1078,19 @@ bentoGrid.addEventListener('click', e => {
 
   if (act === 'flip') { card.classList.toggle('flipped'); return; }
 
+  /* cocher une étape : possible même hors mode Modifier */
+  if (act === 'bul-toggle') {
+    const item = btn.closest('.bbul-item');
+    const idx = parseInt(item.dataset.bi, 10);
+    const pos = node.checkedBullets.indexOf(idx);
+    if (pos > -1) node.checkedBullets.splice(pos, 1); else node.checkedBullets.push(idx);
+    item.classList.toggle('done');
+    save();
+    return;
+  }
+
   if (!visionEdit) {
-    if (card.dataset.kind === 'device' && !e.target.closest('.bnotes')) card.classList.toggle('flipped');
+    if (card.dataset.kind === 'device' && !e.target.closest('.face.back')) card.classList.toggle('flipped');
     return;
   }
 
@@ -938,13 +1102,51 @@ bentoGrid.addEventListener('click', e => {
   else if (act === 'glyph') { node.glyph = GLYPHS[(GLYPHS.indexOf(node.glyph) + 1) % GLYPHS.length]; node.img = ''; save(); renderVision(); }
   else if (act === 'img')   { pickerTarget = node.id; visionPicker.click(); }
   else if (act === 'sheet') { openConfigSheet(node); }
+  else if (act === 'fit')   {
+    /* enchaîne les tailles puis bascule en couverture */
+    if (node.imgFit === 'cover') { node.imgFit = 'contain'; node.imgScale = SCALES[0]; }
+    else {
+      const i2 = SCALES.indexOf(Number(node.imgScale) || 100);
+      if (i2 >= SCALES.length - 1) node.imgFit = 'cover';
+      else node.imgScale = SCALES[i2 + 1];
+    }
+    save(); renderVision();
+  }
+  else if (act === 'bul-add') {
+    node.bullets.push('Une étape');
+    save(); renderVision();
+    const last = bentoGrid.querySelector('.bcard[data-id="' + node.id + '"] .bbul-item:last-child .bbul-txt');
+    if (last) last.focus();
+  }
+  else if (act === 'bul-del') {
+    const idx = parseInt(btn.closest('.bbul-item').dataset.bi, 10);
+    node.bullets.splice(idx, 1);
+    node.checkedBullets = node.checkedBullets.filter(x => x !== idx).map(x => x > idx ? x - 1 : x);
+    save(); renderVision();
+  }
+  else if (act === 'tag-add') {
+    node.tags.push({ text:'Nouveau tag', color: node.color || 'var(--gold)' });
+    save(); renderVision();
+  }
 });
 
 bentoGrid.addEventListener('blur', e => {
-  const f = e.target.dataset && e.target.dataset.field; if (!f) return;
-  const card = e.target.closest('.bcard'); if (!card) return;
+  const t = e.target; if (!t.dataset) return;
+  const card = t.closest('.bcard'); if (!card) return;
   const node = dataset.find(n => n.id === card.dataset.id); if (!node) return;
-  const val = e.target.textContent.trim();
+  const val = (t.textContent || '').trim();
+
+  if (t.dataset.bullet !== undefined) {
+    const i = parseInt(t.dataset.bullet, 10);
+    if (node.bullets[i] !== val) { node.bullets[i] = val; save(); }
+    return;
+  }
+  if (t.dataset.tag !== undefined) {
+    const i = parseInt(t.dataset.tag, 10);
+    if (node.tags[i] && node.tags[i].text !== val) { node.tags[i].text = val; save(); }
+    return;
+  }
+  const f = t.dataset.field; if (!f) return;
   if (node[f] !== val) { node[f] = val; save(); if (f === 'title' || f === 'sub') renderVision(); }
 }, true);
 
@@ -1297,7 +1499,12 @@ function openConfigSheet(node){
   v('nodeNotesInput',  node.notes || '');
   v('nodeBoardInput',  node.board || 'none');
   v('nodeStatusInput', node.status|| 'want');
-  v('nodeSpanInput',   node.span  || 's3');
+  const spanSel = document.getElementById('nodeSpanInput');
+  spanSel.value = node.span || 's3';
+  if (!spanSel.value) spanSel.value = 's3';           /* jamais de valeur vide */
+  v('nodeKindInput',     node.kind   || 'device');
+  v('nodeImgFitInput',   node.imgFit || 'contain');
+  v('nodeImgScaleInput', String(Number(node.imgScale) || 100));
   v('nodeGlyphInput',  node.glyph || '#d-spark');
   v('nodeImgInput',    node.img && node.img.indexOf('data:') === 0 ? '' : (node.img || ''));
   v('nodeIconInput',   node.icon  || '');
@@ -1368,7 +1575,11 @@ document.getElementById('saveNodeConfig').addEventListener('click', () => {
     const k = id => document.getElementById(id).checked;
     n.title = g('nodeTitleInput');  n.sub = g('nodeSubInput');   n.notes = g('nodeNotesInput');
     n.board = g('nodeBoardInput');  n.status = g('nodeStatusInput');
-    n.span  = g('nodeSpanInput');   n.glyph = g('nodeGlyphInput');
+    n.span  = g('nodeSpanInput') || n.span || 's3';   /* ne jamais écraser par du vide */
+    n.kind  = g('nodeKindInput')  || n.kind || 'device';
+    n.glyph = g('nodeGlyphInput');
+    n.imgFit = g('nodeImgFitInput') || 'contain';
+    n.imgScale = parseInt(g('nodeImgScaleInput'), 10) || 100;
     const url = g('nodeImgInput').trim();
     if (url) n.img = url; else if (n.img && n.img.indexOf('data:') !== 0) n.img = '';
     n.icon = g('nodeIconInput');
@@ -1393,7 +1604,7 @@ document.getElementById('deleteNodeBtn').addEventListener('click', () => {
   document.getElementById('configSheet').classList.remove('open');
 });
 
-switchView('map');
+switchView('vision');
 loadData();
 </script>
 </body>
