@@ -585,6 +585,34 @@ async function save(){
   }
 }
 
+/* Les graines ne s'exécutent qu'au tout premier chargement. Pour ajouter une carte
+   à un board déjà rempli, on passe par une évolution enregistrée une bonne fois :
+   elle s'applique une seule fois, et ne revient pas si tu supprimes la carte. */
+function metaNode(){
+  let m = dataset.find(n => n.id === '__meta__');
+  if (!m) { m = { id:'__meta__', meta:true, migrations:[] }; dataset.push(m); }
+  if (!Array.isArray(m.migrations)) m.migrations = [];
+  return m;
+}
+
+const MIGRATIONS = [
+  ['budget-hightech', () => {
+    if (!dataset.some(n => n.kind === 'budget' && n.board === 'hightech'))
+      dataset.push(newNode({ key:'bud', board:'hightech', kind:'budget', span:6, sub:'À prévoir', title:'Budget' }));
+  }]
+];
+
+function runMigrations(){
+  const m = metaNode();
+  let changed = false;
+  MIGRATIONS.forEach(([id, fn]) => {
+    if (m.migrations.indexOf(id) > -1) return;
+    try { fn(); } catch(e) { console.warn('Évolution « ' + id +' » échouée', e); }
+    m.migrations.push(id); changed = true;
+  });
+  return changed;
+}
+
 async function load(){
   sync.textContent = 'Chargement…';
   try {
@@ -599,11 +627,12 @@ async function load(){
     sync.textContent = 'Local';
   }
 
-  dataset.forEach(migrate);
+  dataset.forEach(n => { if (n.id !== '__meta__') migrate(n); });
 
   let seeded = false;
   if (!dataset.some(n => n.board === 'hightech')) { SEED_HIGHTECH.forEach(o => dataset.push(newNode(Object.assign({board:'hightech'}, o)))); seeded = true; }
   if (!dataset.some(n => n.board === 'vie'))      { SEED_VIE.forEach(o => dataset.push(newNode(Object.assign({board:'vie'}, o)))); seeded = true; }
+  if (runMigrations()) seeded = true;
   if (seeded) save();
 
   render();
@@ -704,7 +733,7 @@ function icon(g){
   u.setAttribute('href', g || '#d-spark');
   s.appendChild(u); return s;
 }
-function nodes(){ return dataset.filter(n => n.board === board); }
+function nodes(){ return dataset.filter(n => n.id !== '__meta__' && n.board === board); }
 function isDev(n){ return n.kind === 'device'; }
 
 const FRONT = {
