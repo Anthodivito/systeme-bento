@@ -37,7 +37,17 @@ body{min-height:100vh}
 .brand small{font-size:11px;color:var(--ink-3)}
 .tabs{display:flex;gap:4px;background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:999px;padding:4px}
 .tab{font-family:inherit;font-size:13px;font-weight:600;color:var(--ink-2);background:none;border:0;border-radius:999px;padding:8px 18px;cursor:pointer;letter-spacing:-.01em;white-space:nowrap}
+.tab{display:inline-flex;align-items:center;gap:7px}
 .tab.active{background:rgba(255,255,255,.12);color:#fff}
+.tab-name{outline:none;border-radius:5px;padding:0 1px}
+.tab-name:focus{box-shadow:inset 0 0 0 1.5px var(--blue);background:rgba(10,132,255,.16)}
+.tab-x,.tab-add{display:none;font-family:inherit;line-height:1;cursor:pointer;color:var(--ink-2);
+  background:rgba(255,255,255,.10);border:1px solid var(--hair);border-radius:50%;
+  width:18px;height:18px;font-size:12px;align-items:center;justify-content:center;padding:0;transition:.2s}
+.tab-x:hover{background:rgba(255,69,58,.9);border-color:transparent;color:#fff}
+.tab-add{width:26px;height:26px;font-size:15px;font-weight:500;margin-left:2px;flex:0 0 auto}
+.tab-add:hover{background:rgba(255,255,255,.2);color:#fff}
+[data-edit="on"] .tab-x,[data-edit="on"] .tab-add{display:inline-flex}
 .tab:focus-visible,.btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .acts{display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:relative}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--ink-2)}
@@ -74,10 +84,12 @@ body{min-height:100vh}
 .card.flipped .inner{transform:rotateY(180deg)}
 .face{position:absolute;inset:0;border-radius:26px;overflow:hidden;display:flex;flex-direction:column;padding:20px 22px;
   backface-visibility:hidden;-webkit-backface-visibility:hidden}
-/* backface-visibility masque la face arrière à l'œil, mais elle reste cliquable :
-   sans ça le recto intercepte les clics destinés au verso. */
-.card:not(.flipped) .back{pointer-events:none}
-.card.flipped .front{pointer-events:none}
+/* Safari iOS n'honore pas backface-visibility quand la face porte overflow +
+   backdrop-filter : le recto restait visible, à l'envers, et volait les clics.
+   On bascule l'opacité à mi-rotation, carte vue par la tranche. */
+.face{transition:opacity 0s linear .32s}
+.card:not(.flipped) .back{opacity:0;pointer-events:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.card.flipped .front{opacity:0;pointer-events:none}
 
 /* --- recto --- */
 .front{background:var(--card);border:1px solid var(--hair);
@@ -108,15 +120,15 @@ body{min-height:100vh}
 
 /* --- verso : le verre de la vue Architecture --- */
 .back{transform:rotateY(180deg);
-  background:linear-gradient(180deg,rgba(255,255,255,.06) 0%,rgba(255,255,255,.012) 40%,rgba(0,0,0,.12) 100%);
-  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg,rgba(255,255,255,.085) 0%,rgba(255,255,255,.022) 40%,rgba(0,0,0,.16) 100%);
+  border:1px solid rgba(255,255,255,.12);
   border-bottom:1px solid color-mix(in srgb, var(--gc,#5E5CE6) 60%, transparent);
   box-shadow:0 0 60px -15px color-mix(in srgb, var(--gc,#5E5CE6) 25%, transparent),
              0 20px 50px rgba(0,0,0,.6),
              inset 0 1px 0 rgba(255,255,255,.08),
              inset 0 -1px 0 color-mix(in srgb, var(--gc,#5E5CE6) 15%, transparent);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-.back::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;opacity:.62;z-index:3;
+  backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6)}
+.back::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;opacity:.8;z-index:3;
   background:linear-gradient(180deg,rgba(255,255,255,.16) 0%,transparent 40%,color-mix(in srgb, var(--gc,#5E5CE6) 55%, transparent) 100%);
   -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
 .back::after{content:"";position:absolute;bottom:-2px;left:10%;right:10%;height:42%;pointer-events:none;z-index:0;border-radius:50%;
@@ -193,10 +205,11 @@ body{min-height:100vh}
 .chip{border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(255,255,255,.09);color:#fff}
 .chip span{font-size:11px;font-weight:600;outline:none}
 .chip svg{height:24px;width:auto;opacity:.95}
-.sws{display:flex;gap:10px;align-items:center;margin-top:auto}
+.sws{display:flex;gap:10px;align-items:center;margin-top:auto;flex-wrap:wrap}
+.sws>div:last-child{min-width:0;flex:1 1 110px}
 .sw{display:block;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.2);flex:none}
-.ports{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:1;min-height:0}
-.port{display:flex;flex-direction:column;align-items:center;gap:10px;flex:1}
+.ports{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;flex:1;min-height:0;flex-wrap:wrap}
+.port{display:flex;flex-direction:column;align-items:center;gap:10px;flex:1 1 62px;min-width:0;text-align:center}
 .port small{font-size:11px;color:var(--ink-2);text-align:center;outline:none}
 .bar{display:block;width:26px;height:5px;border-radius:3px;background:linear-gradient(180deg,#EDEDF0,#A8A8AE)}
 .k-os .front{padding:8px;border:none;background:none}
@@ -214,8 +227,17 @@ body{min-height:100vh}
 .bud-i{display:inline-flex;align-items:baseline;gap:9px;font-size:12.5px;padding:7px 13px;border-radius:999px;
   background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);color:var(--ink-2);white-space:nowrap}
 .bud-i b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
-.bud-i.zero{border-style:dashed;opacity:.7}
+.bud-i.zero{border-style:dashed;opacity:.8}
+.bud-i b[contenteditable]{outline:none;padding:1px 5px;margin:-1px -5px;border-radius:6px;cursor:text;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.bud-i b[contenteditable]:focus{box-shadow:inset 0 0 0 1.5px var(--blue);background:rgba(10,132,255,.14)}
+.bud-l .bud-hint{margin-top:8px}
 .bud-hint{font-size:12px;color:var(--ink-3);line-height:1.4}
+.bud-total.vide{color:var(--ink-3)}
+.price.vide{color:var(--ink-3)}
+.bud-tip{margin-top:10px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink-3);display:inline-flex;align-items:center;gap:6px}
+.bud-tip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--orange);box-shadow:0 0 8px rgba(255,159,10,.7)}
 .price{font-size:11px;font-weight:600;padding:4px 11px;border-radius:999px;outline:none;white-space:nowrap;
   background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.8);
   font-variant-numeric:tabular-nums}
@@ -271,6 +293,65 @@ body.fit{height:100vh}
 body.fit .card{animation:none}
 #fitBtn.on{background:var(--blue);border-color:var(--blue);color:#fff}
 
+/* ---------- cadrage « adapté » : image entière sur fond flou ---------- */
+.imgbg{position:absolute;inset:-14%;z-index:0;background-size:cover;background-position:center;
+  filter:blur(28px) saturate(1.3) brightness(.6);opacity:.9;pointer-events:none}
+.card.adapt .front::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.32) 68%,rgba(0,0,0,.8) 100%)}
+.card.adapt .glow{display:none}
+.card.adapt .vis{padding:6px 0 2px}
+.card.adapt .vis img{max-height:100%;max-width:90%;height:auto;width:auto;object-fit:contain;
+  filter:drop-shadow(0 16px 28px rgba(0,0,0,.6))}
+
+/* ---------- habillages de carte : plat · verre · aurore ---------- */
+.card[data-skin="verre"] .front{
+  background:linear-gradient(180deg,rgba(255,255,255,.075) 0%,rgba(255,255,255,.018) 42%,rgba(0,0,0,.20) 100%);
+  border:1px solid rgba(255,255,255,.11);
+  border-bottom:1px solid color-mix(in srgb, var(--gc,#5E5CE6) 62%, transparent);
+  box-shadow:0 0 60px -16px color-mix(in srgb, var(--gc,#5E5CE6) 30%, transparent),
+             inset 0 1px 0 rgba(255,255,255,.10), inset 0 -1px 0 color-mix(in srgb, var(--gc,#5E5CE6) 18%, transparent);
+  backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6)}
+.card[data-skin="verre"] .front::after{background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,0) 44%)}
+
+.card[data-skin="aurore"] .front{background:#07070A;border:1px solid rgba(255,255,255,.10);
+  border-bottom:1px solid rgba(255,255,255,.14)}
+.aura{position:absolute;left:50%;bottom:-30%;translate:-50% 0;width:128%;height:min(96%,300px);z-index:0;pointer-events:none;
+  background:radial-gradient(54% 56% at 50% 52%,
+      color-mix(in srgb, var(--a2,#fff) 82%, transparent) 0%,
+      color-mix(in srgb, var(--a1,#5E5CE6) 62%, transparent) 34%,
+      color-mix(in srgb, var(--a1,#5E5CE6) 20%, transparent) 60%,
+      transparent 78%);
+  filter:blur(38px);opacity:.85}
+/* le haut de la carte reste sombre : le titre garde son contraste */
+.card[data-skin="aurore"] .front::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:linear-gradient(180deg,rgba(6,6,9,.86) 0%,rgba(6,6,9,.42) 26%,transparent 52%)}
+.dots{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.55;
+  background-image:radial-gradient(rgba(255,255,255,.13) 1px, transparent 1.1px);background-size:9px 9px;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.35) 62%,transparent 92%);
+  mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.35) 62%,transparent 92%)}
+.card[data-skin="aurore"] .glow{display:none}
+.card[data-skin="aurore"] .meta,.card[data-skin="aurore"] .vis{position:relative;z-index:3}
+.card[data-skin="aurore"] .dot,.card[data-skin="aurore"] .lk-arrow,
+.card[data-skin="aurore"] .tools,.card[data-skin="aurore"] .move,.card[data-skin="aurore"] .bfoot{z-index:4}
+.card[data-skin="aurore"] .meta{margin-top:0;padding-top:0;order:-1}
+.card[data-skin="aurore"] .ttl{font-size:clamp(17px,1.9vw,25px);font-weight:600;letter-spacing:-.03em}
+.card[data-skin="aurore"] .vis{order:1}
+.card[data-skin="aurore"] .vis svg{opacity:.92;max-height:min(74%,150px);max-width:min(62%,190px)}
+
+/* ---------- carte raccourci ---------- */
+.k-link .front{background:#0C0D11;cursor:pointer}
+.lk-arrow{position:absolute;top:16px;right:18px;z-index:4;width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);transition:background .25s}
+.k-link .front:hover .lk-arrow{background:rgba(255,255,255,.26)}
+.k-link .meta{padding-right:58px}
+.lk-host{font-size:11.5px;color:rgba(255,255,255,.5);margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- jauge masquable ---------- */
+body.no-prog .prog,body.sans-appareil .prog{display:none}
+body.sans-appareil #progBtn{display:none}
+.btn.on-alt{background:rgba(255,255,255,.2)}
+
 /* --- menu d'ajout --- */
 .menu{display:none;position:absolute;right:0;top:calc(100% + 10px);z-index:80;background:#14151A;border:1px solid var(--hair);
   border-radius:14px;padding:6px;box-shadow:0 20px 50px rgba(0,0,0,.7);min-width:200px}
@@ -282,9 +363,23 @@ body.fit .card{animation:none}
 .sheet{position:fixed;top:0;right:0;bottom:0;width:390px;max-width:100%;background:#14151A;border-left:1px solid var(--hair);
   z-index:200;padding:24px;transform:translateX(100%);transition:transform .3s ease;box-shadow:-10px 0 30px rgba(0,0,0,.5);overflow-y:auto}
 .sheet.open{transform:translateX(0)}
+.sheet{padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+.veil{position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.5);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s}
+body.sheet-open .veil{opacity:1;pointer-events:auto}
 @media (min-width:900px){ body.sheet-open .wrap{padding-right:420px} }
-.sheet h3{font-size:16px;font-weight:600;margin:6px 0 22px}
-.sheet-x{position:absolute;top:18px;right:18px;background:none;border:0;color:var(--ink);font-size:26px;cursor:pointer;line-height:1;width:32px;height:32px;font-family:inherit}
+.sheet h3{position:sticky;top:calc(-24px - env(safe-area-inset-top));z-index:5;
+  margin:calc(-24px - env(safe-area-inset-top)) -24px 20px;
+  padding:calc(20px + env(safe-area-inset-top)) 68px 15px 24px;
+  font-size:16px;font-weight:600;background:#14151A;border-bottom:1px solid var(--hair)}
+.sheet-x{position:absolute;top:50%;translate:0 -50%;right:16px;width:42px;height:42px;font-size:26px;
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);border-radius:50%;color:var(--ink);
+  cursor:pointer;line-height:1;font-family:inherit;z-index:6;display:flex;align-items:center;justify-content:center}
+.sheet-x:hover{background:rgba(255,255,255,.22)}
+.sheet-foot{position:sticky;bottom:calc(-28px - env(safe-area-inset-bottom));z-index:5;
+  margin:26px -24px calc(-28px - env(safe-area-inset-bottom));
+  padding:14px 24px calc(16px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:10px;background:#14151A;border-top:1px solid var(--hair)}
 .f{margin-bottom:18px}
 .f label{display:block;font-size:10px;text-transform:uppercase;color:var(--ink-2);margin-bottom:6px;font-weight:600;letter-spacing:.04em}
 .f input,.f select,.f textarea{width:100%;background:rgba(0,0,0,.35);border:1px solid var(--hair);border-radius:9px;padding:10px;color:#fff;font-size:12.5px;font-family:inherit}
@@ -312,12 +407,22 @@ body.fit .card{animation:none}
   .sync{display:none}
 }
 @media (max-width:640px){
-  .top{gap:10px}
-  .brand small{display:none}
+  .top{flex-direction:column;align-items:stretch;gap:8px;
+       padding:calc(9px + env(safe-area-inset-top)) 12px 9px}
+  .brand{display:none}
   .legend{display:none}
-  .tabs{width:100%;justify-content:center}
-  .tab{flex:1;padding:9px 10px;font-size:12.5px}
-  .acts{width:100%;justify-content:space-between}
+  .sync{display:none}
+  .tabs{width:100%;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;padding:9px 14px;font-size:12.5px;text-align:center}
+  .acts{width:100%;display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;overflow-y:visible;
+        -webkit-overflow-scrolling:touch;scrollbar-width:none;padding:1px 0;justify-content:flex-start}
+  .acts::-webkit-scrollbar{display:none}
+  .btn{flex:0 0 auto}
+  .menu{position:fixed;left:auto;right:14px;top:auto;bottom:calc(88px + env(safe-area-inset-bottom));
+        min-width:220px;max-height:58vh;overflow-y:auto}
+  .sheet{width:100%;border-left:none}
+  .sheet-x{width:46px;height:46px;font-size:30px}
   .face{border-radius:22px;padding:16px 17px}
   .tools{border-radius:0 0 22px 22px}
   .ttl{font-size:15px}
@@ -404,17 +509,39 @@ body.fit .card{animation:none}
  <symbol id="d-flag" viewBox="0 0 140 180">
   <rect x="26" y="14" width="6" height="152" rx="3" fill="rgba(255,255,255,.42)"/>
   <path d="M36 24 H116 L100 54 L116 84 H36 Z" fill="url(#glass)" stroke="rgba(255,255,255,.26)" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+
+ <symbol id="d-ink" viewBox="0 0 180 180">
+  <path d="M34 146 L40 118 L124 34 Q132 26 140 34 L150 44 Q158 52 150 60 L66 144 Z" fill="url(#glass)" stroke="rgba(255,255,255,.28)" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M118 40 L146 68" stroke="rgba(255,255,255,.30)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M28 158 Q46 148 64 158" fill="none" stroke="rgba(255,255,255,.26)" stroke-width="4" stroke-linecap="round"/></symbol>
+ <symbol id="d-car" viewBox="0 0 220 130">
+  <path d="M18 92 V70 Q18 62 28 58 L54 30 Q58 26 66 26 H154 Q162 26 166 30 L192 58 Q202 62 202 70 V92 Q202 98 194 98 H26 Q18 98 18 92 Z" fill="url(#glass)" stroke="rgba(255,255,255,.26)" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M62 40 H158 L176 58 H44 Z" fill="url(#screen)"/>
+  <circle cx="58" cy="98" r="15" fill="#0E0F12" stroke="rgba(255,255,255,.26)" stroke-width="2"/>
+  <circle cx="162" cy="98" r="15" fill="#0E0F12" stroke="rgba(255,255,255,.26)" stroke-width="2"/></symbol>
+ <symbol id="d-peak" viewBox="0 0 220 160">
+  <path d="M14 140 L78 34 L112 88 L134 58 L206 140 Z" fill="url(#glass)" stroke="rgba(255,255,255,.26)" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M78 34 L98 66 L78 76 L60 64 Z" fill="rgba(255,255,255,.30)"/></symbol>
+ <symbol id="d-cup" viewBox="0 0 200 170">
+  <path d="M30 52 H146 V108 Q146 140 112 140 H64 Q30 140 30 108 Z" fill="url(#glass)" stroke="rgba(255,255,255,.26)" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M146 66 H164 Q182 66 182 86 Q182 106 164 106 H146" fill="none" stroke="rgba(255,255,255,.26)" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M62 34 Q72 24 62 14 M92 34 Q102 24 92 14 M122 34 Q132 24 122 14" fill="none" stroke="rgba(255,255,255,.24)" stroke-width="5" stroke-linecap="round"/></symbol>
+ <symbol id="d-key" viewBox="0 0 200 140">
+  <circle cx="52" cy="70" r="36" fill="url(#glass)" stroke="rgba(255,255,255,.28)" stroke-width="2"/>
+  <circle cx="52" cy="70" r="14" fill="#0C0D10" stroke="rgba(255,255,255,.20)"/>
+  <path d="M88 70 H182 V92 H166 V72 M140 70 V96" fill="none" stroke="rgba(255,255,255,.40)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+ <symbol id="d-globe" viewBox="0 0 180 180">
+  <circle cx="90" cy="90" r="72" fill="url(#screen)" stroke="rgba(255,255,255,.28)" stroke-width="2"/>
+  <ellipse cx="90" cy="90" rx="32" ry="72" fill="none" stroke="rgba(255,255,255,.26)" stroke-width="2"/>
+  <path d="M22 66 H158 M22 114 H158 M18 90 H162" stroke="rgba(255,255,255,.26)" stroke-width="2"/></symbol>
 </defs></svg>
 
 <div class="top">
   <div class="brand"><b>Vision Board</b><small>Studio Anthony Carrel</small></div>
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-board="hightech" type="button">High-Tech</button>
-    <button class="tab" data-board="vie" type="button">Ma vie</button>
-    <button class="tab" data-board="none" type="button">À trier</button>
-  </div>
+  <div class="tabs" id="tabs"></div>
   <div class="acts">
     <div class="legend"><span><i class="ldot own"></i>Acquis</span><span><i class="ldot want"></i>Visé</span></div>
+    <button class="btn" id="progBtn" type="button">Masquer la jauge</button>
     <button class="btn" id="fitBtn" type="button">Vue d'ensemble</button>
     <button class="btn" id="undoBtn" type="button" title="Annuler (⌘Z)">↺</button>
     <button class="btn" id="flipAll" type="button">Tout retourner</button>
@@ -431,6 +558,7 @@ body.fit .card{animation:none}
       <button type="button" data-kind="ports">Rangée d'éléments</button>
       <button type="button" data-kind="os">Bandeau dégradé</button>
       <button type="button" data-kind="budget">Budget des appareils visés</button>
+      <button type="button" data-kind="link">Raccourci vers un outil</button>
     </div>
   </div>
 </div>
@@ -445,52 +573,65 @@ body.fit .card{animation:none}
 
 <button class="fab" id="fab" type="button" aria-label="Ajouter une carte">+</button>
 
+<div class="veil" id="veil"></div>
 <div class="sheet" id="sheet">
-  <button class="sheet-x" id="sheetX" type="button" aria-label="Fermer">&times;</button>
-  <h3>Détails de la carte</h3>
-  <div class="f"><label>Titre</label><input type="text" id="fTitle"></div>
-  <div class="f"><label>Sous-titre</label><input type="text" id="fSub"></div>
-  <div class="f"><label>Notes du verso</label><textarea id="fNotes"></textarea></div>
-  <div class="f"><label>Board</label><select id="fBoard">
+  <h3>Détails de la carte<button class="sheet-x" id="sheetX" type="button" aria-label="Fermer">&times;</button></h3>
+  <div data-for="*" class="f"><label>Titre</label><input type="text" id="fTitle"></div>
+  <div data-for="*" class="f"><label>Sous-titre</label><input type="text" id="fSub"></div>
+  <div data-for="device" class="f"><label>Notes du verso</label><textarea id="fNotes"></textarea></div>
+  <div data-for="*" class="f"><label>Board</label><select id="fBoard">
     <option value="hightech">High-Tech</option><option value="vie">Ma vie</option><option value="none">À trier</option>
   </select></div>
-  <div class="f"><label>Statut</label><select id="fStatus">
+  <div data-for="device" class="f"><label>Statut</label><select id="fStatus">
     <option value="own">Acquis (vert)</option><option value="want">Visé (orange)</option>
   </select></div>
-  <div class="f"><label>Type de carte</label><select id="fKind">
+  <div data-for="*" class="f"><label>Type de carte</label><select id="fKind">
     <option value="device">Objectif / appareil (avec verso)</option><option value="note">Texte</option>
     <option value="stat">Compteur</option><option value="word">Mot en dégradé</option>
     <option value="chips">Trois tuiles</option><option value="finish">Pastilles couleur</option>
     <option value="ports">Rangée d'éléments</option><option value="os">Bandeau dégradé</option>
+    <option value="budget">Budget — somme des cartes visées</option>
+    <option value="link">Raccourci — ouvre un lien</option>
   </select></div>
-  <div class="f"><label>Largeur souhaitée</label><select id="fSpan">
+  <div data-for="*" class="f"><label>Largeur souhaitée</label><select id="fSpan">
     <option value="2">Étroite</option><option value="3">Normale</option><option value="4">Large</option>
     <option value="5">Très large</option><option value="6">Demi-largeur</option>
   </select></div>
-  <div class="f row"><label>Double hauteur (carte vedette)</label><input type="checkbox" id="fTall"></div>
-  <div class="f"><label>Cadrage de l'image</label><select id="fFit">
-    <option value="contain">Visuel centré</option><option value="cover">Couverture — pleine vignette</option>
+  <div data-for="*" class="f row"><label>Double hauteur (carte vedette)</label><input type="checkbox" id="fTall"></div>
+  <div data-for="*" class="f"><label>Habillage de la carte</label><select id="fSkin">
+    <option value="plat">Mat — surface sombre</option>
+    <option value="verre">Verre — glassmorphisme</option>
+    <option value="aurore">Aurore — halo lumineux</option>
   </select></div>
-  <div class="f"><label>Taille du visuel</label><select id="fScale">
+  <div data-for="link" class="f"><label>Lien du raccourci (carte « Raccourci »)</label><input type="text" id="fUrl" placeholder="https://notion.so/…" inputmode="url"></div>
+  <div data-for="device" class="f"><label>Cadrage de l'image</label><select id="fFit">
+    <option value="contain">Visuel centré</option>
+    <option value="adapt">Adapté — image entière, fond flou</option>
+    <option value="cover">Couverture — pleine vignette</option>
+  </select></div>
+  <div data-for="device" class="f"><label>Taille du visuel</label><select id="fScale">
     <option value="70">Petit</option><option value="100">Moyen</option><option value="135">Grand</option><option value="175">Très grand</option>
   </select></div>
-  <div class="f"><label>Visuel par défaut</label><select id="fGlyph">
+  <div data-for="device link" class="f"><label>Visuel par défaut</label><select id="fGlyph">
     <option value="#d-phone">Téléphone</option><option value="#d-mac">Ordinateur portable</option>
     <option value="#d-ipad">Tablette</option><option value="#d-watch">Montre</option>
     <option value="#d-pods">Écouteurs</option><option value="#d-display">Écran</option>
     <option value="#d-vision">Casque</option><option value="#d-home">Maison</option>
     <option value="#d-camera">Appareil photo</option><option value="#d-flag">Objectif</option>
     <option value="#d-spark">Étoile</option>
+    <option value="#d-ink">Encre — tatouage</option><option value="#d-car">Voiture</option>
+    <option value="#d-peak">Sommet — défi</option><option value="#d-cup">Tasse — pause</option>
+    <option value="#d-key">Clé — logement</option><option value="#d-globe">Globe — en ligne</option>
   </select></div>
-  <div class="f"><label>Image (URL) — ou dépose un fichier sur la carte</label><input type="text" id="fImg" placeholder="https://…"></div>
-  <div class="f"><label>Prix de l'appareil (€)</label><input type="text" id="fPrice" placeholder="0" inputmode="numeric"></div>
-  <div class="f"><label>Dégradé (bandeau, mot, budget coloré)</label><select id="fGrad"></select></div>
-  <div class="f"><label>Style de la carte budget</label><select id="fBudStyle">
+  <div data-for="device" class="f"><label>Image (URL) — ou dépose un fichier sur la carte</label><input type="text" id="fImg" placeholder="https://…"></div>
+  <div data-for="device" class="f"><label>Prix de l'appareil (€)</label><input type="text" id="fPrice" placeholder="0" inputmode="numeric"></div>
+  <div data-for="word os budget link chips finish" class="f"><label>Dégradé (bandeau, mot, budget coloré)</label><select id="fGrad"></select></div>
+  <div data-for="budget" class="f"><label>Style de la carte budget</label><select id="fBudStyle">
     <option value="sobre">Sobre — carte sombre</option>
     <option value="verre">Verre — glassmorphisme</option>
     <option value="couleur">Couleur — dégradé plein</option>
   </select></div>
-  <div class="f"><label>Couleur (halo et verre du verso)</label><select id="fColor">
+  <div data-for="*" class="f"><label>Couleur (halo et verre du verso)</label><select id="fColor">
     <option value="var(--gold)">Or</option><option value="var(--source)">Vert émeraude</option>
     <option value="var(--cockpit)">Bleu cockpit</option><option value="var(--moteur)">Violet</option>
     <option value="var(--objectifs)">Cyan électrique</option><option value="#FF4A82">Rose rubis</option>
@@ -499,11 +640,11 @@ body.fit .card{animation:none}
     <option value="#4EA8DE">Bleu ardoise</option><option value="#DEA4FF">Mauve</option>
     <option value="#FF4A4A">Rouge</option><option value="#FFFFFF">Blanc</option>
   </select></div>
-  <div class="f row"><label>Afficher l'encoche au verso</label><input type="checkbox" id="fBlock"></div>
+  <div data-for="device" class="f row"><label>Afficher l'encoche au verso</label><input type="checkbox" id="fBlock"></div>
   <div class="f"><label>Encoche : libellé et valeur</label>
     <div style="display:flex;gap:6px"><input type="text" id="fBlockL" placeholder="ÉTAT" style="flex:1"><input type="text" id="fBlockV" placeholder="En service" style="flex:2"></div>
   </div>
-  <div style="margin-top:26px;display:flex;flex-direction:column;gap:10px">
+  <div class="sheet-foot">
     <button id="fSave" class="ok-btn" type="button">Terminé</button>
     <button id="fDel" class="danger-btn" type="button">Supprimer définitivement</button>
   </div>
@@ -555,11 +696,39 @@ const menu   = document.getElementById('menu');
 const sheet  = document.getElementById('sheet');
 const picker = document.getElementById('picker');
 
-const GLYPHS = ['#d-phone','#d-mac','#d-ipad','#d-watch','#d-pods','#d-display','#d-vision','#d-home','#d-camera','#d-flag','#d-spark'];
+const GLYPHS = ['#d-phone','#d-mac','#d-ipad','#d-watch','#d-pods','#d-display','#d-vision','#d-home','#d-camera','#d-flag','#d-spark',
+  '#d-ink','#d-car','#d-peak','#d-cup','#d-key','#d-globe'];
 const VIEWS = {'#d-phone':'0 0 120 240','#d-mac':'0 0 320 196','#d-ipad':'0 0 150 200','#d-watch':'0 0 104 140',
   '#d-pods':'0 0 130 116','#d-display':'0 0 220 180','#d-vision':'0 0 180 92','#d-home':'0 0 200 170',
-  '#d-camera':'0 0 200 160','#d-flag':'0 0 140 180','#d-spark':'0 0 160 160'};
+  '#d-camera':'0 0 200 160','#d-flag':'0 0 140 180','#d-spark':'0 0 160 160',
+ '#d-ink':'0 0 180 180','#d-car':'0 0 220 130','#d-peak':'0 0 220 160','#d-cup':'0 0 200 170','#d-key':'0 0 200 140','#d-globe':'0 0 180 180'};
 const SCALES = [70,100,135,175];
+const SKINS = ['plat','verre','aurore'];
+
+/* visuels ajoutés pour les objectifs de vie */
+const EXTRA_GLYPHS = {
+  '#d-bolt'   : ['Éclair','0 0 120 160','<path d="M70 8 L28 88 H58 L48 152 L94 66 H64 Z" fill="url(#glass)" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linejoin="round"/>'],
+  '#d-heart'  : ['Cœur','0 0 180 160','<path d="M90 148 C30 106 14 78 14 54 C14 30 32 14 54 14 C70 14 82 22 90 34 C98 22 110 14 126 14 C148 14 166 30 166 54 C166 78 150 106 90 148 Z" fill="url(#glass)" stroke="rgba(255,255,255,.28)" stroke-width="2"/>'],
+  '#d-run'    : ['Sport','0 0 160 160','<circle cx="98" cy="26" r="15" fill="url(#glass)" stroke="rgba(255,255,255,.3)" stroke-width="2"/><path d="M96 52 L64 76 L82 100 L70 140 M82 100 L118 108 M64 76 L28 88 M118 62 L142 76" fill="none" stroke="rgba(255,255,255,.42)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'],
+  '#d-book'   : ['Livre','0 0 180 150','<path d="M90 32 C70 18 44 14 20 16 V128 C44 126 70 130 90 142 C110 130 136 126 160 128 V16 C136 14 110 18 90 32 Z" fill="url(#glass)" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-linejoin="round"/><path d="M90 32 V142" stroke="rgba(255,255,255,.3)" stroke-width="2"/>'],
+  '#d-plane'  : ['Voyage','0 0 180 160','<path d="M16 92 L164 42 L138 118 L104 100 L78 132 L74 96 Z" fill="url(#glass)" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linejoin="round"/>'],
+  '#d-euro'   : ['Argent','0 0 160 160','<circle cx="80" cy="80" r="62" fill="url(#glass)" stroke="rgba(255,255,255,.28)" stroke-width="2"/><path d="M100 52 C86 44 66 50 60 68 M100 108 C86 116 66 110 60 92 M44 72 H88 M44 90 H84" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="7" stroke-linecap="round"/>'],
+  '#d-idea'   : ['Idée','0 0 140 170','<path d="M70 12 C42 12 22 32 22 58 C22 78 34 90 44 104 V122 H96 V104 C106 90 118 78 118 58 C118 32 98 12 70 12 Z" fill="url(#glass)" stroke="rgba(255,255,255,.3)" stroke-width="2"/><rect x="48" y="132" width="44" height="9" rx="4.5" fill="rgba(255,255,255,.4)"/><rect x="54" y="150" width="32" height="9" rx="4.5" fill="rgba(255,255,255,.3)"/>'],
+  '#d-palette': ['Création','0 0 170 160','<path d="M85 14 C40 14 12 44 12 82 C12 118 40 146 78 146 C92 146 96 136 92 128 C86 116 96 106 110 108 C142 112 158 96 158 74 C158 40 128 14 85 14 Z" fill="url(#glass)" stroke="rgba(255,255,255,.28)" stroke-width="2"/><circle cx="52" cy="60" r="9" fill="#FF375F"/><circle cx="84" cy="42" r="9" fill="#FFD60A"/><circle cx="118" cy="58" r="9" fill="#30D158"/><circle cx="44" cy="98" r="9" fill="#0A84FF"/>'],
+  '#d-music'  : ['Musique','0 0 150 160','<path d="M56 122 V32 L124 16 V104" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="38" cy="126" rx="24" ry="18" fill="url(#glass)" stroke="rgba(255,255,255,.3)" stroke-width="2"/><ellipse cx="106" cy="108" rx="22" ry="17" fill="url(#glass)" stroke="rgba(255,255,255,.3)" stroke-width="2"/>'],
+  '#d-leaf'   : ['Bien-être','0 0 160 160','<path d="M28 132 C28 68 76 20 140 20 C140 84 92 132 28 132 Z" fill="url(#glass)" stroke="rgba(255,255,255,.3)" stroke-width="2" stroke-linejoin="round"/><path d="M28 132 L140 20" stroke="rgba(255,255,255,.35)" stroke-width="4" stroke-linecap="round"/>'],
+  '#d-chart'  : ['Progression','0 0 170 150','<rect x="14" y="14" width="142" height="122" rx="16" fill="url(#glass)" stroke="rgba(255,255,255,.26)" stroke-width="2"/><path d="M34 106 L68 68 L94 90 L138 40" fill="none" stroke="rgba(255,255,255,.62)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>'],
+  '#d-clock'  : ['Temps','0 0 160 160','<circle cx="80" cy="80" r="64" fill="url(#glass)" stroke="rgba(255,255,255,.28)" stroke-width="2"/><path d="M80 40 V82 L108 98" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>']
+};
+(function(){
+  const NS='http://www.w3.org/2000/svg', defs=document.querySelector('svg defs');
+  Object.keys(EXTRA_GLYPHS).forEach(id=>{
+    const [,vb,body]=EXTRA_GLYPHS[id];
+    const sym=document.createElementNS(NS,'symbol');
+    sym.setAttribute('id',id.slice(1)); sym.setAttribute('viewBox',vb); sym.innerHTML=body;
+    defs.appendChild(sym);
+  });
+})();
 
 /* palettes inspirées des visuels Apple — utilisées par les bandeaux,
    les mots en dégradé et les cartes budget colorées */
@@ -577,8 +746,20 @@ const GRADS = {
   titane:     ['Titane',     'linear-gradient(120deg,#F7F7F9 0%,#C9CAD0 45%,#96979E 100%)', 1],
   graphite:   ['Graphite',   'linear-gradient(120deg,#4A4C54 0%,#26272C 55%,#141519 100%)', 0]
 };
+Object.keys(EXTRA_GLYPHS).forEach(id => { VIEWS[id] = EXTRA_GLYPHS[id][1]; GLYPHS.push(id); });
+(function(){
+  const sel = document.getElementById('fGlyph');
+  Object.keys(EXTRA_GLYPHS).forEach(id => {
+    const o = document.createElement('option'); o.value = id; o.textContent = EXTRA_GLYPHS[id][0]; sel.appendChild(o);
+  });
+})();
+
 const gradCss  = k => (GRADS[k] || GRADS.systeme)[1];
 const gradDark = k => !!(GRADS[k] || GRADS.systeme)[2];
+function auraOf(k){
+  const c = gradCss(k).match(/#[0-9A-Fa-f]{6}/g) || ['#5E5CE6','#0A84FF'];
+  return [c[0], c[c.length > 2 ? 2 : c.length - 1]];
+}
 
 /* finitions Apple pour les pastilles */
 const FINISHES = [
@@ -603,6 +784,8 @@ function migrate(n){
   if (n.imgScale === undefined) n.imgScale = 100;
   if (n.grad === undefined) n.grad = 'systeme';
   if (n.budStyle === undefined) n.budStyle = 'sobre';
+  if (n.skin === undefined) n.skin = 'plat';
+  if (n.url === undefined) n.url = '';
   if (n.showBlock === undefined) n.showBlock = false;
   if (typeof n.price !== 'number' || !isFinite(n.price)) n.price = Number(n.price) || 0;
   if (!Array.isArray(n.bullets)) n.bullets = [];
@@ -708,6 +891,7 @@ function undo(){
   dataset.forEach(n => { if (n.id !== '__meta__') migrate(n); });
   lastSnap = snap();
   save(false);
+  renderTabs();
   render(); refreshUndo();
 }
 
@@ -716,9 +900,10 @@ function saveLocal(){
   catch(e){ console.warn('Sauvegarde locale impossible', e); }
 }
 
-async function save(record){
-  if (record !== false) recordUndo();
-  saveLocal();
+/* l'écriture locale est immédiate ; l'écriture réseau est regroupée,
+   pour ne pas envoyer une requête par frappe */
+let netT = null;
+async function pushRemote(){
   if (!db) { sync.textContent = 'Local'; return; }
   sync.textContent = 'Synchronisation…';
   try {
@@ -730,6 +915,12 @@ async function save(record){
     sync.textContent = 'Hors ligne — sauvegardé localement';
   }
 }
+function save(record){
+  if (record !== false) recordUndo();
+  saveLocal();
+  clearTimeout(netT);
+  netT = setTimeout(pushRemote, 600);
+}
 
 /* Les graines ne s'exécutent qu'au tout premier chargement. Pour ajouter une carte
    à un board déjà rempli, on passe par une évolution enregistrée une bonne fois :
@@ -738,13 +929,90 @@ function metaNode(){
   let m = dataset.find(n => n.id === '__meta__');
   if (!m) { m = { id:'__meta__', meta:true, migrations:[] }; dataset.push(m); }
   if (!Array.isArray(m.migrations)) m.migrations = [];
+  if (!Array.isArray(m.boards) || !m.boards.length)
+    m.boards = [{ id:'hightech', name:'High-Tech' }, { id:'vie', name:'Ma vie' }];
   return m;
+}
+
+/* ---- espaces de travail : la liste vit dans la donnée, pas dans le HTML ---- */
+function boardsList(){ return metaNode().boards.concat([{ id:'none', name:'À trier', fixed:true }]); }
+
+function renderTabs(){
+  const box = document.getElementById('tabs');
+  box.innerHTML = '';
+  boardsList().forEach(b => {
+    const t = el('button','tab' + (b.id === board ? ' active' : ''));
+    t.type = 'button'; t.dataset.board = b.id;
+    const nm = el('span','tab-name', b.name);
+    if (!b.fixed) { nm.contentEditable = 'plaintext-only'; nm.dataset.boardName = b.id; }
+    t.appendChild(nm);
+    if (!b.fixed) {
+      const x = el('button','tab-x','×'); x.type='button'; x.dataset.act='board-del'; t.appendChild(x);
+    }
+    box.appendChild(t);
+  });
+  const add = el('button','tab-add','+');
+  add.type='button'; add.id='boardAdd'; add.title='Nouvel espace';
+  box.appendChild(add);
+}
+
+function addBoard(){
+  const m = metaNode();
+  const id = 'b' + Math.round(performance.now() * 1000).toString(36);
+  m.boards.push({ id: id, name: 'Nouvel espace' });
+  board = id;
+  save(); renderTabs(); render();
+  const nm = document.querySelector('[data-board-name="' + id + '"]');
+  if (nm) { nm.focus(); document.execCommand && document.getSelection().selectAllChildren(nm); }
+}
+
+function delBoard(id){
+  const m = metaNode();
+  const b = m.boards.find(x => x.id === id); if (!b) return;
+  const n = dataset.filter(x => x.board === id).length;
+  if (!confirm('Supprimer l’espace « ' + b.name + ' » ?' +
+      (n ? '\n\nSes ' + n + ' cartes partent dans « À trier », rien n’est perdu.' : ''))) return;
+  dataset.forEach(x => { if (x.board === id) x.board = 'none'; });
+  m.boards = m.boards.filter(x => x.id !== id);
+  board = m.boards.length ? m.boards[0].id : 'none';
+  save(); renderTabs(); render();
 }
 
 const MIGRATIONS = [
   ['budget-hightech', () => {
     if (!dataset.some(n => n.kind === 'budget' && n.board === 'hightech'))
       dataset.push(newNode({ key:'bud', board:'hightech', kind:'budget', span:6, sub:'À prévoir', title:'Budget' }));
+  }],
+
+  /* un espace « Workflow » : les raccourcis vers les outils du studio */
+  ['espace-workflow', () => {
+    const m = metaNode();
+    if (!m.boards.some(b => b.id === 'workflow')) m.boards.push({ id:'workflow', name:'Workflow' });
+    if (dataset.some(n => n.board === 'workflow')) return;
+    [
+      {key:'wf-t', kind:'word', span:6, title:'OUTILS', sub:'Un geste, l’outil s’ouvre', grad:'ocean'},
+      {key:'wf-site', kind:'link', span:3, title:'Mon site', sub:'Vitrine et prise de contact',
+       url:'https://systeme.anthonycarrel.com', glyph:'#d-globe', skin:'aurore', grad:'ocean'},
+      {key:'wf-note', kind:'link', span:3, title:'Notes & devis', sub:'À relier — Modifier → Détails',
+       url:'', glyph:'#d-book', skin:'aurore', grad:'crepuscule'},
+      {key:'wf-photo', kind:'link', span:3, title:'Retouche', sub:'À relier — Modifier → Détails',
+       url:'', glyph:'#d-camera', skin:'aurore', grad:'aurore'},
+      {key:'wf-drive', kind:'link', span:3, title:'Livraison client', sub:'À relier — Modifier → Détails',
+       url:'', glyph:'#d-key', skin:'aurore', grad:'or'},
+      {key:'wf-note2', kind:'note', span:6, title:'À quoi sert cet espace', sub:'Le studio en un écran',
+       notes:'Chaque pastille ouvre un outil. Modifier → Détails → « Lien du raccourci » pour changer l’adresse.'}
+    ].forEach(o => { o.board = 'workflow'; dataset.push(newNode(o)); });
+  }],
+
+  /* « Ma vie » avait des pictogrammes génériques : on les rend parlants */
+  ['vie-pictos', () => {
+    const map = { node_app:'#d-key', node_tat:'#d-ink', node_pho:'#d-camera', node_pro:'#d-peak' };
+    dataset.forEach(n => {
+      if (!map[n.id]) return;
+      if (!n.glyph || n.glyph === '#d-spark' || n.glyph === '#d-home' || n.glyph === '#d-flag') n.glyph = map[n.id];
+      if (!n.skin || n.skin === 'plat') n.skin = 'aurore';
+      if (!n.grad || n.grad === 'systeme') n.grad = ({ node_app:'or', node_tat:'rubis', node_pho:'ocean', node_pro:'crepuscule' })[n.id];
+    });
   }]
 ];
 
@@ -782,6 +1050,7 @@ async function load(){
   if (seeded) save(false);
   lastSnap = snap();
 
+  renderTabs();
   render(); refreshUndo();
 }
 
@@ -800,7 +1069,7 @@ function rowH(){ const w = window.innerWidth; return w < 700 ? 190 : (w < 1100 ?
 /* largeur souhaitée ramenée au nombre de colonnes courant */
 function wantW(n, C){
   const sp = Number(n.span) || 3;
-  if (C <= 3) return sp >= 5 ? C : 1;              /* mobile : large ou étroite */
+  if (C <= 3) return (sp >= 5 || n.kind === 'budget' || n.kind === 'ports') ? C : 1;
   return Math.max(2, Math.min(C, Math.round(sp * C / 12)));
 }
 
@@ -859,6 +1128,7 @@ function packLayout(list, C){
     const row = []; let sum = 0;
     while (i < list.length && sum < C && !list[i].tall) {
       const m = list[i];
+      if (sum > 0 && wantW(m, C) >= C) break;        /* pleine largeur : nouvelle rangée */
       const mw = Math.min(wantW(m, C), C - sum);
       row.push({ n: m, w: mw, tall: false });
       sum += mw; i++;
@@ -887,6 +1157,9 @@ const FRONT = {
   device(f, n){
     const d = el('button','dot'); d.type='button'; d.dataset.act='status';
     d.setAttribute('aria-label','Changer le statut'); d.appendChild(el('i')); f.appendChild(d);
+    if (n.img && n.imgFit === 'adapt') {
+      const bg = el('div','imgbg'); bg.style.backgroundImage = 'url("' + n.img + '")'; f.appendChild(bg);
+    }
     if (n.img && n.imgFit === 'cover') {
       const c = el('div','cover'); c.style.backgroundImage = 'url("' + n.img + '")'; f.appendChild(c);
     } else {
@@ -973,6 +1246,17 @@ const FRONT = {
     f.appendChild(r);
     const m = el('div','meta'); m.appendChild(ed(el('div','ttl', n.title || ''), 'title')); f.appendChild(m);
   },
+  link(f, n){
+    const a = el('div','lk-arrow');
+    a.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 16 L16 8 M9.5 8 H16 V14.5"/></svg>';
+    f.appendChild(a);
+    const v = el('div','vis'); v.appendChild(icon(n.glyph || '#d-bolt')); f.appendChild(v);
+    const m = el('div','meta');
+    m.appendChild(ed(el('div','ttl', n.title || 'Raccourci'), 'title'));
+    m.appendChild(ed(el('div','sub', n.sub || ''), 'sub'));
+    if (n.url) m.appendChild(el('div','lk-host', hostOf(n.url)));
+    f.appendChild(m);
+  },
   os(f, n){
     const p2 = ed(el('div','ospill', n.title || 'Bandeau'), 'title');
     p2.style.background = gradCss(n.grad);
@@ -992,23 +1276,33 @@ const FRONT = {
     const total = want.reduce((a, x) => a + (Number(x.price) || 0), 0);
     const left = el('div','bud-l');
     left.appendChild(ed(el('div','eyebrow', n.sub || 'À prévoir'), 'sub'));
-    left.appendChild(el('div','bud-total', total > 0 ? euro(total) : '—'));
+    const tt = el('div','bud-total' + (total > 0 ? '' : ' vide'), euro(total));
+    left.appendChild(tt);
     left.appendChild(el('div','unit', want.length + (want.length > 1 ? ' appareils visés' : ' appareil visé')));
+    left.appendChild(el('div','bud-tip', 'Touche un prix pour le modifier'));
     f.appendChild(left);
 
     const list = el('div','bud-list');
-    if (!want.length) list.appendChild(el('div','bud-hint', 'Aucun appareil visé sur ce board.'));
+    if (!want.length) list.appendChild(el('div','bud-hint', 'Aucun appareil visé sur cet espace. Passe une carte en « Visé » (pastille orange) pour la voir ici.'));
     else want.forEach(x => {
       const p = Number(x.price) || 0;
       const c = el('div','bud-i' + (p ? '' : ' zero'));
       c.appendChild(document.createTextNode(x.title || 'Sans titre'));
-      c.appendChild(el('b', null, p ? euro(p) : 'prix à saisir'));
+      const b = el('b', null, p ? euro(p) : '0 €');
+      b.contentEditable = 'plaintext-only';
+      b.dataset.devprice = x.id;
+      b.title = 'Écris le prix ici';
+      c.appendChild(b);
       list.appendChild(c);
     });
     f.appendChild(list);
   }
 };
 
+function hostOf(u){
+  if (!u) return 'aucun lien — ouvre Détails';
+  try { return new URL(u).hostname.replace(/^www\./,''); } catch(e){ return u; }
+}
 const EUR = new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR', maximumFractionDigits:0 });
 function euro(v){ return EUR.format(v); }
 function parseEuro(t){ const d = String(t).replace(/[^0-9]/g,''); return d ? parseInt(d, 10) : 0; }
@@ -1057,7 +1351,7 @@ function buildBack(n){
   const at = el('button','mini','+ tag'); at.type='button'; at.dataset.act='tag-add'; tags.appendChild(at);
   foot.appendChild(tags);
   const ab = el('button','mini','+ étape'); ab.type='button'; ab.dataset.act='bul-add'; foot.appendChild(ab);
-  const pr = el('span','price', n.price ? euro(n.price) : 'Prix —');
+  const pr = el('span','price' + (n.price ? '' : ' vide'), n.price ? euro(n.price) : '0 €');
   pr.contentEditable = 'plaintext-only'; pr.dataset.field = 'price';
   pr.title = 'Prix de l’appareil'; foot.appendChild(pr);
   b.appendChild(foot);
@@ -1068,7 +1362,9 @@ function buildCard(slot, i){
   const n = slot.n;
   const kind = FRONT[n.kind] ? n.kind : 'device';
   const cov = !!(n.img && n.imgFit === 'cover' && kind === 'device');
-  const card = el('div','card k-' + kind + (slot.tall ? ' tall' : '') + (cov ? ' cov' : ''));
+  const adp = !!(n.img && n.imgFit === 'adapt' && kind === 'device');
+  const card = el('div','card k-' + kind + (slot.tall ? ' tall' : '') + (cov ? ' cov' : '') + (adp ? ' adapt' : ''));
+  card.dataset.skin = n.skin || 'plat';
   card.dataset.id = n.id;
   card.dataset.kind = kind;
   card.style.setProperty('--d', i);
@@ -1083,6 +1379,12 @@ function buildCard(slot, i){
 
   const inner = el('div','inner');
   const front = el('div','face front');
+  if ((n.skin || 'plat') === 'aurore' && kind !== 'os') {
+    const a = auraOf(n.grad);
+    card.style.setProperty('--a1', a[0]); card.style.setProperty('--a2', a[1]);
+    front.appendChild(el('div','aura'));
+    front.appendChild(el('div','dots'));
+  }
   if (kind !== 'os') front.appendChild(el('div','glow'));
   FRONT[kind](front, n);
   inner.appendChild(front);
@@ -1103,15 +1405,18 @@ function buildCard(slot, i){
 
   const tools = el('div','tools');
   let acts;
-  if (kind === 'device') acts = [['img','Image'],['fit','Cadrage'],['glyph','Visuel'],['wider','Élargir'],['tall','Hauteur'],['sheet','Détails']];
-  else if (kind === 'budget') acts = [['budstyle','Style'],['grad','Dégradé'],['wider','Élargir'],['sheet','Détails']];
+  if (kind === 'device') acts = [['img','Image'],['fit','Cadrage'],['glyph','Visuel'],['skin','Habillage'],['grad','Dégradé'],['wider','Élargir'],['tall','Hauteur'],['sheet','Détails']];
+  else if (kind === 'budget') acts = [['budstyle','Style'],['grad','Dégradé'],['skin','Habillage'],['wider','Élargir'],['sheet','Détails']];
+  else if (kind === 'link') acts = [['glyph','Visuel'],['skin','Habillage'],['grad','Dégradé'],['wider','Élargir'],['sheet','Détails']];
   else if (kind === 'os' || kind === 'word') acts = [['grad','Dégradé'],['wider','Élargir'],['sheet','Détails']];
-  else acts = [['wider','Élargir'],['sheet','Détails']];
+  else acts = [['skin','Habillage'],['grad','Dégradé'],['wider','Élargir'],['sheet','Détails']];
+  if (window.VB && VB._tools) VB._tools.forEach(t => {
+    if (t.kinds.indexOf(kind) > -1 || t.kinds.indexOf('*') > -1) acts.push([t.act, t.label]);
+  });
   acts.forEach(([a, l]) => { const b = el('button', null, l); b.type='button'; b.dataset.act = a; tools.appendChild(b); });
   const d = el('button','danger','Retirer'); d.type='button'; d.dataset.act='del'; tools.appendChild(d);
   card.appendChild(tools);
 
-  card.draggable = editing;
   return card;
 }
 
@@ -1143,6 +1448,7 @@ function render(){
   for (let k = 0; k < devs.length; k++) bar.appendChild(el('i','seg' + (k < own ? ' on' : (k === own ? ' next' : ''))));
   document.getElementById('progTxt').textContent = own + ' sur ' + devs.length;
   document.getElementById('progSub').textContent = board === 'hightech' ? "de l'écosystème visé" : 'acquis';
+  document.body.classList.toggle('sans-appareil', !devs.length);
 
   if (selId) { const c = grid.querySelector('.card[data-id="' + selId + '"]'); if (c) c.classList.add('sel'); }
   if (allFlipped) grid.querySelectorAll('.k-device').forEach(c => c.classList.add('flipped'));
@@ -1182,6 +1488,21 @@ function toggleFit(){
 }
 document.getElementById('fitBtn').addEventListener('click', toggleFit);
 
+let progHidden = false;
+try { progHidden = localStorage.getItem('vb_noprog') === '1'; } catch(e){}
+function applyProg(){
+  document.body.classList.toggle('no-prog', progHidden);
+  const b = document.getElementById('progBtn');
+  b.textContent = progHidden ? 'Afficher la jauge' : 'Masquer la jauge';
+  b.classList.toggle('on-alt', progHidden);
+}
+document.getElementById('progBtn').addEventListener('click', () => {
+  progHidden = !progHidden;
+  try { localStorage.setItem('vb_noprog', progHidden ? '1' : '0'); } catch(e){}
+  applyProg(); applyFit();
+});
+applyProg();
+
 /* =========================================================================
    4. INTERACTIONS
    ========================================================================= */
@@ -1203,11 +1524,22 @@ function placeBefore(from, to){
 }
 
 document.getElementById('tabs').addEventListener('click', e => {
+  if (e.target.closest('#boardAdd')) { addBoard(); return; }
+  const del = e.target.closest('[data-act="board-del"]');
+  if (del) { e.stopPropagation(); delBoard(del.closest('.tab').dataset.board); return; }
+  if (e.target.closest('[contenteditable]')) return;
   const t = e.target.closest('.tab'); if (!t) return;
   board = t.dataset.board;
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
   render();
 });
+
+document.getElementById('tabs').addEventListener('blur', e => {
+  const id = e.target.dataset && e.target.dataset.boardName; if (!id) return;
+  const v = (e.target.textContent || '').trim() || 'Sans nom';
+  const b = metaNode().boards.find(x => x.id === id);
+  if (b && b.name !== v) { b.name = v; save(); }
+}, true);
 
 document.getElementById('editBtn').addEventListener('click', function(){
   editing = !editing;
@@ -1215,7 +1547,7 @@ document.getElementById('editBtn').addEventListener('click', function(){
   this.classList.toggle('on', editing);
   this.textContent = editing ? 'Terminé' : 'Modifier';
   menu.classList.remove('open');
-  grid.querySelectorAll('.card').forEach(c => { c.draggable = editing; });
+
 });
 
 document.getElementById('flipAll').addEventListener('click', function(){
@@ -1241,6 +1573,7 @@ grid.addEventListener('click', e => {
   }
 
   if (!editing) {
+    if (card.dataset.kind === 'link') { if (n.url) window.open(n.url, '_blank', 'noopener'); return; }
     if (card.dataset.kind === 'device' && !e.target.closest('.face.back')) card.classList.toggle('flipped');
     return;
   }
@@ -1265,11 +1598,12 @@ grid.addEventListener('click', e => {
   else if (act === 'img')   { pickerFor = n.id; picker.click(); }
   else if (act === 'sheet') { openSheet(n); }
   else if (act === 'fit') {
-    if (n.imgFit === 'cover') { n.imgFit = 'contain'; n.imgScale = SCALES[0]; }
-    else {
-      const i = SCALES.indexOf(Number(n.imgScale) || 100);
-      if (i >= SCALES.length - 1) n.imgFit = 'cover'; else n.imgScale = SCALES[i + 1];
-    }
+    const CY = [['contain',70],['contain',100],['contain',135],['adapt',100],['cover',100]];
+    let cur = -1;
+    for (let k = 0; k < CY.length; k++)
+      if (CY[k][0] === n.imgFit && (n.imgFit !== 'contain' || CY[k][1] === (Number(n.imgScale) || 100))) { cur = k; break; }
+    const nx = CY[(cur + 1) % CY.length];
+    n.imgFit = nx[0]; n.imgScale = nx[1];
     save(); render();
   }
   else if (act === 'bul-add') {
@@ -1291,6 +1625,7 @@ grid.addEventListener('click', e => {
     n.grad = keys[(keys.indexOf(n.grad) + 1) % keys.length];
     save(); render();
   }
+  else if (act === 'skin') { n.skin = SKINS[(SKINS.indexOf(n.skin || 'plat') + 1) % SKINS.length]; save(); render(); }
   else if (act === 'budstyle') {
     const st = ['sobre','verre','couleur'];
     n.budStyle = st[(st.indexOf(n.budStyle) + 1) % st.length];
@@ -1329,6 +1664,12 @@ let rendering = false;
 grid.addEventListener('blur', e => {
   const t = e.target; if (!t.dataset) return;
   if (rendering || !t.isConnected) return;   /* le rendu détache l'élément : ne pas rejouer */
+  /* prix saisi depuis la carte budget : il appartient à une AUTRE carte */
+  if (t.dataset.devprice) {
+    const d = dataset.find(x => x.id === t.dataset.devprice);
+    if (d) { const np = parseEuro(t.textContent); if (d.price !== np) { d.price = np; save(); } }
+    render(); return;
+  }
   const card = t.closest('.card'); if (!card) return;
   const n = dataset.find(x => x.id === card.dataset.id); if (!n) return;
   const v = (t.textContent || '').trim();
@@ -1355,6 +1696,12 @@ grid.addEventListener('blur', e => {
   if (f === 'price') { const p = parseEuro(v); if (n.price !== p) { n.price = p; save(); } render(); return; }
   if (n[f] !== v) { n[f] = v; save(); if (f === 'title') render(); }
 }, true);
+
+grid.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.shiftKey) return;
+  const t = e.target;
+  if (t && t.dataset && (t.dataset.devprice || t.dataset.field === 'price')) { e.preventDefault(); t.blur(); }
+});
 
 document.addEventListener('paste', e => {
   const ed2 = e.target.closest && e.target.closest('[contenteditable]'); if (!ed2) return;
@@ -1396,6 +1743,7 @@ const BLANK = {
           swatches:['linear-gradient(145deg,#F2F2F4,#B9BAC0 55%,#8E8F96)','linear-gradient(145deg,#3A3B40,#151619)']},
   ports :{title:'Une rangée', ports:['Un','Deux','Trois','Quatre']},
   os    :{title:'Bandeau'},
+  link  :{title:'Nouveau raccourci', sub:'Vers un outil', glyph:'#d-bolt', url:'', span:3},
   budget:{title:'Budget', sub:'À prévoir', span:6}
 };
 document.getElementById('addBtn').addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
@@ -1412,32 +1760,79 @@ menu.addEventListener('click', e => {
   save(); render();
 });
 
-/* glisser : réordonner, ou déposer une image */
-grid.addEventListener('dragstart', e => {
-  const c = e.target.closest('.card');
-  if (!editing || !c) { e.preventDefault(); return; }
-  dragId = c.dataset.id; c.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-  try { e.dataTransfer.setData('text/plain', dragId); } catch(_){}
+/* ---------------------------------------------------------------------------
+   Déplacement des cartes : un seul mécanisme pour la souris et le doigt.
+   Appui maintenu ≈ 320 ms → la carte se soulève et suit le curseur.
+   Le glisser HTML5 ne fonctionne pas au doigt ; les événements pointeur, si.
+   --------------------------------------------------------------------------- */
+let grabbed = null, grabTimer = null, grabTarget = null, grabDX = 0, grabDY = 0;
+
+function endGrab(commit){
+  clearTimeout(grabTimer); grabTimer = null;
+  if (!grabbed) return;
+  const from = grabbed.dataset.id;
+  const to   = grabTarget ? grabTarget.dataset.id : null;
+  grabbed.classList.remove('grabbed');
+  grabbed.style.transform = '';
+  if (grabTarget) grabTarget.classList.remove('target');
+  document.body.classList.remove('dragging-card');
+  grabbed = null; grabTarget = null;
+  if (commit && to && to !== from) placeBefore(from, to);
+}
+
+grid.addEventListener('pointerdown', e => {
+  if (!editing || e.button > 0) return;
+  const card = e.target.closest('.card'); if (!card) return;
+  if (e.target.closest('[data-act],[contenteditable],button,input,select,textarea')) return;
+  const sx = e.clientX, sy = e.clientY;
+  const r = card.getBoundingClientRect();
+  grabTimer = setTimeout(() => {
+    grabbed = card; grabDX = sx; grabDY = sy;
+    card.classList.add('grabbed');
+    document.body.classList.add('dragging-card');
+    try { card.setPointerCapture(e.pointerId); } catch(_){}
+    if (navigator.vibrate) navigator.vibrate(8);
+  }, 320);
 });
-grid.addEventListener('dragend', () => {
-  dragId = null;
-  grid.querySelectorAll('.card').forEach(c => c.classList.remove('dragging','over','drop'));
+
+function moveGrab(x, y){
+  if (!grabbed) return;
+  grabbed.style.transform = 'translate(' + (x - grabDX) + 'px,' + (y - grabDY) + 'px)';
+  grabbed.style.pointerEvents = 'none';
+  const under = document.elementFromPoint(x, y);
+  grabbed.style.pointerEvents = '';
+  const t = under && under.closest ? under.closest('.card') : null;
+  if (t === grabTarget) return;
+  if (grabTarget) grabTarget.classList.remove('target');
+  grabTarget = (t && t !== grabbed) ? t : null;
+  if (grabTarget) grabTarget.classList.add('target');
+}
+
+grid.addEventListener('pointermove', e => {
+  if (!grabbed) { if (grabTimer && (Math.abs(e.clientX - grabDX) > 12 || Math.abs(e.clientY - grabDY) > 12)) {} return; }
+  moveGrab(e.clientX, e.clientY);
 });
+grid.addEventListener('pointerup',     () => endGrab(true));
+grid.addEventListener('pointercancel', () => endGrab(false));
+grid.addEventListener('pointerleave',  e => { if (!grabbed) { clearTimeout(grabTimer); grabTimer = null; } });
+/* pendant le déplacement au doigt, la page ne doit pas défiler */
+grid.addEventListener('touchmove', e => { if (grabbed) e.preventDefault(); }, { passive:false });
+/* un simple défilement annule l'appui maintenu */
+grid.addEventListener('touchmove', () => { if (!grabbed) { clearTimeout(grabTimer); grabTimer = null; } }, { passive:true });
+
+/* dépôt d'une image depuis le bureau (souris uniquement) */
 ['dragover','dragleave','drop'].forEach(t => {
   grid.addEventListener(t, e => {
     if (!editing) return;
     const c = e.target.closest('.card'); if (!c) return;
     const isFile = e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') > -1;
+    if (!isFile) return;
     e.preventDefault();
-    if (t === 'dragover') { c.classList.add(isFile ? 'drop' : 'over'); if (!isFile) e.dataTransfer.dropEffect = 'move'; }
-    else c.classList.remove('drop','over');
-    if (t === 'drop') {
-      if (isFile && e.dataTransfer.files.length && c.dataset.kind === 'device') {
-        pickerFor = c.dataset.id;
-        const dt = new DataTransfer(); dt.items.add(e.dataTransfer.files[0]);
-        picker.files = dt.files; picker.dispatchEvent(new Event('change'));
-      } else if (!isFile && dragId) placeBefore(dragId, c.dataset.id);
+    if (t === 'dragover') c.classList.add('drop'); else c.classList.remove('drop');
+    if (t === 'drop' && e.dataTransfer.files.length && c.dataset.kind === 'device') {
+      pickerFor = c.dataset.id;
+      const dt = new DataTransfer(); dt.items.add(e.dataTransfer.files[0]);
+      picker.files = dt.files; picker.dispatchEvent(new Event('change'));
     }
   });
 });
@@ -1451,7 +1846,9 @@ function openSheet(n){
   V('fTitle').value = n.title || '';
   V('fSub').value = n.sub || '';
   V('fNotes').value = n.notes || '';
-  V('fBoard').value = n.board || 'none';
+  const bs = V('fBoard'); bs.innerHTML = '';
+  boardsList().forEach(b => { const o = document.createElement('option'); o.value = b.id; o.textContent = b.name; bs.appendChild(o); });
+  bs.value = n.board || 'none';
   V('fStatus').value = n.status || 'want';
   V('fKind').value = n.kind || 'device';
   V('fSpan').value = String(Math.max(2, Math.min(6, n.span || 3)));
@@ -1464,11 +1861,14 @@ function openSheet(n){
   if (!gs.options.length) Object.keys(GRADS).forEach(k => { const o = document.createElement('option'); o.value = k; o.textContent = GRADS[k][0]; gs.appendChild(o); });
   gs.value = n.grad || 'systeme';
   V('fBudStyle').value = n.budStyle || 'sobre';
+  V('fSkin').value = n.skin || 'plat';
+  V('fUrl').value = n.url || '';
   V('fPrice').value = n.price ? String(n.price) : '';
   V('fColor').value = n.color || 'var(--gold)';
   V('fBlock').checked = !!n.showBlock;
   V('fBlockL').value = n.blockLabel || '';
   V('fBlockV').value = n.blockVal || '';
+  syncSheet();
   sheet.classList.add('open');
   document.body.classList.add('sheet-open');
 
@@ -1482,11 +1882,29 @@ function openSheet(n){
   }
 }
 
+/* n'affiche que les réglages qui concernent le type de carte choisi */
+function syncSheet(){
+  const k = V('fKind').value || 'device';
+  sheet.querySelectorAll('[data-for]').forEach(el => {
+    const f = el.getAttribute('data-for');
+    el.style.display = (f === '*' || f.split(' ').indexOf(k) > -1) ? '' : 'none';
+  });
+}
 function closeSheet(){
+  const id = activeId;
   sheet.classList.remove('open');
   document.body.classList.remove('sheet-open');
   activeId = null;
+  /* retour à l'état normal : la carte se remet à l'endroit et se déselectionne */
+  if (id) {
+    const c = grid.querySelector('.card[data-id="' + id + '"]');
+    if (c) { if (!allFlipped) c.classList.remove('flipped'); c.classList.remove('sel'); }
+  }
 }
+document.getElementById('veil').addEventListener('click', closeSheet);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && sheet.classList.contains('open')) closeSheet();
+});
 
 /* aperçu en direct : chaque changement se voit tout de suite sur la carte */
 let saveT;
@@ -1507,6 +1925,8 @@ function applySheet(){
   n.price = parseEuro(V('fPrice').value);
   n.grad = V('fGrad').value || n.grad;
   n.budStyle = V('fBudStyle').value || n.budStyle;
+  n.skin = V('fSkin').value || n.skin || 'plat';
+  n.url = V('fUrl').value.trim();
   n.color = V('fColor').value || n.color;
   n.showBlock = V('fBlock').checked;
   n.blockLabel = V('fBlockL').value; n.blockVal = V('fBlockV').value;
@@ -1516,8 +1936,11 @@ function applySheet(){
   if (c) { c.classList.add('sel'); if (n.kind === 'device') c.classList.add('flipped'); }
   clearTimeout(saveT); saveT = setTimeout(save, 500);
 }
-sheet.addEventListener('input',  e => { if (e.target.matches('input,select,textarea')) applySheet(); });
+let uiT;
+function applySheetSoon(){ clearTimeout(uiT); uiT = setTimeout(applySheet, 130); }
+sheet.addEventListener('input',  e => { if (e.target.matches('input,select,textarea')) applySheetSoon(); });
 sheet.addEventListener('change', e => { if (e.target.matches('input,select,textarea')) applySheet(); });
+sheet.addEventListener('change', e => { if (e.target.id === 'fKind') syncSheet(); });
 V('sheetX').addEventListener('click', closeSheet);
 V('fSave').addEventListener('click', () => { applySheet(); clearTimeout(saveT); save(); closeSheet(); });
 V('fDel').addEventListener('click', () => {
@@ -1527,6 +1950,95 @@ V('fDel').addEventListener('click', () => {
   save(); render();
   closeSheet();
 });
+
+
+/* =========================================================================
+   6. POINT D'ACCROCHE POUR LES CORRECTIFS
+   Tout bloc <script> collé à la fin de ce fichier peut passer par VB.
+   ========================================================================= */
+window.VB = {
+  version: '2026-08-23',
+
+  /* état vivant */
+  get dataset(){ return dataset; },  set dataset(v){ dataset = v; },
+  get board(){ return board; },      set board(v){ board = v; },
+  get editing(){ return editing; },
+
+  /* actions */
+  save:   r => save(r),
+  render: () => render(),
+  nodes:  () => nodes(),
+  migrate, newNode, el, ed, icon,
+
+  /* tables modifiables : VB.GRADS.monDegrade = ['Nom','linear-gradient(…)',0] */
+  GRADS, GLYPHS, FINISHES, SCALES, VIEWS,
+  FRONT,            /* VB.FRONT.monType = (face, n) => {…} */
+  BLANK,            /* gabarit d'une nouvelle carte de ce type */
+
+  /* éléments du DOM */
+  grid, sheet, menu,
+
+  /* ajoute une évolution qui ne s'applique qu'une fois, même sur une base déjà remplie */
+  addMigration(id, fn){
+    if (MIGRATIONS.some(m => m[0] === id)) return false;
+    MIGRATIONS.push([id, fn]);
+    if (runMigrations()) { save(false); render(); }
+    return true;
+  },
+
+  /* déclare un nouveau type de carte : rendu + entrée de menu + option du panneau */
+  addKind(name, label, renderer, blank){
+    FRONT[name] = renderer;
+    if (blank) BLANK[name] = blank;
+    if (!menu.querySelector('[data-kind="' + name + '"]')) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.dataset.kind = name; b.textContent = label;
+      menu.appendChild(b);
+    }
+    const sel = document.getElementById('fKind');
+    if (sel && !sel.querySelector('option[value="' + name + '"]')) {
+      const o = document.createElement('option'); o.value = name; o.textContent = label; sel.appendChild(o);
+    }
+    render();
+  },
+
+  /* ajoute un bouton dans la barre d'outils d'une carte */
+  addTool(kinds, act, label, handler){
+    VB._tools = VB._tools || [];
+    VB._tools.push({ kinds: [].concat(kinds), act, label, handler });
+    render();
+  },
+
+  /* ajoute un champ au panneau Détails */
+  addField(html){ const w = document.createElement('div'); w.innerHTML = html;
+    while (w.firstChild) sheet.insertBefore(w.firstChild, document.getElementById('fSave').parentNode); },
+
+  /* injecte du style */
+  css(text){ const st = document.createElement('style'); st.textContent = text; document.head.appendChild(st); },
+
+  /* point d'entrée d'un correctif : s'exécute même s'il est collé après coup */
+  _q: [], _on: false,
+  ready(fn){ if (VB._on) { try { fn(); } catch(e){ console.warn('Correctif en échec', e); } } else VB._q.push(fn); }
+};
+
+function vbGo(){
+  if (VB._on) return;
+  VB._on = true;
+  VB._q.splice(0).forEach(fn => { try { fn(); } catch(e){ console.warn('Correctif en échec', e); } });
+  document.dispatchEvent(new CustomEvent('vb:ready'));
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vbGo);
+else setTimeout(vbGo, 0);
+
+/* les boutons ajoutés par VB.addTool sont branchés ici */
+grid.addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]'); if (!btn || !VB._tools) return;
+  const t = VB._tools.find(x => x.act === btn.dataset.act); if (!t) return;
+  const card = btn.closest('.card'); if (!card) return;
+  const n = dataset.find(x => x.id === card.dataset.id); if (!n) return;
+  t.handler(n, card);
+});
+
 
 document.getElementById('undoBtn').addEventListener('click', undo);
 document.addEventListener('keydown', e => {
@@ -1543,119 +2055,13 @@ if (window.matchMedia('(hover: none)').matches || 'ontouchstart' in window || na
   document.body.dataset.touch = '1';
 load();
 </script>
+
+<!-- =======================================================================
+     ZONE DE CORRECTIFS
+     Colle ici, tout en bas, les blocs <script> ou <style> envoyés par Claude.
+     Ils s'ajoutent sans rien réécrire. Pour revenir en arrière, supprime
+     simplement le bloc concerné.
+     ======================================================================= -->
+
 </body>
 </html>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     CORRECTIF 2026-08-23-A — retournement iOS, cadrage d'image, barre
-     haute mobile, fluidité, icône Mac.  Supprime ce bloc pour l'annuler.
-     ═══════════════════════════════════════════════════════════════════ -->
-<style>
-/* 1 — Safari iOS n'applique pas backface-visibility quand la face porte
-   overflow + backdrop-filter : le recto restait visible, à l'envers.
-   On bascule l'opacité à mi-rotation, quand la carte est vue par la tranche. */
-.face{transition:opacity 0s linear .32s}
-.card:not(.flipped) .back{opacity:0;pointer-events:none;backdrop-filter:none;-webkit-backdrop-filter:none}
-.card.flipped .front{opacity:0;pointer-events:none}
-
-/* 2 — cadrage « Adapté » : l'image entière, posée sur un fond flou tiré d'elle-même */
-.imgbg{position:absolute;inset:-14%;z-index:0;background-size:cover;background-position:center;
-  filter:blur(28px) saturate(1.3) brightness(.6);opacity:.9;pointer-events:none}
-.card.adapt .front::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:linear-gradient(180deg,rgba(0,0,0,.04) 0%,rgba(0,0,0,.32) 68%,rgba(0,0,0,.8) 100%)}
-.card.adapt .glow{display:none}
-.card.adapt .vis{padding:6px 0 2px}
-.card.adapt .vis img{max-height:100%;max-width:90%;height:auto;width:auto;object-fit:contain;
-  filter:drop-shadow(0 16px 28px rgba(0,0,0,.6))}
-
-/* 3 — barre haute : encoche respectée, actions défilantes, menu jamais coupé */
-@supports (padding:env(safe-area-inset-top)){ .top{padding-top:calc(12px + env(safe-area-inset-top))} }
-@media (max-width:640px){
-  .top{flex-direction:column;align-items:stretch;gap:8px;
-       padding:calc(9px + env(safe-area-inset-top)) 12px 9px}
-  .brand{display:none}
-  .tabs{width:100%}
-  .tab{flex:1;padding:9px 6px;font-size:12.5px;text-align:center}
-  .acts{width:100%;display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;overflow-y:visible;
-        -webkit-overflow-scrolling:touch;scrollbar-width:none;padding:1px 0;justify-content:flex-start}
-  .acts::-webkit-scrollbar{display:none}
-  .btn{flex:0 0 auto}
-  .menu{position:fixed;left:auto;right:14px;top:auto;bottom:calc(88px + env(safe-area-inset-bottom));
-        min-width:220px;max-height:58vh;overflow-y:auto}
-}
-
-/* 4 — fluidité : moins de flou à composer sur petit écran */
-@media (max-width:900px){
-  .back{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-  .back::after{filter:blur(14px)}
-  .glow{filter:blur(18px)}
-}
-</style>
-
-<script>
-(function(){
-  /* A — écriture réseau regroupée : plus une requête Supabase par frappe */
-  var remoteSave = save, netT = null;
-  save = function(record){
-    if (record !== false) { try { recordUndo(); } catch(e){} }
-    try { saveLocal(); } catch(e){}
-    clearTimeout(netT);
-    netT = setTimeout(function(){ remoteSave(false); }, 600);
-  };
-
-  /* B — panneau Détails : on ne redessine plus la grille à chaque caractère */
-  var applyNow = applySheet, uiT = null;
-  applySheet = function(){ clearTimeout(uiT); uiT = setTimeout(applyNow, 130); };
-
-  /* C — troisième cadrage d'image */
-  var drawDevice = FRONT.device;
-  FRONT.device = function(f, n){
-    if (n.img && n.imgFit === 'adapt') {
-      var bg = document.createElement('div');
-      bg.className = 'imgbg';
-      bg.style.backgroundImage = 'url("' + n.img + '")';
-      f.appendChild(bg);
-    }
-    drawDevice(f, n);
-  };
-
-  var buildOne = buildCard;
-  buildCard = function(slot, i){
-    var c = buildOne(slot, i);
-    if (slot.n.img && slot.n.imgFit === 'adapt' && slot.n.kind === 'device') c.classList.add('adapt');
-    return c;
-  };
-
-  /* le bouton Cadrage enchaîne : petit → moyen → grand → adapté → couverture */
-  var CYCLE = [['contain',70],['contain',100],['contain',135],['adapt',100],['cover',100]];
-  grid.addEventListener('click', function(e){
-    var btn = e.target.closest('[data-act="fit"]'); if (!btn) return;
-    var card = btn.closest('.card'); if (!card) return;
-    var n = dataset.find(function(x){ return x.id === card.dataset.id; }); if (!n) return;
-    e.stopPropagation();
-    var cur = -1;
-    for (var k = 0; k < CYCLE.length; k++) {
-      if (CYCLE[k][0] === n.imgFit && (n.imgFit !== 'contain' || CYCLE[k][1] === (Number(n.imgScale) || 100))) { cur = k; break; }
-    }
-    var nx = CYCLE[(cur + 1) % CYCLE.length];
-    n.imgFit = nx[0]; n.imgScale = nx[1];
-    save(); render();
-  }, true);
-
-  /* la même option dans le panneau Détails */
-  var sel = document.getElementById('fFit');
-  if (sel && !sel.querySelector('option[value="adapt"]')) {
-    var o = document.createElement('option');
-    o.value = 'adapt'; o.textContent = 'Adapté — image entière, fond flou';
-    sel.insertBefore(o, sel.querySelector('option[value="cover"]'));
-  }
-
-  /* D — icône Mac : macOS choisit la plus grande taille disponible.
-     Dépose icon-512.png à côté de index.html pour supprimer le cadre blanc. */
-  if (!document.querySelector('link[rel="apple-touch-icon"][sizes="512x512"]')) {
-    var l = document.createElement('link');
-    l.rel = 'apple-touch-icon'; l.setAttribute('sizes','512x512'); l.href = 'icon-512.png';
-    document.head.appendChild(l);
-  }
-})();
-</script>
