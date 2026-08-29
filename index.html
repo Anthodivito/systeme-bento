@@ -53,6 +53,50 @@ body{min-height:100vh}
 .tab-add:hover{background:rgba(255,255,255,.2);color:#fff}
 [data-edit="on"] .tab-x,[data-edit="on"] .tab-add{display:inline-flex}
 .tab:focus-visible,.btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* ---------------- recherche ---------------- */
+.icon-btn{flex:0 0 auto;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(255,255,255,.07);border:1px solid var(--hair);color:var(--ink-2);cursor:pointer;
+  font-family:inherit;padding:0;transition:background .2s,color .2s,scale .12s}
+.icon-btn svg{width:17px;height:17px}
+.icon-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+.icon-btn:active{scale:.92}
+body.searching .icon-btn#searchBtn{background:var(--blue);border-color:transparent;color:#fff}
+.search-bar{flex:1 0 100%;display:none;flex-wrap:wrap;align-items:center;gap:9px;padding-top:10px}
+body.searching .search-bar{display:flex}
+.sb-field{flex:1 1 260px;min-width:0;display:flex;align-items:center;gap:9px;
+  background:rgba(0,0,0,.42);border:1px solid var(--hair-2);border-radius:12px;padding:0 11px;height:42px}
+.sb-field:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(41,151,255,.2)}
+.sb-ic{flex:0 0 auto;width:16px;height:16px;color:var(--ink-3)}
+/* 16 px minimum, sinon iOS zoome au moment où l'on touche le champ */
+#searchInput{flex:1;min-width:0;background:none;border:0;outline:none;color:#fff;font-family:inherit;font-size:16px}
+#searchInput::placeholder{color:var(--ink-3)}
+.sb-x{flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:0;background:rgba(255,255,255,.1);
+  color:var(--ink-2);font-size:17px;line-height:1;cursor:pointer;font-family:inherit;display:grid;place-items:center;padding:0}
+.sb-x:hover{background:rgba(255,255,255,.22);color:#fff}
+.sb-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-width:0}
+.sb-t{font-family:inherit;font-size:11.5px;font-weight:600;letter-spacing:-.01em;cursor:pointer;
+  border-radius:999px;padding:6px 12px;white-space:nowrap;transition:.18s;
+  color:color-mix(in srgb,var(--tc,var(--gold)) 88%,#fff);
+  background:color-mix(in srgb,var(--tc,var(--gold)) 15%,transparent);
+  border:1px solid color-mix(in srgb,var(--tc,var(--gold)) 32%,transparent)}
+.sb-t:hover{background:color-mix(in srgb,var(--tc,var(--gold)) 28%,transparent)}
+.sb-t.on{background:color-mix(in srgb,var(--tc,var(--gold)) 82%,transparent);color:#0A0A0C;border-color:transparent}
+.sb-count{flex:0 0 auto;font-size:11.5px;color:var(--ink-3);margin-left:auto;white-space:nowrap}
+body.searching .prog{display:none}
+/* d'où vient la carte trouvée : sans ça, on ne sait plus quel espace on regarde */
+.bd-badge{position:absolute;top:12px;left:14px;z-index:7;font-size:9.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:rgba(255,255,255,.72);background:rgba(8,8,10,.82);
+  border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:4px 9px;pointer-events:none;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+body.searching .card .move{display:none!important}
+/* les tags des cartes sans verso s'affichent discrètement sur le recto */
+.ftags{position:relative;z-index:4;display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.ftag{font-size:10px;font-weight:600;letter-spacing:.01em;border-radius:999px;padding:3px 8px;
+  color:color-mix(in srgb,var(--tc,var(--gold)) 88%,#fff);
+  background:color-mix(in srgb,var(--tc,var(--gold)) 14%,transparent);
+  border:1px solid color-mix(in srgb,var(--tc,var(--gold)) 30%,transparent)}
+.vide-recherche{grid-column:1/-1;padding:44px 20px;text-align:center;color:var(--ink-3);font-size:13.5px;line-height:1.6}
 .acts{display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:relative}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--ink-2)}
 .legend span{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
@@ -101,7 +145,7 @@ body{min-height:100vh}
 .card.target .front{outline:2px dashed color-mix(in srgb, var(--blue) 75%, transparent);outline-offset:-3px}
 .card.target::after{content:"";position:absolute;inset:-4px;border-radius:26px;pointer-events:none;
   background:radial-gradient(60% 60% at 50% 50%,rgba(41,151,255,.20),transparent 72%)}
-body.dragging-card{cursor:grabbing;-webkit-user-select:none;user-select:none;overflow:hidden}
+body.dragging-card{cursor:grabbing;-webkit-user-select:none;user-select:none}
 body.dragging-card .card:not(.grabbed){opacity:.62;scale:.985}
 body.dragging-card .tools,body.dragging-card .move,body.dragging-card .flip{opacity:0;pointer-events:none}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
@@ -440,6 +484,11 @@ body.sans-appareil #progBtn{display:none}
 .menu.open{display:block}
 .menu button{display:block;width:100%;text-align:left;font-family:inherit;font-size:12.5px;color:var(--ink);background:none;border:0;border-radius:9px;padding:10px 12px;cursor:pointer}
 .menu button:hover{background:rgba(255,255,255,.08)}
+.menu h4{margin:8px 12px 5px;font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-3)}
+.menu h4:first-child{margin-top:4px}
+.menu h4+button{margin-top:0}
+.menu button[data-tpl]{font-weight:500}
 
 /* --- panneau détails --- */
 /* Ordinateur : panneau latéral. Téléphone : feuille qui monte du bas, comme dans iOS.
@@ -489,6 +538,42 @@ body.sheet-open .veil{opacity:1;pointer-events:auto}
 .f.row label{margin:0}
 .f.row input[type=checkbox]{flex:0 0 auto;cursor:pointer;accent-color:var(--blue);
   width:23px;height:23px;margin:0}
+.ai{position:fixed;inset:0;z-index:220;display:none;align-items:center;justify-content:center;padding:20px;
+  background:rgba(0,0,0,.62);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.ai.open{display:flex}
+.ai-box{width:min(460px,100%);max-height:min(86vh,760px);display:flex;flex-direction:column;
+  background:#131418;border:1px solid rgba(255,255,255,.12);border-radius:22px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.7);animation:aiUp .34s cubic-bezier(.32,.72,0,1) both}
+@keyframes aiUp{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+.ai-head{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:16px 14px 14px 20px;
+  border-bottom:1px solid var(--hair)}
+.ai-ttl{flex:1;min-width:0}
+.ai-ttl b{display:block;font-size:16px;font-weight:600;letter-spacing:-.02em;margin-top:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:18px 20px 6px}
+.ai-foot{flex:0 0 auto;display:flex;flex-direction:column;gap:9px;padding:13px 20px calc(14px + var(--sab));
+  border-top:1px solid var(--hair)}
+.ai-hint{margin:7px 0 0;font-size:11.5px;color:var(--ink-3);line-height:1.5}
+.ai-msg{font-size:12.5px;line-height:1.55;color:var(--ink-2);margin:4px 0 12px;min-height:0}
+.ai-msg.err{color:#FF8A80}
+.ai-out{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.ai-i{display:flex;align-items:flex-start;gap:11px;background:rgba(0,0,0,.28);border:1px solid var(--hair);
+  border-radius:12px;padding:12px 13px;cursor:pointer;transition:border-color .18s,background .18s}
+.ai-i:hover{border-color:var(--hair-2);background:rgba(255,255,255,.04)}
+.ai-i input{flex:0 0 auto;width:21px;height:21px;margin:0;accent-color:var(--blue);cursor:pointer}
+.ai-i span{flex:1;min-width:0;font-size:13.5px;line-height:1.45}
+.alt-btn{width:100%;background:rgba(255,255,255,.09);color:var(--ink);border:1px solid var(--hair-2);
+  padding:13px;border-radius:12px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;
+  transition:background .18s,scale .12s}
+.alt-btn:hover{background:rgba(255,255,255,.17)}
+.alt-btn:active{scale:.985}
+.ok-btn:disabled,.alt-btn:disabled{opacity:.45;cursor:default}
+@media (max-width:820px){
+  .ai{align-items:flex-end;padding:0}
+  .ai-box{width:100%;max-width:none;max-height:88vh;border-radius:24px 24px 0 0;
+    animation:aiMonte .38s cubic-bezier(.32,.72,0,1) both}
+  @keyframes aiMonte{from{transform:translateY(100%)}to{transform:none}}
+}
 .items{display:flex;flex-direction:column;gap:10px}
 .it{background:rgba(0,0,0,.26);border:1px solid var(--hair);border-radius:13px;padding:11px 12px;
   display:flex;flex-direction:column;gap:7px}
@@ -591,6 +676,16 @@ body.sheet-open .veil{opacity:1;pointer-events:auto}
   .grid{gap:11px}
   .prog{padding:13px 16px;gap:12px}
   .ports{flex-wrap:wrap}
+  /* les tags défilent sur une seule ligne : sur deux, la barre haute mange l'écran */
+  .search-bar{padding-top:9px;gap:8px}
+  .sb-field{flex:1 0 100%;height:44px}
+  .sb-tags{flex:1 1 auto;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:1px 0;min-width:0;
+    -webkit-overflow-scrolling:touch;
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 20px),transparent 100%);
+            mask-image:linear-gradient(90deg,#000 calc(100% - 20px),transparent 100%)}
+  .sb-tags::-webkit-scrollbar{display:none}
+  .sb-t{flex:0 0 auto}
+  .sb-count{flex:0 0 auto;margin-left:0;font-size:11px}
 
   /* budget : en colonne, une ligne par appareil, prix aligné à droite */
   .k-budget .front{flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:14px;justify-content:flex-start}
@@ -712,6 +807,18 @@ body.sheet-open .veil{opacity:1;pointer-events:auto}
 <div class="top">
   <div class="brand"><b>Vision Board</b><small>Studio Anthony Carrel</small></div>
   <div class="tabs" id="tabs"></div>
+  <button class="icon-btn" id="searchBtn" type="button" aria-label="Rechercher" title="Rechercher (⌘F)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+  </button>
+  <div class="search-bar" id="searchBar">
+    <div class="sb-field">
+      <svg class="sb-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+      <input type="text" id="searchInput" placeholder="Chercher un mot, au recto comme au verso…" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="sb-x" id="searchClear" type="button" aria-label="Effacer">&times;</button>
+    </div>
+    <div class="sb-tags" id="searchTags"></div>
+    <div class="sb-count" id="searchCount"></div>
+  </div>
   <div class="acts">
     <div class="legend"><span><i class="ldot own"></i>Acquis</span><span><i class="ldot want"></i>Visé</span></div>
     <button class="btn" id="progBtn" type="button" aria-label="Jauge"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h7M3 12h13M3 16h9"/></svg><b class="lb">Masquer la jauge</b><b class="lbs">Jauge</b></button>
@@ -722,6 +829,14 @@ body.sheet-open .veil{opacity:1;pointer-events:auto}
     <button class="btn" id="editBtn" type="button" aria-label="Modifier"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5 4 20Z"/><path d="M14.5 6.5 17.5 9.5"/></svg><b class="lb">Modifier</b><b class="lbs">Modifier</b></button>
     <div class="sync" id="sync">…</div>
     <div class="menu" id="menu">
+      <h4>Modèles prêts à l'emploi</h4>
+      <button type="button" data-tpl="materiel">Matériel — un appareil à acquérir</button>
+      <button type="button" data-tpl="projet">Projet — un objectif avec ses étapes</button>
+      <button type="button" data-tpl="routine">Routine — des habitudes à cocher</button>
+      <button type="button" data-tpl="citation">Citation — une phrase qui te porte</button>
+      <button type="button" data-tpl="outil">Outil — un raccourci unique</button>
+      <button type="button" data-tpl="outils">Boîte à outils — une liste de raccourcis</button>
+      <h4>Cartes vierges</h4>
       <button type="button" data-kind="device">Carte objectif (avec verso)</button>
       <button type="button" data-kind="note">Carte texte</button>
       <button type="button" data-kind="stat">Compteur</button>
@@ -733,6 +848,8 @@ body.sheet-open .veil{opacity:1;pointer-events:auto}
       <button type="button" data-kind="budget">Budget des appareils visés</button>
       <button type="button" data-kind="link">Raccourci vers un outil</button>
       <button type="button" data-kind="liste">Liste de raccourcis</button>
+      <h4>Assistant</h4>
+      <button type="button" data-reglage="ai">Adresse de la fonction…</button>
     </div>
   </div>
 </div>
@@ -784,6 +901,8 @@ body.sheet-open .veil{opacity:1;pointer-events:auto}
     <option value="aurore">Aurore — halo lumineux</option>
   </select></div>
   <div data-for="link" class="f"><label>Lien du raccourci (carte « Raccourci »)</label><input type="text" id="fUrl" placeholder="https://notion.so/…" inputmode="url"></div>
+  <div data-for="*" class="f"><label>Tags — séparés par une virgule</label>
+    <input type="text" id="fTags" placeholder="Urgent, Achats, Long terme" autocapitalize="words"></div>
   <div data-for="liste" class="f"><label>Lignes de la liste</label>
     <div id="fItems" class="items"></div>
     <button type="button" id="fItemAdd" class="it-add">+ Ajouter une ligne</button>
@@ -832,6 +951,35 @@ body.sheet-open .veil{opacity:1;pointer-events:auto}
   <div class="sheet-foot">
     <button id="fSave" class="ok-btn" type="button">Terminé</button>
     <button id="fDel" class="danger-btn" type="button">Supprimer définitivement</button>
+  </div>
+</div>
+
+<div class="ai" id="ai" role="dialog" aria-modal="true" aria-label="Plan d'action">
+  <div class="ai-box">
+    <div class="ai-head">
+      <div class="ai-ttl"><span class="eyebrow">Plan d'action</span><b id="aiTtl">Carte</b></div>
+      <button class="icon-btn" id="aiCog" type="button" aria-label="Réglages de l'assistant" title="Réglages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6M18.4 18.4l-1.6-1.6M7.2 7.2 5.6 5.6"/></svg>
+      </button>
+      <button class="sheet-x" id="aiX" type="button" aria-label="Fermer">&times;</button>
+    </div>
+    <div class="ai-body">
+      <div class="f" id="aiCfg" hidden>
+        <label>Adresse de la fonction</label>
+        <input type="text" id="aiUrl" placeholder="https://…supabase.co/functions/v1/plan-action" inputmode="url" autocapitalize="off" autocorrect="off">
+        <p class="ai-hint">À saisir une seule fois : elle est enregistrée avec tes données et te suit sur tous tes appareils.</p>
+      </div>
+      <div class="f" id="aiAsk">
+        <label>Une précision ? (facultatif)</label>
+        <textarea id="aiPrecision" placeholder="En tenant compte de mon budget, sur trois mois…"></textarea>
+      </div>
+      <div class="ai-out" id="aiOut"></div>
+      <div class="ai-msg" id="aiMsg"></div>
+    </div>
+    <div class="ai-foot">
+      <button class="ok-btn" id="aiGo" type="button">Demander trois étapes</button>
+      <button class="alt-btn" id="aiAdd" type="button" hidden>Ajouter les étapes retenues</button>
+    </div>
   </div>
 </div>
 
@@ -1278,6 +1426,10 @@ function fillRow(row, total){
 }
 
 /* découpe la liste en blocs pleins : chaque rangée fait exactement C colonnes */
+/* une carte ne descend jamais sous deux colonnes : à une seule, le titre
+   s'affiche une lettre par ligne. Mieux vaut clore la rangée et laisser
+   fillRow élargir les cartes déjà placées. */
+const MINW = 2;
 function packLayout(list, C){
   const out = [];
   let i = 0;
@@ -1316,7 +1468,10 @@ function packLayout(list, C){
         let sum = 0;
         while (i < list.length && sum < rest && !list[i].tall) {
           const m = list[i];
-          const mw = Math.min(wantW(m, C), rest - sum);
+          const reste = rest - sum;
+          if (reste < Math.min(MINW, rest)) break;
+          const mw = Math.max(Math.min(wantW(m, C), reste), Math.min(MINW, reste));
+          if (mw > reste) break;
           rows[r].push({ n: m, w: mw, tall: false });
           sum += mw; i++;
         }
@@ -1330,7 +1485,10 @@ function packLayout(list, C){
     while (i < list.length && sum < C && !list[i].tall) {
       const m = list[i];
       if (sum > 0 && wantW(m, C) >= C) break;        /* pleine largeur : nouvelle rangée */
-      const mw = Math.min(wantW(m, C), C - sum);
+      const reste = C - sum;
+      if (sum > 0 && reste < Math.min(MINW, C)) break;
+      const mw = Math.max(Math.min(wantW(m, C), reste), Math.min(MINW, reste));
+      if (mw > reste) break;
       row.push({ n: m, w: mw, tall: false });
       sum += mw; i++;
     }
@@ -1351,7 +1509,47 @@ function icon(g){
   u.setAttribute('href', g || '#d-spark');
   s.appendChild(u); return s;
 }
-function nodes(){ return dataset.filter(n => n.id !== '__meta__' && n.board === board); }
+/* ---------------------------------------------------------------------------
+   Recherche : elle traverse TOUS les espaces d'un coup, recto et verso, et
+   n'importe quel type de carte. Les tags s'ajoutent au filtre, ils ne le
+   remplacent pas — un tag seul suffit, un mot seul aussi, les deux se croisent.
+   --------------------------------------------------------------------------- */
+let query = '', tagFilter = [];
+function searching(){ return !!query.trim() || tagFilter.length > 0; }
+
+/* « visé » doit se trouver en tapant « vise » : on retire les accents des deux côtés */
+const sansAccent = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+function nodeText(n){
+  const p = [n.title, n.sub, n.notes, n.unit, n.eyebrow, n.blockLabel, n.blockVal, n.url];
+  (n.bullets || []).forEach(b => p.push(b));
+  (n.tags || []).forEach(t => p.push(t && t.text));
+  (n.items || []).forEach(i => p.push(i.label, i.sub, i.url));
+  (n.chips || []).forEach(c => p.push(c && c.label));
+  (n.ports || []).forEach(x => p.push(x));
+  p.push(KIND_LABEL[n.kind]);
+  return sansAccent(p.filter(Boolean).join(' '));
+}
+
+function matches(n){
+  if (tagFilter.length) {
+    const t = (n.tags || []).map(x => sansAccent(x && x.text));
+    if (!tagFilter.every(f => t.indexOf(f) > -1)) return false;
+  }
+  const q = sansAccent(query).trim();
+  if (!q) return true;
+  const hay = nodeText(n);
+  return q.split(/\s+/).every(mot => hay.indexOf(mot) > -1);
+}
+
+function nodes(){
+  const tout = dataset.filter(n => n.id !== '__meta__');
+  return searching() ? tout.filter(matches) : tout.filter(n => n.board === board);
+}
+function nomEspace(id){
+  const b = boardsList().find(x => x.id === id);
+  return b ? b.name : 'À trier';
+}
 function isDev(n){ return n.kind === 'device'; }
 
 const FRONT = {
@@ -1585,6 +1783,8 @@ function buildBack(n){
   const at = el('button','mini','+ tag'); at.type='button'; at.dataset.act='tag-add'; tags.appendChild(at);
   foot.appendChild(tags);
   const ab = el('button','mini','+ étape'); ab.type='button'; ab.dataset.act='bul-add'; foot.appendChild(ab);
+  const ia = el('button','mini','Plan d’action'); ia.type='button'; ia.dataset.act='ai';
+  ia.title = 'Demander trois prochaines étapes'; foot.appendChild(ia);
   const pr = el('span','price' + (n.price ? '' : ' vide'), n.price ? euro(n.price) : '0 €');
   pr.contentEditable = 'plaintext-only'; pr.dataset.field = 'price';
   pr.title = 'Prix de l’appareil'; foot.appendChild(pr);
@@ -1610,6 +1810,7 @@ function buildCard(slot, i){
   card.style.setProperty('--iht', Math.round(290 * sc / 100) + 'px');
   if (kind === 'device') card.dataset.status = n.status;
   if (kind === 'budget') card.dataset.style = n.budStyle || 'sobre';
+  if (searching()) card.appendChild(el('div','bd-badge', nomEspace(n.board)));
 
   const inner = el('div','inner');
   const front = el('div','face front');
@@ -1621,6 +1822,17 @@ function buildCard(slot, i){
   }
   if (kind !== 'os') front.appendChild(el('div','glow'));
   FRONT[kind](front, n);
+  /* les cartes à verso montrent leurs tags au dos ; les autres n'ont que le recto */
+  if (kind !== 'device' && (n.tags || []).length) {
+    const ft = el('div','ftags');
+    n.tags.forEach(t => {
+      if (!t || !String(t.text || '').trim()) return;
+      const x = el('span','ftag', t.text);
+      x.style.setProperty('--tc', t.color || 'var(--gold)');
+      ft.appendChild(x);
+    });
+    if (ft.children.length) front.appendChild(ft);
+  }
   inner.appendChild(front);
   if (kind === 'device') inner.appendChild(buildBack(n));
   card.appendChild(inner);
@@ -1669,9 +1881,13 @@ function render(){
 
   const list = nodes();
   if (!list.length) {
-    grid.appendChild(el('div','empty', board === 'none'
-      ? 'Rien à trier. Les cartes retirées d’un board atterrissent ici.'
-      : 'Aucune carte. Appuie sur « Modifier » puis « + Ajouter ».'));
+    grid.appendChild(el('div', searching() ? 'vide-recherche' : 'empty',
+      searching()
+        ? 'Rien ne correspond' + (query.trim() ? ' à « ' + query.trim() + ' »' : '') +
+          (tagFilter.length ? ' avec ' + (tagFilter.length > 1 ? 'ces tags' : 'ce tag') : '') + '.'
+        : (board === 'none'
+            ? 'Rien à trier. Les cartes retirées d’un board atterrissent ici.'
+            : 'Aucune carte. Appuie sur « Modifier » puis « + Ajouter ».')));
   } else {
     packLayout(list, C).forEach((slot, i) => grid.appendChild(buildCard(slot, i)));
   }
@@ -1683,7 +1899,8 @@ function render(){
   for (let k = 0; k < devs.length; k++) bar.appendChild(el('i','seg' + (k < own ? ' on' : (k === own ? ' next' : ''))));
   document.getElementById('progTxt').textContent = own + ' sur ' + devs.length;
   document.getElementById('progSub').textContent = board === 'hightech' ? "de l'écosystème visé" : 'acquis';
-  document.body.classList.toggle('sans-appareil', !devs.length);
+  document.body.classList.toggle('sans-appareil', !devs.length || searching());
+  majCompteurRecherche(list);
 
   if (selId) { const c = grid.querySelector('.card[data-id="' + selId + '"]'); if (c) c.classList.add('sel'); }
   if (allFlipped) grid.querySelectorAll('.k-device').forEach(c => c.classList.add('flipped'));
@@ -1722,6 +1939,77 @@ function toggleFit(){
   applyFit();
 }
 document.getElementById('fitBtn').addEventListener('click', toggleFit);
+
+/* ---------------------------------------------------------------------------
+   Barre de recherche
+   --------------------------------------------------------------------------- */
+const sBar = document.getElementById('searchBar');
+const sInput = document.getElementById('searchInput');
+
+function tousLesTags(){
+  const m = new Map();
+  dataset.forEach(n => (n.tags || []).forEach(t => {
+    if (!t || !String(t.text || '').trim()) return;
+    const cle = sansAccent(t.text);
+    if (!m.has(cle)) m.set(cle, { texte: String(t.text).trim(), color: t.color || 'var(--gold)', n: 0 });
+    m.get(cle).n++;
+  }));
+  return Array.from(m.entries()).sort((a, b) => b[1].n - a[1].n || a[1].texte.localeCompare(b[1].texte));
+}
+
+function renderSearchTags(){
+  const box = document.getElementById('searchTags');
+  box.innerHTML = '';
+  tousLesTags().forEach(([cle, t]) => {
+    const b = el('button', 'sb-t' + (tagFilter.indexOf(cle) > -1 ? ' on' : ''), t.texte);
+    b.type = 'button'; b.dataset.tag = cle;
+    b.style.setProperty('--tc', t.color);
+    box.appendChild(b);
+  });
+}
+
+function majCompteurRecherche(list){
+  const el2 = document.getElementById('searchCount');
+  if (!el2) return;
+  if (!searching()) { el2.textContent = ''; return; }
+  const par = {};
+  list.forEach(n => { const b = nomEspace(n.board); par[b] = (par[b] || 0) + 1; });
+  const detail = Object.keys(par).map(k => k + ' ' + par[k]).join(' · ');
+  el2.textContent = list.length + (list.length > 1 ? ' cartes' : ' carte') + (detail ? ' — ' + detail : '');
+}
+
+function ouvrirRecherche(ouvrir){
+  document.body.classList.toggle('searching', ouvrir);
+  if (ouvrir) {
+    renderSearchTags();
+    setTimeout(() => sInput.focus(), 60);
+  } else {
+    query = ''; tagFilter = []; sInput.value = '';
+    render();
+  }
+}
+
+document.getElementById('searchBtn').addEventListener('click', () => {
+  ouvrirRecherche(!document.body.classList.contains('searching'));
+});
+document.getElementById('searchClear').addEventListener('click', () => {
+  query = ''; tagFilter = []; sInput.value = '';
+  renderSearchTags(); render(); sInput.focus();
+});
+let sT;
+sInput.addEventListener('input', () => {
+  query = sInput.value;
+  clearTimeout(sT); sT = setTimeout(() => render(), 130);
+});
+sInput.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.preventDefault(); ouvrirRecherche(false); }
+});
+document.getElementById('searchTags').addEventListener('click', e => {
+  const b = e.target.closest('[data-tag]'); if (!b) return;
+  const c = b.dataset.tag, i = tagFilter.indexOf(c);
+  if (i > -1) tagFilter.splice(i, 1); else tagFilter.push(c);
+  renderSearchTags(); render();
+});
 
 let progHidden = false;
 try { progHidden = localStorage.getItem('vb_noprog') === '1'; } catch(e){}
@@ -1889,6 +2177,7 @@ grid.addEventListener('click', e => {
     it.glyph = GLYPHS[(GLYPHS.indexOf(it.glyph) + 1) % GLYPHS.length];
     save(); render();
   }
+  else if (act === 'ai') { ouvrirAssistant(n, false); }
   else if (act === 'tag-add') { n.tags.push({ text:'Nouveau tag', color: n.color || 'var(--gold)' }); save(); render(); }
 
   /* --- sous-éléments : tuiles, rangée, pastilles --- */
@@ -2014,6 +2303,34 @@ picker.addEventListener('change', function(){
 });
 
 /* ajout d'une carte */
+/* ---------------------------------------------------------------------------
+   Changer le type d'une carte ne doit rien perdre : on ajoute ce que le nouveau
+   type réclame, on ne touche pas au reste. Repasser au type d'origine restitue
+   donc tout ce qui y était.
+   --------------------------------------------------------------------------- */
+const TINTS_CHIP = ['radial-gradient(120% 130% at 30% 0%,#1B4E7A,#0C2438 60%,#08131E)',
+                    'radial-gradient(120% 130% at 30% 0%,#5B2A8A,#2A1240 60%,#150920)',
+                    'radial-gradient(120% 130% at 30% 0%,#8A3B12,#3A1A0B 60%,#1B0C06)'];
+const KIND_NEEDS = {
+  chips (n){ if (!Array.isArray(n.chips) || !n.chips.length)
+               n.chips = ['Un','Deux','Trois'].map((l,i)=>({label:l, glyph:'#d-spark', tint:TINTS_CHIP[i]})); },
+  ports (n){ if (!Array.isArray(n.ports) || !n.ports.length) n.ports = ['Un','Deux','Trois','Quatre']; },
+  finish(n){ if (!Array.isArray(n.swatches) || !n.swatches.length)
+               n.swatches = ['linear-gradient(145deg,#F2F2F4,#B9BAC0 55%,#8E8F96)','linear-gradient(145deg,#3A3B40,#151619)'];
+             if (!n.eyebrow) n.eyebrow = 'Finition'; },
+  liste (n){ if (!Array.isArray(n.items) || !n.items.length)
+               n.items = [{label:'Première ligne', sub:'', url:'', glyph:'#d-spark', color:'var(--cockpit)'}]; },
+  stat  (n){ if (!n.unit) n.unit = 'unités'; if (!(n.title||'').trim()) n.title = '0'; },
+  word  (n){ if (!(n.title||'').trim()) n.title = 'MOT'; },
+  os    (n){ if (!(n.title||'').trim()) n.title = 'Bandeau'; },
+  note  (n){ if (!(n.notes||'').trim()) n.notes = 'Écris ici.'; }
+};
+function ensureKind(n){
+  const f = KIND_NEEDS[n.kind];
+  if (f) { try { f(n); } catch(e){ console.warn('Conversion incomplète', e); } }
+  return n;
+}
+
 const BLANK = {
   device:{title:'Nouvelle carte', sub:'Une précision', glyph:'#d-spark'},
   note  :{title:'Nouvelle note', sub:'', notes:'Écris ici.'},
@@ -2035,6 +2352,49 @@ const BLANK = {
             {label:'Retouche',  sub:'À relier — ouvre Détails',    url:'', glyph:'#d-camera', color:'var(--moteur)'},
             {label:'Devis',     sub:'À relier — ouvre Détails',    url:'', glyph:'#d-book',   color:'var(--gold)'}]}
 };
+/* ---------------------------------------------------------------------------
+   Modèles : des cartes déjà remplies, dans l'esprit de celles que tu utilises.
+   Rien n'y est figé — tout se modifie ensuite comme n'importe quelle carte.
+   --------------------------------------------------------------------------- */
+const TEMPLATES = {
+  materiel: { kind:'device', span:3, status:'want', glyph:'#d-phone', color:'var(--objectifs)',
+    title:'Nouvel appareil', sub:'À acquérir', price:0,
+    notes:"Pourquoi cet appareil, ce qu'il remplace, ce qu'il débloque.",
+    bullets:['Comparer les modèles','Fixer le budget','Choisir le moment'],
+    tags:[{text:'Achat', color:'var(--objectifs)'}],
+    showBlock:true, blockLabel:'ÉCHÉANCE', blockVal:'À définir' },
+
+  projet: { kind:'device', span:5, tall:true, status:'want', glyph:'#d-peak', color:'var(--moteur)',
+    skin:'aurore', grad:'crepuscule',
+    title:'Nouveau projet', sub:'Où je veux arriver',
+    notes:"Écris la vision au présent, comme si c'était déjà là.",
+    bullets:['Nommer le cap','Choisir la première étape','Fixer une date'],
+    tags:[{text:'Projet', color:'var(--moteur)'}],
+    showBlock:true, blockLabel:'ÉCHÉANCE', blockVal:'À définir' },
+
+  routine: { kind:'device', span:3, status:'own', glyph:'#d-run', color:'var(--source)',
+    title:'Ma routine', sub:'Ce que je tiens chaque semaine',
+    notes:'Coche au fur et à mesure. Rien ne se perd, tout se réinitialise à la main.',
+    bullets:['Première habitude','Deuxième habitude','Troisième habitude'],
+    tags:[{text:'Routine', color:'var(--source)'}] },
+
+  citation: { kind:'note', span:4, glyph:'#d-spark', color:'var(--gold)',
+    skin:'verre', grad:'or',
+    title:'', sub:'',
+    notes:'« La phrase que tu veux relire les jours où tu doutes. »' },
+
+  outil: { kind:'link', span:3, glyph:'#d-globe', color:'var(--cockpit)',
+    skin:'aurore', grad:'ocean',
+    title:'Nouvel outil', sub:'À relier — Modifier → Détails', url:'' },
+
+  outils: { kind:'liste', span:4, tall:true, glyph:'#d-bolt', color:'var(--source)',
+    skin:'aurore', grad:'aurore',
+    title:'Boîte à outils', sub:'Un geste, l’outil s’ouvre',
+    items:[{label:'Premier outil', sub:'', url:'', glyph:'#d-globe',  color:'var(--objectifs)'},
+           {label:'Deuxième outil', sub:'', url:'', glyph:'#d-camera', color:'var(--moteur)'},
+           {label:'Troisième outil', sub:'', url:'', glyph:'#d-book',  color:'var(--gold)'}] }
+};
+
 document.getElementById('addBtn').addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
 document.getElementById('fab').addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
 document.addEventListener('click', e => {
@@ -2042,11 +2402,29 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.card')) grid.querySelectorAll('.card.sel').forEach(c => c.classList.remove('sel'));
 });
 menu.addEventListener('click', e => {
-  const b = e.target.closest('[data-kind]'); if (!b) return;
-  const k = b.dataset.kind;
-  dataset.push(newNode(Object.assign({ key: Math.round(performance.now()*1000), board: board, kind: k, status:'want', span:3 }, BLANK[k])));
+  if (e.target.closest('[data-reglage="ai"]')) { menu.classList.remove('open'); ouvrirAssistant(null, true); return; }
+  const b = e.target.closest('[data-kind],[data-tpl]'); if (!b) return;
+  const base = { key: Math.round(performance.now()*1000), board: board, status:'want', span:3 };
+  let src;
+  if (b.dataset.tpl) {
+    src = TEMPLATES[b.dataset.tpl];
+    if (!src) return;
+    src = JSON.parse(JSON.stringify(src));          /* copie : le modèle reste intact */
+  } else {
+    const k = b.dataset.kind;
+    src = Object.assign({ kind: k }, BLANK[k]);
+  }
+  const n = newNode(Object.assign(base, src));
+  ensureKind(n);
+  dataset.push(n);
   menu.classList.remove('open');
   save(); render();
+  /* la carte neuve se signale : on la sélectionne et on l'amène sous les yeux */
+  requestAnimationFrame(() => {
+    const c = grid.querySelector('.card[data-id="' + n.id + '"]');
+    if (c) { grid.querySelectorAll('.card.sel').forEach(x => x.classList.remove('sel'));
+             c.classList.add('sel'); c.scrollIntoView({ behavior:'smooth', block:'center' }); }
+  });
 });
 
 /* ---------------------------------------------------------------------------
@@ -2066,29 +2444,51 @@ function endGrab(commit){
   if (grabTarget) grabTarget.classList.remove('target');
   document.body.classList.remove('dragging-card');
   grabbed = null; grabTarget = null;
-  if (scrollLock !== null) { window.scrollTo(0, scrollLock); scrollLock = null; }
+  if (bordTimer) { cancelAnimationFrame(bordTimer); bordTimer = null; }
+  scrollLock = null;
   if (commit && to && to !== from) placeBefore(from, to);
 }
 
 grid.addEventListener('pointerdown', e => {
-  if (!editing || e.button > 0) return;
+  if (!editing || e.button > 0 || searching()) return;
   const card = e.target.closest('.card'); if (!card) return;
-  if (e.target.closest('[data-act],[contenteditable],button,input,select,textarea')) return;
+  if (e.target.closest('[data-act],button,input,select,textarea')) return;
+  /* Un appui long sur un libellé doit soulever la carte : sinon, sur les cartes
+     dont presque toute la surface est du texte modifiable, le déplacement semble
+     ne pas marcher. Un appui bref continue de poser le curseur, et si le champ
+     est déjà en cours d'édition on le laisse tranquille pour sélectionner. */
+  const edt = e.target.closest('[contenteditable]');
+  if (edt && document.activeElement === edt) return;
   const sx = e.clientX, sy = e.clientY;
   pressX = sx; pressY = sy;
   grabTimer = setTimeout(() => {
     grabbed = card; grabDX = sx; grabDY = sy;
     card.classList.add('grabbed');
     document.body.classList.add('dragging-card');
-    /* on fige le défilement de la page le temps du déplacement */
-    scrollLock = window.scrollY;
     try { card.setPointerCapture(e.pointerId); } catch(_){}
     if (navigator.vibrate) navigator.vibrate([6, 20, 10]);
   }, 300);
 });
 
+let bordTimer = null;
+function defilementBord(y){
+  const H = window.innerHeight, marge = 110;
+  let d = 0;
+  if (y < marge) d = -Math.ceil((marge - y) / 6);
+  else if (y > H - marge - 60) d = Math.ceil((y - (H - marge - 60)) / 6);
+  if (!d) { if (bordTimer) { cancelAnimationFrame(bordTimer); bordTimer = null; } return; }
+  if (bordTimer) return;
+  const pas = () => {
+    if (!grabbed) { bordTimer = null; return; }
+    window.scrollBy(0, d);
+    bordTimer = requestAnimationFrame(pas);
+  };
+  bordTimer = requestAnimationFrame(pas);
+}
+
 function moveGrab(x, y){
   if (!grabbed) return;
+  defilementBord(y);
   grabbed.style.transform = 'translate(' + (x - grabDX) + 'px,' + (y - grabDY) + 'px)';
   grabbed.style.pointerEvents = 'none';
   const under = document.elementFromPoint(x, y);
@@ -2165,6 +2565,7 @@ function openSheet(n){
   V('fBlock').checked = !!n.showBlock;
   V('fBlockL').value = n.blockLabel || '';
   V('fBlockV').value = n.blockVal || '';
+  V('fTags').value = (n.tags || []).map(t => t && t.text).filter(Boolean).join(', ');
   renderItems(n);
   syncSheet();
   V('sheetKind').textContent = KIND_LABEL[n.kind] || 'Carte';
@@ -2192,6 +2593,139 @@ const KIND_LABEL = {
 };
 function isPhone(){ return window.matchMedia('(max-width:820px)').matches; }
 let sheetScrollY = 0;
+
+/* ---------------------------------------------------------------------------
+   Assistant : il demande trois prochaines actions à partir du contenu de la
+   carte. La clé API ne vit pas ici mais dans une fonction Supabase — voir le
+   mode d'emploi joint. Sans adresse renseignée, le bouton explique quoi faire.
+   --------------------------------------------------------------------------- */
+const aiBox = document.getElementById('ai');
+let aiNode = null, aiProps = [];
+
+function aiUrl(){ return String(metaNode().aiUrl || '').trim(); }
+
+function aiMsg(t, err){
+  const m = document.getElementById('aiMsg');
+  m.textContent = t || '';
+  m.classList.toggle('err', !!err);
+}
+
+function ouvrirAssistant(n, reglagesSeuls){
+  aiNode = n; aiProps = [];
+  const sansUrl = !aiUrl();
+  document.getElementById('aiTtl').textContent = n ? ((n.title || '').trim() || 'Sans titre') : 'Réglages';
+  document.getElementById('aiCfg').hidden = !(sansUrl || reglagesSeuls);
+  document.getElementById('aiUrl').value = metaNode().aiUrl || '';
+  document.getElementById('aiAsk').hidden = !n;
+  document.getElementById('aiPrecision').value = '';
+  document.getElementById('aiOut').innerHTML = '';
+  document.getElementById('aiAdd').hidden = true;
+  const go = document.getElementById('aiGo');
+  go.hidden = !n; go.disabled = false; go.textContent = 'Demander trois étapes';
+  aiMsg(reglagesSeuls
+      ? 'Colle ici l’adresse de ta fonction Supabase. Elle est enregistrée avec tes données.'
+      : (sansUrl ? 'L’assistant n’est pas encore branché : renseigne l’adresse de ta fonction ci-dessus.' : ''));
+  aiBox.classList.add('open');
+  setTimeout(() => {
+    const c = document.getElementById('aiCfg');
+    (c.hidden ? document.getElementById('aiPrecision') : document.getElementById('aiUrl')).focus();
+  }, 80);
+}
+
+function fermerAssistant(){
+  aiBox.classList.remove('open');
+  aiNode = null; aiProps = [];
+}
+
+document.getElementById('aiX').addEventListener('click', fermerAssistant);
+aiBox.addEventListener('click', e => { if (e.target === aiBox) fermerAssistant(); });
+document.getElementById('aiCog').addEventListener('click', () => {
+  const c = document.getElementById('aiCfg');
+  c.hidden = !c.hidden;
+  if (!c.hidden) document.getElementById('aiUrl').focus();
+});
+document.getElementById('aiUrl').addEventListener('change', function(){
+  const v = this.value.trim();
+  metaNode().aiUrl = v;
+  save();
+  aiMsg(v ? 'Adresse enregistrée.' : 'Adresse effacée : l’assistant est de nouveau endormi.');
+});
+
+document.getElementById('aiGo').addEventListener('click', async function(){
+  if (!aiNode) return;
+  const url = aiUrl();
+  if (!url) {
+    document.getElementById('aiCfg').hidden = false;
+    document.getElementById('aiUrl').focus();
+    aiMsg('Il manque l’adresse de la fonction.', true);
+    return;
+  }
+  this.disabled = true; this.textContent = 'Un instant…';
+  aiMsg('');
+  document.getElementById('aiOut').innerHTML = '';
+  document.getElementById('aiAdd').hidden = true;
+
+  const ctl = new AbortController();
+  const chrono = setTimeout(() => ctl.abort(), 25000);
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      signal: ctl.signal,
+      body: JSON.stringify({
+        titre: aiNode.title || '',
+        sousTitre: aiNode.sub || '',
+        notes: aiNode.notes || '',
+        etapes: aiNode.bullets || [],
+        precision: document.getElementById('aiPrecision').value || ''
+      })
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.erreur || ('Erreur ' + r.status));
+    aiProps = (d.etapes || []).filter(Boolean);
+    if (!aiProps.length) throw new Error('Aucune étape proposée');
+    afficherPropositions();
+    aiMsg('Décoche ce que tu ne veux pas garder.');
+  } catch (e) {
+    let m = String(e.message || e);
+    if (e.name === 'AbortError') m = 'Pas de réponse au bout de 25 secondes.';
+    else if (/failed to fetch|networkerror|load failed/i.test(m))
+      m = 'Fonction injoignable. Vérifie l’adresse, et que le domaine du site figure bien dans la liste ORIGINES de la fonction.';
+    aiMsg(m, true);
+  } finally {
+    clearTimeout(chrono);
+    this.disabled = false; this.textContent = aiProps.length ? 'Proposer autre chose' : 'Demander trois étapes';
+  }
+});
+
+function afficherPropositions(){
+  const box = document.getElementById('aiOut');
+  box.innerHTML = '';
+  aiProps.forEach((t, i) => {
+    const l = document.createElement('label'); l.className = 'ai-i';
+    const c = document.createElement('input'); c.type = 'checkbox'; c.checked = true; c.dataset.i = i;
+    const sp = el('span', null, t);
+    l.appendChild(c); l.appendChild(sp); box.appendChild(l);
+  });
+  document.getElementById('aiAdd').hidden = false;
+}
+
+document.getElementById('aiAdd').addEventListener('click', () => {
+  if (!aiNode) return;
+  const gardees = Array.prototype.slice.call(document.querySelectorAll('#aiOut input:checked'))
+    .map(c => aiProps[+c.dataset.i]).filter(Boolean);
+  if (!gardees.length) { aiMsg('Aucune étape retenue.', true); return; }
+  const n = dataset.find(x => x.id === aiNode.id);
+  if (!n) { fermerAssistant(); return; }
+  if (!Array.isArray(n.bullets)) n.bullets = [];
+  gardees.forEach(t => n.bullets.push(t));
+  save(); render();
+  fermerAssistant();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && aiBox.classList.contains('open')) fermerAssistant();
+});
 
 /* --- éditeur des lignes d'une carte liste --- */
 const ROW_COLORS = [['var(--cockpit)','Bleu cockpit'],['var(--objectifs)','Cyan électrique'],
@@ -2337,7 +2871,9 @@ function applySheet(){
   V('sheetKind').textContent = KIND_LABEL[V('fKind').value] || 'Carte';
   n.board = V('fBoard').value || n.board;
   n.status = V('fStatus').value || n.status;
+  const kindAvant = n.kind;
   n.kind = V('fKind').value || n.kind;
+  if (n.kind !== kindAvant) ensureKind(n);       /* on remplit ce qui manque au nouveau type */
   n.span = parseInt(V('fSpan').value, 10) || n.span || 3;
   n.tall = V('fTall').checked;
   n.imgFit = V('fFit').value || 'contain';
@@ -2354,6 +2890,13 @@ function applySheet(){
   if (n.kind === 'liste') readItems(n);
   n.showBlock = V('fBlock').checked;
   n.blockLabel = V('fBlockL').value; n.blockVal = V('fBlockV').value;
+  /* on conserve la couleur d'un tag qui existait déjà, on en attribue une aux nouveaux */
+  const ancTags = {};
+  (n.tags || []).forEach(t => { if (t && t.text) ancTags[sansAccent(t.text)] = t.color; });
+  n.tags = V('fTags').value.split(',').map(x => x.trim()).filter(Boolean).map(txt => ({
+    text: txt, color: ancTags[sansAccent(txt)] || n.color || 'var(--gold)'
+  }));
+  if (document.body.classList.contains('searching')) renderSearchTags();
   migrate(n);
   render();
   const c = grid.querySelector('.card[data-id="' + n.id + '"]');
