@@ -47,7 +47,7 @@ button{background:none;border:none;cursor:pointer}
 .app.wide .main{display:none}
 
 /* ---------- RAIL ---------- */
-.rail{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;z-index:5}
+.rail{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;z-index:22}
 .rail .mark{font-family:var(--serif);font-size:20px;color:var(--gold);line-height:1;margin-bottom:14px;user-select:none}
 .rail button{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:var(--dim2);transition:.15s}
 .rail button:hover{color:var(--txt);background:var(--raise)}
@@ -219,7 +219,7 @@ button{background:none;border:none;cursor:pointer}
 /* ---------- TIROIR ---------- */
 .scrim{position:fixed;inset:0;background:rgba(6,7,9,.6);opacity:0;pointer-events:none;transition:.2s;z-index:20}
 .scrim.on{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:0;left:0;bottom:0;width:340px;max-width:88vw;background:var(--panel);border-right:1px solid var(--line);z-index:21;transform:translateX(-100%);transition:transform .24s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+.drawer{position:fixed;top:0;left:var(--rail);bottom:0;width:340px;max-width:88vw;background:var(--panel);border-right:1px solid var(--line);z-index:21;transform:translateX(-100%);transition:transform .24s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
 .drawer.on{transform:none}
 .drawer .dh{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
 .drawer .dh h2{font-family:var(--serif);font-size:20px;font-weight:400;flex:1}
@@ -248,6 +248,7 @@ button{background:none;border:none;cursor:pointer}
 @media(max-width:980px){
   .app{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto}
   .app.wide{grid-template-columns:1fr}
+  .drawer{left:0}
   .rail{flex-direction:row;width:100%;border-right:none;border-bottom:1px solid var(--line);padding:8px 10px;gap:2px;justify-content:flex-start}
   .rail .mark{margin:0 8px 0 4px;font-size:18px}
   .side{border-left:none;border-top:1px solid var(--line);display:none}
@@ -271,6 +272,7 @@ button{background:none;border:none;cursor:pointer}
     <div class="mark">A</div>
     <button id="btnTpl" title="Modèles et blocs"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></svg></button>
     <button id="btnLink" title="Mes liens"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></button>
+    <button id="btnIA" title="Assistant IA"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M18 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg></button>
     <button id="btnPara" title="Structurer en paragraphes"><svg viewBox="0 0 24 24"><path d="M5 5h14M5 10h14M5 15h9M5 20h6"/></svg></button>
     <button id="btnClean" title="Nettoyer la typographie"><svg viewBox="0 0 24 24"><path d="M4 20l6-6M14 4l6 6-9 9H5v-6z"/></svg></button>
     <button id="btnHist" title="Historique"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4"/><path d="M12 7v5l3 2"/></svg></button>
@@ -696,11 +698,13 @@ function ro(v,k){return '<div><span class="v">'+v+'</span><span class="k">'+k+'<
 /* ========== INSPECTEUR ========== */
 function renderInsp(){
   var h='<div class="grp" style="margin-top:0"><span class="lbl">Assistance IA</span><span class="ln"></span></div>'
-   +'<button class="btn sm'+(hasKey()?' pri':'')+'" id="iaFix" style="width:100%;padding:10px">✦ Améliorer le mail</button>'
-   +'<div class="empty" style="text-align:left;padding:6px 2px 8px">Ponctuation, orthographe et paragraphes — pour un mail dicté ou collé en vrac. Ne met rien en gras.</div>'
-   +'<button class="btn sm'+(hasKey()?' pri':'')+'" id="iaBtn" style="width:100%;padding:10px">'
+   +'<button class="btn sm ia-write'+(hasKey()?' pri':'')+'" style="width:100%;padding:10px">✦ Rédiger le mail</button>'
+   +'<div class="empty" style="text-align:left;padding:6px 2px 8px">Des notes en vrac deviennent un mail complet. N’invente ni date ni montant.</div>'
+   +'<button class="btn sm ia-fix" style="width:100%;padding:10px">✦ Corriger et structurer</button>'
+   +'<div class="empty" style="text-align:left;padding:6px 2px 8px">Ponctuation, orthographe et paragraphes, sans réécrire ton texte.</div>'
+   +'<button class="btn sm ia-bold'+(hasKey()?' pri':'')+'" style="width:100%;padding:10px">'
    +(hasKey()?'✦ Gras automatique':'✦ Gras par IA — configurer')+'</button>'
-   +'<button class="btn sm" id="iaMan" style="width:100%;padding:7px;margin-top:6px">Passer par un assistant sans clé</button>'
+   +'<button class="btn sm ia-man" style="width:100%;padding:7px;margin-top:6px">Passer par un assistant sans clé</button>'
    +'<div class="grp"><span class="lbl">Intensité du gras (moteur local)</span><span class="ln"></span></div>'
    +'<div class="seg" id="segLvl" style="width:100%">'
    +NIVEAU.map(function(n,i){return '<button data-l="'+i+'"'+(i===LEVEL?' class="on"':'')+' style="flex:1">'+n+'</button>';}).join('')
@@ -787,15 +791,23 @@ function drawerTpl(){
   openDrawer('Modèles',h);
 }
 function drawerLiens(){
-  var sel=$('body').selectionStart!==$('body').selectionEnd;
-  var h='<div class="lbl" style="padding:6px 12px 10px">'+(sel?'Le passage sélectionné deviendra le lien':'Clic = lien cliquable inséré dans le mail')+'</div>';
+  var ta=$('body'),sel=ta.value.slice(ta.selectionStart,ta.selectionEnd).trim();
+  var h='<div class="grp" style="padding:0 2px;margin-top:0"><span class="lbl">Enregistrer un lien</span><span class="ln"></span></div>'
+   +'<div class="lnkform">'
+   +'<input id="lE" maxlength="4" placeholder="🔗" title="Emoji, facultatif">'
+   +'<input id="lT" placeholder="Texte cliquable — 2 ou 3 mots" value="'+esc(sel.length>1&&sel.length<60?sel:'')+'">'
+   +'<input id="lU" class="full" placeholder="https://anthonycarrel.com/…">'
+   +'<button class="btn sm full pri" id="lAdd">Enregistrer et insérer</button></div>'
+   +'<div class="d" style="padding:8px 2px 4px;color:var(--dim2);font-size:11.5px;line-height:1.55">Un texte court se lit mieux qu’une adresse : <span style="color:#7FA9F5;text-decoration:underline">photographe événementiel Cannes</span> plutôt que l’URL entière. L’emoji est facultatif.</div>'
+   +'<div class="grp" style="padding:0 2px"><span class="lbl">Mes liens · '+LIENS.length+'</span><span class="ln"></span></div>'
+   +'<div style="padding:0 2px 8px;color:var(--dim2);font-size:11.5px">'
+   +(sel?'Le passage sélectionné deviendra le texte cliquable.':'Un clic insère le lien à l’endroit du curseur.')+'</div>';
+  if(!LIENS.length)h+='<div class="empty">Aucun lien pour l’instant.</div>';
   for(var i=0;i<LIENS.length;i++){
-    h+='<div class="lnk"><span class="e">'+LIENS[i].e+'</span><span class="m"><span class="t">'+esc(LIENS[i].t)+'</span><br><span class="u">'+esc(LIENS[i].u)+'</span></span>'
+    h+='<div class="lnk">'+(LIENS[i].e?'<span class="e">'+LIENS[i].e+'</span>':'')
+      +'<span class="m"><span class="t">'+esc(LIENS[i].t)+'</span><br><span class="u">'+esc(LIENS[i].u)+'</span></span>'
       +'<button class="go" data-lien="'+i+'">Insérer</button><button class="tag" style="padding:2px 7px" data-dl="'+i+'">×</button></div>';
   }
-  h+='<div class="grp" style="padding:0 2px"><span class="lbl">Ajouter un lien</span></div>'
-   +'<div class="lnkform"><input id="lE" maxlength="4" placeholder="🔗"><input id="lT" placeholder="Texte affiché (ex. Mon univers Mariage)">'
-   +'<input id="lU" class="full" placeholder="https://anthonycarrel.com/…"><button class="btn sm full" id="lAdd">Enregistrer ce lien</button></div>';
   openDrawer('Mes liens',h);
 }
 var IAPROMPT='Voici un e-mail professionnel en francais. Reperе les elements que le destinataire doit retenir en un coup d\u2019oeil : montants, dates, horaires, lieux, delais, livrables, engagements et conditions. Encadre chacun de ces passages avec ** **.\n\nRegles strictes :\n- ne reformule rien, n\u2019ajoute rien, ne supprime rien : renvoie exactement le meme texte, avec seulement les ** en plus\n- deux passages en gras au maximum par paragraphe\n- aucun gras apres la formule de politesse ni dans la signature\n- ne touche pas aux liens de la forme [texte](adresse)\n- les marqueurs entre crochets doubles comme ⟦NOM1⟧ remplacent des donnees masquees : recopie-les a l’identique, tu peux les mettre en gras\n- reponds uniquement avec le texte, sans commentaire ni bloc de code\n\nTexte :\n\n';
@@ -899,30 +911,53 @@ function deanon(t,map){
   return {t:t,missing:missing};
 }
 function nu(t){return t.replace(/\*\*/g,'').replace(/\s+/g,' ').trim();}
-var IAFIX='Tu recois le brouillon d’un e-mail professionnel en francais, souvent dicte a la voix.\nRends-le pret a envoyer.\n\n- corrige l’orthographe, la grammaire et surtout la ponctuation manquante\n- structure en paragraphes courts, une idee par paragraphe\n- transforme les enumerations en listes commencant par le tiret –\n- conserve strictement le sens, les faits, les chiffres, les dates et les noms\n- garde le ton et le niveau de langue de l’auteur, ne rallonge pas\n- n’invente rien, n’ajoute ni formule de politesse ni signature absentes\n- recopie a l’identique les liens [texte](adresse) et les marqueurs entre crochets doubles comme ⟦NOM1⟧\n- ne mets aucun mot en gras, pas d’asterisques\n- reponds uniquement avec le texte de l’e-mail, sans commentaire ni bloc de code\n\nTexte :\n\n';
-function iaAmeliorer(){
+var IAFIX='Tu recois le brouillon d’un e-mail professionnel en francais, souvent dicte a la voix.\nCorrige-le sans le reecrire.\n\n- corrige l’orthographe, la grammaire et surtout la ponctuation manquante\n- structure en paragraphes courts, une idee par paragraphe\n- transforme les enumerations en listes commencant par le tiret –\n- conserve strictement le sens, les faits, les chiffres, les dates, les noms et les tournures de l’auteur\n- ne rallonge pas, n’invente rien, n’ajoute ni formule de politesse ni signature absentes\n- recopie a l’identique les liens [texte](adresse) et les marqueurs entre crochets doubles comme ⟦NOM1⟧\n- ne mets aucun mot en gras, pas d’asterisques\n- reponds uniquement avec le texte de l’e-mail, sans commentaire ni bloc de code\n\nTexte :\n\n';
+
+var IAREDIGE='Tu recois des notes en vrac : une idee de mail, jetee rapidement ou dictee a la voix.\nRedige a partir de ces notes un e-mail professionnel francais, pret a envoyer.\n\nAuteur : Anthony Carrel, photographe independant base a Cannes (evenementiel, mode, concert, festival).\nTon : professionnel et chaleureux, direct, sans emphase commerciale ni superlatifs. Vouvoiement.\n\n- developpe les notes en phrases completes et naturelles, mais reste concis\n- structure : salutation, une idee par paragraphe, demande claire, formule de politesse\n- transforme les enumerations en listes commencant par le tiret –\n- n’invente aucun fait : pas de date, de tarif, de lieu, de delai ni de nom qui ne soit pas dans les notes ; si une information manque, laisse un marqueur entre crochets comme [date] ou [montant]\n- recopie a l’identique les liens [texte](adresse) et les marqueurs entre crochets doubles comme ⟦NOM1⟧\n- ne mets aucun mot en gras, pas d’asterisques\n- reponds uniquement avec le texte de l’e-mail, sans objet, sans commentaire ni bloc de code\n\nNotes :\n\n';
+
+function iaBtns(cls){return document.querySelectorAll('.'+cls);}
+function iaBusy(cls,txt,busy){iaBtns(cls).forEach(function(b){b.textContent=txt;b.disabled=busy;});}
+function iaTexte(prompt,cls,libelle,verbe){
   if(!hasKey()){closeDrawer();drawerSet();toast('Ajoute ta clé dans les réglages',1);return;}
   var src=$('body').value;
-  if(!src.trim()){toast('Le mail est vide',1);return;}
-  var b=$('iaFix');if(b){b.textContent='✦ Réécriture en cours…';b.disabled=true;}
+  if(!src.trim()){toast('Écris d’abord quelques mots',1);return;}
+  iaBusy(cls,'✦ '+verbe+'…',true);
   var a=ANON?anonymize(src):{t:src,map:[]};
   var call=(AIPROV==='gem')
-    ? gCall(a.t,IAFIX)
-    : oCall([{role:'system',content:IAFIX.replace(/\n\nTexte :\n\n$/,'')},{role:'user',content:a.t}]);
+    ? gCall(a.t,prompt)
+    : oCall([{role:'system',content:prompt.replace(/\n\n(Texte|Notes) :\n\n$/,'')},{role:'user',content:a.t}]);
   call.then(function(raw){
-    var r=deanon(raw,a.map),out=r.t.replace(/\*\*/g,'');
+    var r=deanon(raw,a.map),out=r.t.replace(/\*\*/g,'').trim();
     LASTBODY=src;$('body').value=out;render();
-    var p=out.trim().split(/\n{2,}/).length;
-    toast('Mail réécrit en '+p+' paragraphes'+(r.missing?' · '+r.missing+' marqueurs perdus, relis':''),r.missing?1:0,
+    var p=out.split(/\n{2,}/).length;
+    toast(p+' paragraphes'+(r.missing?' · '+r.missing+' marqueurs perdus, relis':''),r.missing?1:0,
       {l:'Annuler',f:function(){if(LASTBODY!==null){$('body').value=LASTBODY;LASTBODY=null;render();}}});
   }).catch(function(e){toast(gErr(e),1);})
-  .then(function(){var b2=$('iaFix');if(b2){b2.textContent='✦ Améliorer le mail';b2.disabled=false;}render();});
+  .then(function(){iaBusy(cls,libelle,false);render();});
+}
+function iaRediger(){iaTexte(IAREDIGE,'ia-write','✦ Rédiger le mail','Rédaction');}
+function iaAmeliorer(){iaTexte(IAFIX,'ia-fix','✦ Corriger et structurer','Correction');}
+
+function drawerIAmenu(){
+  var k=hasKey();
+  openDrawer('Assistant',
+    '<div class="lbl" style="padding:6px 12px 10px">'+(k?'Connecté · '+(AIPROV==='gem'?'Gemini':(AIMODEL||'service compatible OpenAI')):'Aucune clé enregistrée')+'</div>'
+   +'<div style="padding:0 12px;display:flex;flex-direction:column;gap:8px">'
+   +'<button class="btn sm ia-write'+(k?' pri':'')+'" style="padding:11px">✦ Rédiger le mail</button>'
+   +'<div class="d" style="color:var(--dim2);font-size:11.5px;line-height:1.55;margin:-2px 0 6px">Tu jettes tes idées en vrac ou tu dictes, l’IA en fait un mail complet : salutation, paragraphes, demande claire, politesse. Elle n’invente aucun chiffre ni aucune date — ce qui manque devient [date], [montant].</div>'
+   +'<button class="btn sm ia-fix" style="padding:11px">✦ Corriger et structurer</button>'
+   +'<div class="d" style="color:var(--dim2);font-size:11.5px;line-height:1.55;margin:-2px 0 6px">Ton texte reste le tien : ponctuation, orthographe et paragraphes uniquement. À utiliser quand le mail est déjà écrit.</div>'
+   +'<button class="btn sm ia-bold" style="padding:11px">✦ Gras automatique</button>'
+   +'<div class="d" style="color:var(--dim2);font-size:11.5px;line-height:1.55;margin:-2px 0 6px">Montants, dates, horaires, lieux et livrables passent en gras.</div>'
+   +'<button class="btn sm ia-man" style="padding:9px">Passer par un assistant sans clé</button>'
+   +'<button class="btn sm" data-act="reglages" style="padding:9px">Réglages de la clé</button>'
+   +'</div>');
 }
 function iaAuto(){
   if(!hasKey()){closeDrawer();drawerSet();toast('Ajoute ta clé dans les réglages',1);return;}
   var src=$('body').value;
   if(!src.trim()){toast('Le mail est vide',1);return;}
-  var b=$('iaBtn');if(b){b.textContent='✦ Analyse en cours…';b.disabled=true;}
+  iaBusy('ia-bold','✦ Analyse en cours…',true);
   var a=ANON?anonymize(src):{t:src,map:[]};
   aiCall(a.t).then(function(raw){
     var r=deanon(raw,a.map),out=r.t;
@@ -933,7 +968,7 @@ function iaAuto(){
     toast(msg,(drift>0.06||r.missing)?1:0,
       {l:'Annuler',f:function(){if(LASTBODY!==null){$('body').value=LASTBODY;LASTBODY=null;render();}}});
   }).catch(function(e){toast(gErr(e),1);})
-  .then(function(){var b2=$('iaBtn');if(b2){b2.textContent='✦ Gras automatique';b2.disabled=false;}render();});
+  .then(function(){iaBusy('ia-bold','✦ Gras automatique',false);render();});
 }
 function drawerIA(){
   openDrawer('Gras par IA',
@@ -1007,15 +1042,22 @@ function done(btn,msg){
 }
 $('dbody').addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b)return;
+  if(b.classList.contains('ia-write')){iaRediger();return;}
+  if(b.classList.contains('ia-fix')){iaAmeliorer();return;}
+  if(b.classList.contains('ia-bold')){if(hasKey())iaAuto();else{drawerSet();toast('Renseigne ta clé ici',0);}return;}
+  if(b.classList.contains('ia-man')){drawerIA();return;}
+  if(b.dataset.act==='reglages'){drawerSet();return;}
   if(b.dataset.tpl!==undefined){var t=TPL[b.dataset.tpl];if(!$('subj').value)$('subj').value=t.s;insert(($('body').value.trim()?'\n\n':'')+t.b);done(b,'Modèle inséré');}
   else if(b.dataset.bloc!==undefined){insert(($('body').value.trim()?'\n\n':'')+BLOCS[b.dataset.bloc].t);done(b,'Bloc inséré');}
   else if(b.dataset.lien!==undefined){insertLien(+b.dataset.lien);done(b,'Lien inséré');}
   else if(b.dataset.dl!==undefined){LIENS.splice(+b.dataset.dl,1);STORE.set('liens',LIENS);drawerLiens();}
   else if(b.id==='lAdd'){
     var u=$('lU').value.trim(),t2=$('lT').value.trim();
-    if(!u||!t2){toast('Texte et adresse obligatoires',1);return;}
+    if(!u||!t2){toast('Texte cliquable et adresse obligatoires',1);return;}
     if(!/^https?:\/\//i.test(u))u='https://'+u;
-    LIENS.push({e:$('lE').value.trim()||'🔗',t:t2,u:u});STORE.set('liens',LIENS);drawerLiens();toast('Lien enregistré');
+    LIENS.push({e:$('lE').value.trim(),t:t2,u:u});STORE.set('liens',LIENS);
+    insertLien(LIENS.length-1);
+    drawerLiens();dstat();toast('Lien enregistré et inséré');
   }
   else if(b.dataset.h!==undefined){var x=HIST[b.dataset.h];$('subj').value=x.s;$('body').value=x.b;closeDrawer();render();}
   else if(b.dataset.act)acts(b.dataset.act);
@@ -1097,7 +1139,7 @@ function insert(t){
 }
 function insertLien(i){
   var l=LIENS[i],ta=$('body'),s=ta.selectionStart,e=ta.selectionEnd;
-  var label=(s!==e)?ta.value.slice(s,e):(l.e+' '+l.t);
+  var label=(s!==e)?ta.value.slice(s,e):((l.e?l.e+' ':'')+l.t);
   insert('['+label+']('+l.u+')');
 }
 /* =========================================================
@@ -1252,12 +1294,14 @@ function toggleWide(){
   $('btnFull').classList.toggle('on',$('app').classList.contains('wide'));
   setTimeout(render,20);
 }
-$('btnTpl').onclick=drawerTpl;$('btnLink').onclick=drawerLiens;$('btnHist').onclick=drawerHist;$('btnSet').onclick=drawerSet;$('btnClean').onclick=doClean;$('btnPara').onclick=doStruct;
+$('btnIA').onclick=drawerIAmenu;$('btnTpl').onclick=drawerTpl;$('btnLink').onclick=drawerLiens;$('btnHist').onclick=drawerHist;$('btnSet').onclick=drawerSet;$('btnClean').onclick=doClean;$('btnPara').onclick=doStruct;
 
 $('insp').addEventListener('click',function(e){
-  if(e.target.id==='iaFix'){if(hasKey())iaAmeliorer();else{drawerSet();toast('Renseigne ta clé ici',0);}return;}
-  if(e.target.id==='iaBtn'){if(hasKey())iaAuto();else{drawerSet();toast('Renseigne ta clé ici',0);}return;}
-  if(e.target.id==='iaMan'){drawerIA();return;}
+  var ib=e.target.closest('button');
+  if(ib&&ib.classList.contains('ia-write')){iaRediger();return;}
+  if(ib&&ib.classList.contains('ia-fix')){iaAmeliorer();return;}
+  if(ib&&ib.classList.contains('ia-bold')){if(hasKey())iaAuto();else{drawerSet();toast('Renseigne ta clé ici',0);}return;}
+  if(ib&&ib.classList.contains('ia-man')){drawerIA();return;}
   var lv=e.target.closest('#segLvl button');
   if(lv){LEVEL=+lv.dataset.l;STORE.set('level',LEVEL);render();return;}
   var sw=e.target.closest('.sw');
