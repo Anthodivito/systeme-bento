@@ -230,6 +230,12 @@ button{background:none;border:none;cursor:pointer}
 .item .d{font-size:11.5px;color:var(--dim2);margin-top:2px}
 .item .k{float:right;font-family:var(--mono);font-size:10px;color:var(--dim2)}
 
+.item.used{background:rgba(198,161,91,.16);border-color:var(--gold-lo)}
+.item.used .n::after{content:' ✓';color:var(--gold-hi)}
+.lnk .go.used{color:var(--ok)}
+.drawer .df{border-top:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--dim2);flex:none}
+.drawer .df .sp{flex:1}
+.drawer .df b{color:var(--gold-hi);font-family:var(--mono)}
 /* ---------- TOAST ---------- */
 .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,90px);background:var(--raise);border:1px solid var(--line2);color:var(--txt);padding:11px 18px;border-radius:11px;font-size:13px;box-shadow:0 12px 30px rgba(0,0,0,.5);transition:transform .3s cubic-bezier(.34,1.4,.64,1);z-index:40;display:flex;gap:9px;align-items:center;max-width:88vw}
 .toast.on{transform:translate(-50%,0)}
@@ -342,6 +348,7 @@ Titres, étiquettes, montants, dates, horaires, lieux et livrables passent en gr
 <aside class="drawer" id="drawer">
   <div class="dh"><h2 id="dtitle">Modèles</h2><button class="icobtn" id="dclose"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="dc" id="dbody"></div>
+  <div class="df"><span id="dstat">—</span><span class="sp"></span><button class="btn sm" id="dclose2">Fermer</button></div>
 </aside>
 
 <div class="toast" id="toast"><span class="i"></span><span id="tmsg"></span></div>
@@ -688,7 +695,10 @@ function ro(v,k){return '<div><span class="v">'+v+'</span><span class="k">'+k+'<
 
 /* ========== INSPECTEUR ========== */
 function renderInsp(){
-  var h='<button class="btn sm'+(hasKey()?' pri':'')+'" id="iaBtn" style="width:100%;padding:10px;margin-top:2px">'
+  var h='<div class="grp" style="margin-top:0"><span class="lbl">Assistance IA</span><span class="ln"></span></div>'
+   +'<button class="btn sm'+(hasKey()?' pri':'')+'" id="iaFix" style="width:100%;padding:10px">✦ Améliorer le mail</button>'
+   +'<div class="empty" style="text-align:left;padding:6px 2px 8px">Ponctuation, orthographe et paragraphes — pour un mail dicté ou collé en vrac. Ne met rien en gras.</div>'
+   +'<button class="btn sm'+(hasKey()?' pri':'')+'" id="iaBtn" style="width:100%;padding:10px">'
    +(hasKey()?'✦ Gras automatique':'✦ Gras par IA — configurer')+'</button>'
    +'<button class="btn sm" id="iaMan" style="width:100%;padding:7px;margin-top:6px">Passer par un assistant sans clé</button>'
    +'<div class="grp"><span class="lbl">Intensité du gras (moteur local)</span><span class="ln"></span></div>'
@@ -765,9 +775,9 @@ var BLOCS=[
 {n:'Droits d’usage',k:'⌘4',t:'Droits d’usage cédés pour [supports], pour une durée de [durée], sur le territoire [territoire]. Crédit obligatoire : Photo Anthony Carrel.'}
 ];
 
-function openDrawer(t,h){$('dtitle').textContent=t;$('dbody').innerHTML=h;$('drawer').classList.add('on');$('scrim').classList.add('on');}
+function openDrawer(t,h){$('dtitle').textContent=t;$('dbody').innerHTML=h;$('drawer').classList.add('on');$('scrim').classList.add('on');dstat();}
 function closeDrawer(){$('drawer').classList.remove('on');$('scrim').classList.remove('on');}
-$('dclose').onclick=closeDrawer;$('scrim').onclick=closeDrawer;
+$('dclose').onclick=closeDrawer;$('scrim').onclick=closeDrawer;$('dclose2').onclick=closeDrawer;
 
 function drawerTpl(){
   var h='<div class="lbl" style="padding:6px 12px">Modèles</div>';
@@ -843,8 +853,8 @@ function gModel(){
     GMODEL=pick;STORE.set('gmodel',pick);return pick;
   });
 }
-function gCall(txt){
-  var body=JSON.stringify({contents:[{role:'user',parts:[{text:IAPROMPT+txt}]}],
+function gCall(txt,prompt){
+  var body=JSON.stringify({contents:[{role:'user',parts:[{text:(prompt||IAPROMPT)+txt}]}],
     generationConfig:{temperature:0.1,maxOutputTokens:4096}});
   return gModel().then(function(m){
     var url=GAPI+'models/'+m+':generateContent?key='+encodeURIComponent(GKEY);
@@ -889,6 +899,25 @@ function deanon(t,map){
   return {t:t,missing:missing};
 }
 function nu(t){return t.replace(/\*\*/g,'').replace(/\s+/g,' ').trim();}
+var IAFIX='Tu recois le brouillon d’un e-mail professionnel en francais, souvent dicte a la voix.\nRends-le pret a envoyer.\n\n- corrige l’orthographe, la grammaire et surtout la ponctuation manquante\n- structure en paragraphes courts, une idee par paragraphe\n- transforme les enumerations en listes commencant par le tiret –\n- conserve strictement le sens, les faits, les chiffres, les dates et les noms\n- garde le ton et le niveau de langue de l’auteur, ne rallonge pas\n- n’invente rien, n’ajoute ni formule de politesse ni signature absentes\n- recopie a l’identique les liens [texte](adresse) et les marqueurs entre crochets doubles comme ⟦NOM1⟧\n- ne mets aucun mot en gras, pas d’asterisques\n- reponds uniquement avec le texte de l’e-mail, sans commentaire ni bloc de code\n\nTexte :\n\n';
+function iaAmeliorer(){
+  if(!hasKey()){closeDrawer();drawerSet();toast('Ajoute ta clé dans les réglages',1);return;}
+  var src=$('body').value;
+  if(!src.trim()){toast('Le mail est vide',1);return;}
+  var b=$('iaFix');if(b){b.textContent='✦ Réécriture en cours…';b.disabled=true;}
+  var a=ANON?anonymize(src):{t:src,map:[]};
+  var call=(AIPROV==='gem')
+    ? gCall(a.t,IAFIX)
+    : oCall([{role:'system',content:IAFIX.replace(/\n\nTexte :\n\n$/,'')},{role:'user',content:a.t}]);
+  call.then(function(raw){
+    var r=deanon(raw,a.map),out=r.t.replace(/\*\*/g,'');
+    LASTBODY=src;$('body').value=out;render();
+    var p=out.trim().split(/\n{2,}/).length;
+    toast('Mail réécrit en '+p+' paragraphes'+(r.missing?' · '+r.missing+' marqueurs perdus, relis':''),r.missing?1:0,
+      {l:'Annuler',f:function(){if(LASTBODY!==null){$('body').value=LASTBODY;LASTBODY=null;render();}}});
+  }).catch(function(e){toast(gErr(e),1);})
+  .then(function(){var b2=$('iaFix');if(b2){b2.textContent='✦ Améliorer le mail';b2.disabled=false;}render();});
+}
 function iaAuto(){
   if(!hasKey()){closeDrawer();drawerSet();toast('Ajoute ta clé dans les réglages',1);return;}
   var src=$('body').value;
@@ -960,11 +989,27 @@ function drawerSet(){
    +'<button class="item" data-act="reset"><div class="n">Vider le brouillon</div><div class="d">Efface l’objet et le corps en cours</div></button>'
    +'<div class="d" style="padding:14px 12px;color:var(--dim2);font-size:11.5px;line-height:1.6">Réglages, clé et brouillon restent dans ce navigateur, sur cet appareil. Seul le bouton « Gras automatique » envoie du texte à l’extérieur.</div>');
 }
+/* le tiroir reste ouvert : on marque l’élément utilisé et on laisse enchaîner */
+function dstat(){
+  var t=$('body').value,w=(t.match(/\S+/g)||[]).length;
+  var p=t.trim()?t.trim().split(/\n{2,}/).length:0;
+  var n=0,l=analyse(t);for(var i=0;i<l.length;i++)n+=l[i].b;
+  var el=$('dstat');
+  if(el)el.innerHTML=t.trim()?('<b>'+w+'</b> mots · <b>'+p+'</b> paragraphes · <b>'+n+'</b> gras'):'Mail vide';
+}
+function done(btn,msg){
+  if(btn){
+    btn.classList.add('used');
+    clearTimeout(btn._t);
+    btn._t=setTimeout(function(){btn.classList.remove('used');},1600);
+  }
+  dstat();toast(msg);
+}
 $('dbody').addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b)return;
-  if(b.dataset.tpl!==undefined){var t=TPL[b.dataset.tpl];if(!$('subj').value)$('subj').value=t.s;insert(($('body').value.trim()?'\n\n':'')+t.b);closeDrawer();}
-  else if(b.dataset.bloc!==undefined){insert(($('body').value.trim()?'\n\n':'')+BLOCS[b.dataset.bloc].t);closeDrawer();}
-  else if(b.dataset.lien!==undefined){insertLien(+b.dataset.lien);closeDrawer();}
+  if(b.dataset.tpl!==undefined){var t=TPL[b.dataset.tpl];if(!$('subj').value)$('subj').value=t.s;insert(($('body').value.trim()?'\n\n':'')+t.b);done(b,'Modèle inséré');}
+  else if(b.dataset.bloc!==undefined){insert(($('body').value.trim()?'\n\n':'')+BLOCS[b.dataset.bloc].t);done(b,'Bloc inséré');}
+  else if(b.dataset.lien!==undefined){insertLien(+b.dataset.lien);done(b,'Lien inséré');}
   else if(b.dataset.dl!==undefined){LIENS.splice(+b.dataset.dl,1);STORE.set('liens',LIENS);drawerLiens();}
   else if(b.id==='lAdd'){
     var u=$('lU').value.trim(),t2=$('lT').value.trim();
@@ -1210,6 +1255,7 @@ function toggleWide(){
 $('btnTpl').onclick=drawerTpl;$('btnLink').onclick=drawerLiens;$('btnHist').onclick=drawerHist;$('btnSet').onclick=drawerSet;$('btnClean').onclick=doClean;$('btnPara').onclick=doStruct;
 
 $('insp').addEventListener('click',function(e){
+  if(e.target.id==='iaFix'){if(hasKey())iaAmeliorer();else{drawerSet();toast('Renseigne ta clé ici',0);}return;}
   if(e.target.id==='iaBtn'){if(hasKey())iaAuto();else{drawerSet();toast('Renseigne ta clé ici',0);}return;}
   if(e.target.id==='iaMan'){drawerIA();return;}
   var lv=e.target.closest('#segLvl button');
@@ -1246,7 +1292,78 @@ document.addEventListener('keydown',function(e){
 });
 $('body').addEventListener('input',render);
 $('subj').addEventListener('input',render);
-$('body').addEventListener('paste',function(){setTimeout(function(){
+/* =========================================================
+   COLLAGE RICHE — conserve listes, gras et liens
+   Un textarea ne reçoit que du texte brut : les puces d’un mail copié
+   depuis Gmail ou un assistant disparaissent. On lit donc le HTML du
+   presse-papiers et on le convertit nous-mêmes.
+   ========================================================= */
+function htmlToTexte(html){
+  var doc=new DOMParser().parseFromString(html,'text/html');
+  Array.prototype.forEach.call(doc.querySelectorAll('style,script,meta,title,head'),function(n){n.parentNode&&n.parentNode.removeChild(n);});
+  var out='';
+  function plain(n){return (n.textContent||'').replace(/ /g,' ').replace(/\s+/g,' ');}
+  function walk(node,depth){
+    var kids=node.childNodes;
+    for(var i=0;i<kids.length;i++){
+      var c=kids[i];
+      if(c.nodeType===3){out+=(c.nodeValue||'').replace(/ /g,' ').replace(/[ \t\r\n]+/g,' ');continue;}
+      if(c.nodeType!==1)continue;
+      var tag=c.tagName.toLowerCase();
+      if(tag==='br'){out+='\n';continue;}
+      if(tag==='ul'||tag==='ol'){
+        out=out.replace(/[ \t]+$/,'');
+        if(!/\n$/.test(out))out+='\n';
+        var num=1;
+        for(var j=0;j<c.children.length;j++){
+          var li=c.children[j];
+          if(li.tagName.toLowerCase()!=='li')continue;
+          out+=new Array(depth+1).join('  ')+(tag==='ol'?(num++)+'. ':'– ');
+          walk(li,depth+1);
+          out=out.replace(/[ \t]+$/,'');
+          if(!/\n$/.test(out))out+='\n';
+        }
+        out+='\n';continue;
+      }
+      if(tag==='li'){walk(c,depth);continue;}
+      if(tag==='b'||tag==='strong'){var s=plain(c).trim();if(s)out+='**'+s+'**';continue;}
+      if(tag==='a'){
+        var href=c.getAttribute('href')||'',lab=plain(c).trim();
+        out+=(lab&&/^https?:/i.test(href)&&href!==lab)?('['+lab+']('+href+')'):lab;
+        continue;
+      }
+      if(/^(p|h[1-6]|blockquote)$/.test(tag)){
+        walk(c,depth);out=out.replace(/[ \t]+$/,'');
+        if(!/\n\n$/.test(out))out+=/\n$/.test(out)?'\n':'\n\n';
+        continue;
+      }
+      if(/^(div|tr|section|article|header|footer)$/.test(tag)){
+        walk(c,depth);out=out.replace(/[ \t]+$/,'');
+        if(!/\n$/.test(out))out+='\n';
+        continue;
+      }
+      walk(c,depth);
+    }
+  }
+  walk(doc.body||doc,0);
+  return out.replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+$('body').addEventListener('paste',function(e){
+  var cd=e.clipboardData;
+  if(cd){
+    var html=cd.getData('text/html');
+    if(html&&/<(ul|ol|li|p|b|strong|a|br)\b/i.test(html)){
+      var t=nettoyer(htmlToTexte(html));
+      if(t){
+        e.preventDefault();
+        insert(t);
+        var puces=(t.match(/^\s*[–\d]/gm)||[]).length;
+        toast('Collé en gardant la mise en forme'+(puces?' · '+puces+' lignes de liste':''));
+        return;
+      }
+    }
+  }
+  setTimeout(function(){
   var ta=$('body'),p=ta.selectionStart,v=ta.value,n=nettoyer(v);
   if(n!==v){ta.value=n;ta.selectionStart=ta.selectionEnd=Math.min(p,n.length);toast('Collé et nettoyé');}
   render();},10);});
