@@ -1238,10 +1238,49 @@ function undo(){
   render(); refreshUndo();
 }
 
+/* Le cache local : IndexedDB n'a pas la limite de 5 Mo de localStorage, qui
+   refusait silencieusement un tableau chargé de photos. C'est lui qui permet
+   d'afficher les cartes tout de suite, avant la réponse du nuage. */
+const VBC = {
+  _db: null,
+  open(){
+    if (this._db) return Promise.resolve(this._db);
+    return new Promise((ok, ko) => {
+      try {
+        const r = indexedDB.open('vb-cache', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('kv');
+        r.onsuccess = () => { this._db = r.result; ok(r.result); };
+        r.onerror = () => ko(r.error);
+      } catch (e) { ko(e); }
+    });
+  },
+  async get(k){
+    try {
+      const d = await this.open();
+      return await new Promise(ok => {
+        const q = d.transaction('kv').objectStore('kv').get(k);
+        q.onsuccess = () => ok(q.result); q.onerror = () => ok(undefined);
+      });
+    } catch (e) { return undefined; }
+  },
+  async set(k, v){
+    try {
+      const d = await this.open();
+      await new Promise(ok => {
+        const t = d.transaction('kv', 'readwrite');
+        t.objectStore('kv').put(v, k); t.oncomplete = ok; t.onerror = ok;
+      });
+    } catch (e) {}
+  }
+};
 function saveLocal(){
+  VBC.set('dataset', dataset);
   try { localStorage.setItem('anthony_system_v6', JSON.stringify(dataset)); }
-  catch(e){ console.warn('Sauvegarde locale impossible', e); }
+  catch(e){ /* trop lourd pour localStorage : IndexedDB a pris le relais */ }
 }
+/* tant que le nuage n'a pas répondu, on n'écrit pas dessus : on retient
+   seulement qu'une modification attend d'être envoyée */
+let netLoaded = false, pendingPush = false;
 
 /* l'écriture locale est immédiate ; l'écriture réseau est regroupée,
    pour ne pas envoyer une requête par frappe */
@@ -1262,6 +1301,7 @@ function save(record){
   if (record !== false) recordUndo();
   saveLocal();
   clearTimeout(netT);
+  if (!netLoaded) { pendingPush = true; return; }
   netT = setTimeout(pushRemote, 600);
 }
 
@@ -1372,31 +1412,105 @@ function runMigrations(){
   return changed;
 }
 
-async function load(){
-  sync.textContent = 'Chargement…';
-  try {
-    if (!db) throw new Error('local');
-    const { data, error } = await db.from('bento_architecture').select('data').eq('id',1).single();
-    if (error || !data) throw error;
-    dataset = data.data || [];
-    sync.textContent = 'En ligne';
-  } catch (err) {
-    console.warn('Chargement local :', err);
-    try { const l = localStorage.getItem('anthony_system_v6'); if (l) dataset = JSON.parse(l); } catch(e){}
-    sync.textContent = 'Local';
-  }
-
+/* migrations et graines, communes au cache et au nuage */
+function prepare(){
   dataset.forEach(n => { if (n.id !== '__meta__') migrate(n); });
 
   let seeded = false;
   if (!dataset.some(n => n.board === 'hightech')) { SEED_HIGHTECH.forEach(o => dataset.push(newNode(Object.assign({board:'hightech'}, o)))); seeded = true; }
   if (!dataset.some(n => n.board === 'vie'))      { SEED_VIE.forEach(o => dataset.push(newNode(Object.assign({board:'vie'}, o)))); seeded = true; }
   if (runMigrations()) seeded = true;
-  if (seeded) save(false);
-  lastSnap = snap();
+  return seeded;
+}
+function show(){ lastSnap = snap(); renderTabs(); render(); refreshUndo(); }
 
-  renderTabs();
-  render(); refreshUndo();
+async function load(){
+  sync.textContent = 'Chargement…';
+  /* 1. le cache : les cartes s'affichent tout de suite */
+  let cached = await VBC.get('dataset');
+  if (!Array.isArray(cached) || !cached.length) {
+    try { const l = localStorage.getItem('anthony_system_v6'); if (l) cached = JSON.parse(l); } catch(e){}
+  }
+  const cacheTxt = Array.isArray(cached) && cached.length ? JSON.stringify(cached) : '';
+  if (cacheTxt) { dataset = cached; prepare(); show(); }
+
+  /* 2. le nuage : il fait foi, sauf si tu as déjà modifié quelque chose
+     pendant qu'il répondait (tes modifications passent alors en premier) */
+  let net = null;
+  try {
+    if (!db) throw new Error('local');
+    const { data, error } = await db.from('bento_architecture').select('data').eq('id',1).single();
+    if (error || !data) throw error;
+    net = data.data || [];
+    sync.textContent = 'En ligne';
+  } catch (err) {
+    console.warn('Chargement local :', err);
+    sync.textContent = 'Local';
+  }
+  netLoaded = true;
+
+  if (net && !pendingPush) {
+    if (JSON.stringify(net) !== cacheTxt) {
+      dataset = net;
+      if (prepare()) save(false);
+      show();
+    }
+    VBC.set('dataset', dataset);
+  } else if (!cacheTxt) {
+    if (prepare()) save(false);
+    show();
+  }
+  if (pendingPush) { pendingPush = false; netT = setTimeout(pushRemote, 600); }
+  if (net) setTimeout(allegerPhotos, 1500);
+}
+
+/* ── 3. les photos ──
+   Une photo était enregistrée en PNG : 400 à 900 Ko chacune, toutes dans la
+   même ligne du nuage, téléchargée en entier avant d'afficher quoi que ce soit.
+   En JPEG elle pèse 60 à 90 Ko. Une image avec de la transparence (un objet
+   détouré) la garde : WebP quand le navigateur sait l'écrire, PNG sinon. */
+function encoderPhoto(cv){
+  let alpha = false;
+  try {
+    const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
+    for (let i = 3; i < d.length; i += 16) if (d[i] < 250) { alpha = true; break; }
+  } catch(e){ alpha = true; }
+  if (!alpha) return cv.toDataURL('image/jpeg', 0.84);
+  const w = cv.toDataURL('image/webp', 0.86);
+  return w.indexOf('data:image/webp') === 0 ? w : cv.toDataURL('image/png');
+}
+function alleger(srcImg){
+  return new Promise(ok => {
+    const im = new Image();
+    im.onload = () => {
+      const s = Math.min(1, 640 / Math.max(im.width, im.height));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(im.width * s); cv.height = Math.round(im.height * s);
+      cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+      const out = encoderPhoto(cv);
+      ok(out.length < srcImg.length ? out : srcImg);
+    };
+    im.onerror = () => ok(srcImg);
+    im.src = srcImg;
+  });
+}
+/* Une seule fois : les photos déjà enregistrées sont allégées. Avant de
+   toucher à quoi que ce soit, l'état complet est copié dans le nuage (ligne 2
+   de la même table) : si une photo ne te plaît pas, rien n'est perdu. */
+async function allegerPhotos(){
+  if (!db) return;
+  const m = metaNode();
+  if (m.migrations.includes('photos-legeres-v1')) return;
+  const lourdes = dataset.filter(n => typeof n.img === 'string' &&
+    n.img.indexOf('data:image/png') === 0 && n.img.length > 120000);
+  if (!lourdes.length) { m.migrations.push('photos-legeres-v1'); save(false); return; }
+  try {
+    const { error } = await db.from('bento_architecture').upsert({ id:2, data:dataset });
+    if (error) throw error;
+  } catch (e) { console.warn('Copie de secours impossible : photos laissées telles quelles', e); return; }
+  for (const n of lourdes) n.img = await alleger(n.img);
+  m.migrations.push('photos-legeres-v1');
+  save(false); render();
 }
 
 /* =========================================================================
@@ -2293,7 +2407,7 @@ picker.addEventListener('change', function(){
       const cv = document.createElement('canvas');
       cv.width = Math.round(im.width * s); cv.height = Math.round(im.height * s);
       cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
-      n.img = cv.toDataURL('image/png');
+      n.img = encoderPhoto(cv);
       save(); render();
     };
     im.src = rd.result;
