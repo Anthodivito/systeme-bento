@@ -199,7 +199,7 @@ button{background:none;border:none;cursor:pointer}
 .dark .gwin .gact{border-color:#5F6368;color:#A8C7FA}
 .gwin::after{content:'';position:absolute;left:0;right:0;bottom:0;height:24px;pointer-events:none;background:linear-gradient(rgba(255,255,255,0),#fff)}
 .dark .gwin::after{background:linear-gradient(rgba(27,28,30,0),#1B1C1E)}
-.mailbody a{color:#222222;text-decoration:underline}
+.mailbody a{color:#222222;text-decoration:underline;font-weight:700}
 .dark .mailbody a{color:#E3E3E3}
 
 /* ---------- LIENS ---------- */
@@ -606,7 +606,7 @@ function mailInner(lines,forCopy){
   return h;
 }
 function mailForCopy(lines){
-  var inner=mailInner(lines,true).replace(/<a href=/g,'<a style="color:#222222;text-decoration:underline" href=');
+  var inner=mailInner(lines,true).replace(/<a href=/g,'<a style="color:#222222;text-decoration:underline;font-weight:700" href=');
   return '<div style="max-width:'+WIDTH+'px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6">'+inner+'</div>';
 }
 function plainText(text,cols){
