@@ -199,8 +199,8 @@ button{background:none;border:none;cursor:pointer}
 .dark .gwin .gact{border-color:#5F6368;color:#A8C7FA}
 .gwin::after{content:'';position:absolute;left:0;right:0;bottom:0;height:24px;pointer-events:none;background:linear-gradient(rgba(255,255,255,0),#fff)}
 .dark .gwin::after{background:linear-gradient(rgba(27,28,30,0),#1B1C1E)}
-.mailbody a{color:#1A73E8;text-decoration:underline}
-.dark .mailbody a{color:#A8C7FA}
+.mailbody a{color:#222222;text-decoration:underline}
+.dark .mailbody a{color:#E3E3E3}
 
 /* ---------- LIENS ---------- */
 .lnk{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;background:var(--panel2);margin-bottom:6px}
@@ -606,7 +606,7 @@ function mailInner(lines,forCopy){
   return h;
 }
 function mailForCopy(lines){
-  var inner=mailInner(lines,true).replace(/<a href=/g,'<a style="color:#1a73e8;text-decoration:underline" href=');
+  var inner=mailInner(lines,true).replace(/<a href=/g,'<a style="color:#222222;text-decoration:underline" href=');
   return '<div style="max-width:'+WIDTH+'px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6">'+inner+'</div>';
 }
 function plainText(text,cols){
@@ -1331,6 +1331,12 @@ document.addEventListener('keydown',function(e){
   var k=e.key.toLowerCase();
   if(k==='b'){e.preventDefault();gras();}
   else if(k==='k'){e.preventDefault();drawerLiens();}
+  else if(e.key==='Backspace'||e.key==='Delete'){
+    var a=document.activeElement;
+    if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')&&a!==$('body'))return;
+    e.preventDefault();var old=$('body').value;if(!old.trim())return;
+    $('body').value='';render();$('body').focus();
+    toast('Corps du mail effacé',false,{l:'Annuler',f:function(){$('body').value=old;render();$('body').focus();}});}
   else if(e.key==='Enter'){e.preventDefault();$('btnHtml').click();}
   else if(k>='1'&&k<='4'&&document.activeElement===$('body')){e.preventDefault();insert(($('body').value.trim()?'\n\n':'')+BLOCS[+k-1].t);}
 });
